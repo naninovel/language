@@ -3,6 +3,8 @@ using Microsoft.JSInterop;
 using Naninovel.Metadata;
 using static Naninovel.Common.Bindings.Utilities;
 
+[assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
+
 namespace Naninovel.Language.Bindings.Language;
 
 public static partial class Language
