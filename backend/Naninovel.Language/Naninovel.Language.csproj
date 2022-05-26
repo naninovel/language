@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <PackageId>Naninovel.Language</PackageId>
+        <Version>$([System.DateTime]::Now.ToString("yyyy.MM.dd.HHmm"))</Version>
+        <Authors>Elringus</Authors>
+        <Company>ReWaffle LLC</Company>
+        <PackageDescription>Language server protocol implementation for Naninovel scenario scripting language.</PackageDescription>
+        <RepositoryUrl>https://github.com/Naninovel/Naninovel</RepositoryUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Naninovel.Common" Version="2022.5.26.2054"/>
+    </ItemGroup>
+
+</Project>

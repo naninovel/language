@@ -1,0 +1,32 @@
+{
+    "name": "@naninovel/language",
+    "version": "1.0.0",
+    "description": "Language server protocol implementation for Naninovel scenario scripting language.",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": ["dist/*"],
+    "jest": {
+        "preset": "ts-jest",
+        "testMatch": ["**/test/**/*.ts"],
+        "coveragePathIgnorePatterns": ["backend/*"]
+    },
+    "scripts": {
+        "test": "jest --silent=true",
+        "cover": "npm test -- --coverage",
+        "build": "webpack --mode production && tsc --outDir ./dist --declaration --emitDeclarationOnly --skipLibCheck",
+        "publish-npm": "npm publish --access public"
+    },
+    "dependencies": {
+        "vscode-languageserver": "^8.0.1",
+        "@naninovel/common": "^1.0.9"
+    },
+    "devDependencies": {
+        "typescript": "^4.7.2",
+        "ts-jest": "^28.0.3",
+        "ts-loader": "^9.3.0",
+        "@types/jest": "^27.5.1",
+        "webpack": "^5.72.1",
+        "webpack-cli": "^4.9.2",
+        "backend": "file:./backend"
+    }
+}

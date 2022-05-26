@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DotNetJS" Version="0.13.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Naninovel.Language.Bindings/Naninovel.Language.Bindings.csproj"/>
+    </ItemGroup>
+
+</Project>

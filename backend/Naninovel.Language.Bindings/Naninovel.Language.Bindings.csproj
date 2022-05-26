@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <PackageId>Naninovel.Language.Bindings</PackageId>
+        <Version>$([System.DateTime]::Now.ToString("yyyy.MM.dd.HHmm"))</Version>
+        <Authors>Elringus</Authors>
+        <Company>ReWaffle LLC</Company>
+        <PackageDescription>JavaScript bindings for naniscript language server.</PackageDescription>
+        <RepositoryUrl>https://github.com/Naninovel/Language</RepositoryUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DotNetJS" Version="0.13.2"/>
+        <PackageReference Include="Naninovel.Common.Bindings" Version="2022.5.26.2054"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Naninovel.Language/Naninovel.Language.csproj"/>
+    </ItemGroup>
+
+</Project>

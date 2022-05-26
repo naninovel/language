@@ -1,0 +1,6 @@
+{
+    "private": true,
+    "name": "backend",
+    "main": "Naninovel.Language.WASM/bin/dotnet.js",
+    "types": "Naninovel.Language.WASM/bin/dotnet.d.ts"
+}
