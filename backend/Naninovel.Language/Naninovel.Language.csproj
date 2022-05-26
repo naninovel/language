@@ -8,7 +8,7 @@
         <Authors>Elringus</Authors>
         <Company>ReWaffle LLC</Company>
         <PackageDescription>Language server protocol implementation for Naninovel scenario scripting language.</PackageDescription>
-        <RepositoryUrl>https://github.com/Naninovel/Naninovel</RepositoryUrl>
+        <RepositoryUrl>https://github.com/Naninovel/Language</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
