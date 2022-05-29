@@ -1,5 +1,5 @@
 ﻿import { Language, Metadata } from "backend";
-import { defaultMetadata, mergeWithDefaultMetadata } from "@naninovel/common";
+import { getDefaultMetadata, mergeMetadata } from "@naninovel/common";
 import { LanguageMessageReader } from "./message-reader";
 import { LanguageMessageWriter } from "./message-writer";
 import { Message, Connection, Emitter } from "vscode-languageserver";
@@ -7,12 +7,12 @@ import { createConnection } from "vscode-languageserver/browser";
 import { createConfiguration } from "./configuration";
 
 export function bootLanguageServer(reader: Emitter<Message>, writer: Emitter<Message>) {
-    Language.CreateHandlers(defaultMetadata);
+    Language.CreateHandlers(getDefaultMetadata());
     startServer(reader, writer);
 }
 
 export function applyCustomMetadata(customMetadata: Metadata.Project) {
-    const mergedMeta = mergeWithDefaultMetadata(customMetadata);
+    const mergedMeta = mergeMetadata(getDefaultMetadata(), customMetadata);
     Language.CreateHandlers(mergedMeta);
 }
 
