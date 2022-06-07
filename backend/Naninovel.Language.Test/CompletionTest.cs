@@ -368,7 +368,7 @@ public class CompletionTest
             new Constant { Name = "Labels/Script001", Values = new[] { "foo" } },
             new Constant { Name = "Labels/Script002", Values = new[] { "bar" } }
         };
-        Assert.Equal("foo", Complete("@goto .", 7, "Script001")[0].Label);
+        Assert.Equal("foo", Complete("@goto .", 7, "root/Script001.nani")[0].Label);
         Assert.Equal("bar", Complete("@goto Script002.", 16)[0].Label);
     }
 
