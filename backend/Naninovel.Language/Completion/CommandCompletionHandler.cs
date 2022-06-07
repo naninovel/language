@@ -15,6 +15,7 @@ internal class CommandCompletionHandler
     private Parsing.Command command = null!;
     private Position position = null!;
     private string lineText = string.Empty;
+    private string scriptName = string.Empty;
 
     public CommandCompletionHandler (MetadataProvider meta, CompletionProvider provider)
     {
@@ -22,9 +23,9 @@ internal class CommandCompletionHandler
         this.provider = provider;
     }
 
-    public CompletionItem[] Handle (Parsing.Command command, Position position, string lineText)
+    public CompletionItem[] Handle (Parsing.Command command, Position position, string lineText, string scriptName)
     {
-        ResetState(command, position, lineText);
+        ResetState(command, position, lineText, scriptName);
         if (ShouldCompleteCommandId())
             return provider.GetCommands();
         if (meta.FindCommand(command.Identifier) is not { } commandMeta)
@@ -36,11 +37,12 @@ internal class CommandCompletionHandler
         return provider.GetParameters(commandMeta.Id);
     }
 
-    private void ResetState (Parsing.Command command, Position position, string lineText)
+    private void ResetState (Parsing.Command command, Position position, string lineText, string scriptName)
     {
         this.command = command;
         this.position = position;
         this.lineText = lineText;
+        this.scriptName = scriptName;
     }
 
     private bool IsCursorOver (LineContent content) => position.IsCursorOver(content);
@@ -111,7 +113,7 @@ internal class CommandCompletionHandler
     {
         return context.Type switch {
             ValueContextType.Expression => provider.GetExpressions(),
-            ValueContextType.Constant => provider.GetConstants(context.SubType),
+            ValueContextType.Constant => GetConstantValues(context, commandMeta),
             ValueContextType.Resource => provider.GetResources(context.SubType),
             ValueContextType.Actor => provider.GetActors(context.SubType),
             ValueContextType.Appearance when FindActorId(commandMeta) is { } id => provider.GetAppearances(id),
@@ -136,6 +138,21 @@ internal class CommandCompletionHandler
         var dotIndex = value.LastIndexOf('.');
         if (dotIndex < 0 && name) return value;
         if (dotIndex < 0 && !name) return null;
-        return name ? value[..dotIndex] : value[(dotIndex + 1)..];
+        var result = name ? value[..dotIndex] : value[(dotIndex + 1)..];
+        return string.IsNullOrEmpty(result) ? null : result;
+    }
+
+    private CompletionItem[] GetConstantValues (ValueContext context, Metadata.Command commandMeta)
+    {
+        var name = ConstantEvaluator.EvaluateName(context.SubType, scriptName, GetParamValue);
+        return provider.GetConstants(name);
+
+        string? GetParamValue (string id, int? index)
+        {
+            foreach (var param in command.Parameters)
+                if (meta.FindParameter(commandMeta.Id, param.Identifier) is { } paramMeta && paramMeta.Id == id)
+                    return index.HasValue ? GetNamedValue(param.Value, index == 0) : param.Value;
+            return null;
+        }
     }
 }

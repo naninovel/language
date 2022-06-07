@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
@@ -17,6 +18,7 @@ public class CompletionHandler
     private char charBehindCursor => position.GetCharBehindCursor(lineText);
     private Position position = null!;
     private string lineText = string.Empty;
+    private string scriptName = string.Empty;
 
     public CompletionHandler (MetadataProvider meta, DocumentRegistry registry)
     {
@@ -28,19 +30,21 @@ public class CompletionHandler
     public CompletionItem[] Complete (string documentUri, Position position)
     {
         var documentLine = registry.Get(documentUri)[position.Line];
-        ResetState(documentLine.Text, position);
+        var scriptName = Path.GetFileNameWithoutExtension(documentUri);
+        ResetState(documentLine.Text, position, scriptName);
         return documentLine.Script switch {
             GenericTextLine line => GetForGenericLine(line),
-            CommandLine line => commandHandler.Handle(line.Command, position, lineText),
+            CommandLine line => commandHandler.Handle(line.Command, position, lineText, scriptName),
             EmptyLine => provider.GetActors(CharacterType),
             _ => Array.Empty<CompletionItem>()
         };
     }
 
-    private void ResetState (string lineText, Position position)
+    private void ResetState (string lineText, Position position, string scriptName)
     {
         this.lineText = lineText;
         this.position = position;
+        this.scriptName = scriptName;
     }
 
     private bool IsCursorOver (LineContent content) => position.IsCursorOver(content);
@@ -52,7 +56,7 @@ public class CompletionHandler
         if (ShouldCompleteAuthorAppearance(line, out var authorId))
             return provider.GetAppearances(authorId);
         if (line.Content.OfType<InlinedCommand>().FirstOrDefault(IsCursorOver) is { } inlined)
-            return commandHandler.Handle(inlined.Command, position, lineText);
+            return commandHandler.Handle(inlined.Command, position, lineText, scriptName);
         if (line.Content.OfType<GenericText>().FirstOrDefault(IsCursorOver) is { } text)
             return GetForGenericText(text);
         return Array.Empty<CompletionItem>();

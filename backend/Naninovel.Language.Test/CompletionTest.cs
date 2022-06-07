@@ -355,6 +355,32 @@ public class CompletionTest
     }
 
     [Fact]
+    public void ConstantExpressionIsEvaluated ()
+    {
+        var param = new Parameter {
+            Id = "Path",
+            Nameless = true,
+            ValueContainerType = ValueContainerType.Named,
+            NamedValueContext = new() { Type = ValueContextType.Constant, SubType = "Labels/{:Path[0]??$Script}" }
+        };
+        meta.Commands = new[] { new Command { Id = "Goto", Parameters = new[] { param } } };
+        meta.Constants = new[] {
+            new Constant { Name = "Labels/Script001", Values = new[] { "foo" } },
+            new Constant { Name = "Labels/Script002", Values = new[] { "bar" } }
+        };
+        Assert.Equal("foo", Complete("@goto .", 7, "Script001")[0].Label);
+        Assert.Equal("bar", Complete("@goto Script002.", 16)[0].Label);
+    }
+
+    [Fact]
+    public void WhenUnknownParameterInConstantExpressionResultIsEmpty ()
+    {
+        var param = new Parameter { Id = "foo", ValueContext = new() { Type = ValueContextType.Constant, SubType = "{:bar}" } };
+        meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
+        Assert.Empty(Complete("@cmd foo:", 9));
+    }
+
+    [Fact]
     public void WhenOverResourceContextResourcePathsAreReturned ()
     {
         var param = new Parameter { Id = "re", ValueContext = new() { Type = ValueContextType.Resource, SubType = "foo" } };
@@ -412,11 +438,12 @@ public class CompletionTest
         Assert.Equal("true", Complete("@command identifier:", 20)[0].Label);
     }
 
-    private CompletionItem[] Complete (string lineText, int charOffset)
+    private CompletionItem[] Complete (string lineText, int charOffset, string scriptUri = null)
     {
+        scriptUri ??= "@";
         var registry = new DocumentRegistry();
         var handler = new CompletionHandler(new MetadataProvider(meta), registry);
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", lineText);
-        return handler.Complete("@", new Position(0, charOffset));
+        new DocumentHandler(registry, new MockDiagnoser()).Open(scriptUri, lineText);
+        return handler.Complete(scriptUri, new Position(0, charOffset));
     }
 }
