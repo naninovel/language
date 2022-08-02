@@ -129,7 +129,8 @@ public class Diagnoser : IDiagnoser
     private static bool IsParameterDefined (Metadata.Parameter paramMeta, Parsing.Command command)
     {
         foreach (var param in command.Parameters)
-            if (string.Equals(param.Identifier, paramMeta.Id, StringComparison.OrdinalIgnoreCase)) return true;
+            if (param.Nameless && paramMeta.Nameless) return true;
+            else if (string.Equals(param.Identifier, paramMeta.Id, StringComparison.OrdinalIgnoreCase)) return true;
             else if (string.Equals(param.Identifier, paramMeta.Alias, StringComparison.OrdinalIgnoreCase)) return true;
         return false;
     }

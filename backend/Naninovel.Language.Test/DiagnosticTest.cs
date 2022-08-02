@@ -119,6 +119,14 @@ public class DiagnosticTest
         Assert.Empty(Diagnose("@c f:x bar:x"));
     }
 
+    [Fact]
+    public void NamelessRequiredParametersAreResolved ()
+    {
+        var param = new Parameter { Id = "*", Alias = "", Nameless = true, Required = true };
+        meta.Commands = new[] { new Command { Id = "c", Parameters = new[] { param } } };
+        Assert.Empty(Diagnose("@c foo"));
+    }
+
     private Diagnostic[] Diagnose (string lineText)
     {
         var result = default(Diagnostic[]);
