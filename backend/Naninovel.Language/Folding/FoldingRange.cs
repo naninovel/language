@@ -1,6 +1,6 @@
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#foldingRange
+// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#foldingRange
 
 public record FoldingRange(int StartLine, int EndLine)
 {

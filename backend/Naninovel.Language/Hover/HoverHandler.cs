@@ -13,6 +13,7 @@ public class HoverHandler
     private readonly StringBuilder builder = new();
 
     private Position position = null!;
+    private DocumentLine line = null!;
 
     public HoverHandler (MetadataProvider meta, DocumentRegistry registry)
     {
@@ -23,9 +24,9 @@ public class HoverHandler
     public Hover? Hover (string documentUri, Position position)
     {
         ResetState(position);
-        var documentLine = registry.Get(documentUri)[position.Line];
-        return documentLine.Script switch {
-            GenericTextLine line => HoverGenericLine(line),
+        line = registry.Get(documentUri)[position.Line];
+        return line.Script switch {
+            GenericLine line => HoverGenericLine(line),
             CommandLine line => HoverCommand(line.Command),
             _ => null
         };
@@ -37,9 +38,9 @@ public class HoverHandler
         builder.Clear();
     }
 
-    private bool IsCursorOver (LineContent content) => position.IsCursorOver(content);
+    private bool IsCursorOver (ILineComponent content) => line.IsCursorOver(content, position);
 
-    private Hover? HoverGenericLine (GenericTextLine line)
+    private Hover? HoverGenericLine (GenericLine line)
     {
         foreach (var content in line.Content)
             if (content is InlinedCommand inlined && IsCursorOver(inlined))
@@ -69,7 +70,7 @@ public class HoverHandler
             AppendParameters(commandMeta.Parameters);
         if (!string.IsNullOrEmpty(commandMeta.Examples))
             builder.Append($"## Examples\n```nani\n{commandMeta.Examples}\n```");
-        var range = Range.FromContent(command.Identifier, position.Line);
+        var range = line.GetRange(command.Identifier, position.Line);
         return new Hover(builder.ToString(), range);
     }
 
@@ -77,7 +78,7 @@ public class HoverHandler
     {
         var paramMeta = meta.FindParameter(commandMeta.Id, param.Identifier);
         if (paramMeta is null || string.IsNullOrEmpty(paramMeta.Summary)) return null;
-        var range = Range.FromContent(param, position.Line);
+        var range = line.GetRange(param, position.Line);
         return new Hover(paramMeta.Summary, range);
     }
 

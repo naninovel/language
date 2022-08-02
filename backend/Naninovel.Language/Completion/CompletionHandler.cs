@@ -7,7 +7,7 @@ using static Naninovel.Metadata.Constants;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#textDocument_completion
+// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_completion
 
 public class CompletionHandler
 {
@@ -15,9 +15,9 @@ public class CompletionHandler
     private readonly CompletionProvider provider;
     private readonly CommandCompletionHandler commandHandler;
 
-    private char charBehindCursor => position.GetCharBehindCursor(lineText);
+    private char charBehindCursor => line.GetCharBehindCursor(position);
     private Position position = null!;
-    private string lineText = string.Empty;
+    private DocumentLine line = null!;
     private string scriptName = string.Empty;
 
     public CompletionHandler (MetadataProvider meta, DocumentRegistry registry)
@@ -31,48 +31,47 @@ public class CompletionHandler
     {
         var documentLine = registry.Get(documentUri)[position.Line];
         var scriptName = Path.GetFileNameWithoutExtension(documentUri);
-        ResetState(documentLine.Text, position, scriptName);
+        ResetState(documentLine, position, scriptName);
         return documentLine.Script switch {
-            GenericTextLine line => GetForGenericLine(line),
-            CommandLine line => commandHandler.Handle(line.Command, position, lineText, scriptName),
-            EmptyLine => provider.GetActors(CharacterType),
+            GenericLine line => GetForGenericLine(line),
+            CommandLine line => commandHandler.Handle(line.Command, position, documentLine, scriptName),
             _ => Array.Empty<CompletionItem>()
         };
     }
 
-    private void ResetState (string lineText, Position position, string scriptName)
+    private void ResetState (DocumentLine line, Position position, string scriptName)
     {
-        this.lineText = lineText;
+        this.line = line;
         this.position = position;
         this.scriptName = scriptName;
     }
 
-    private bool IsCursorOver (LineContent content) => position.IsCursorOver(content);
+    private bool IsCursorOver (ILineComponent? content) => line.IsCursorOver(content, position);
 
-    private CompletionItem[] GetForGenericLine (GenericTextLine line)
+    private CompletionItem[] GetForGenericLine (GenericLine genericLine)
     {
-        if (IsCursorOver(line.Prefix.AuthorIdentifier))
+        if (string.IsNullOrEmpty(line.Text) || IsCursorOver(genericLine.Prefix?.Author))
             return provider.GetActors(CharacterType);
-        if (ShouldCompleteAuthorAppearance(line, out var authorId))
+        if (ShouldCompleteAuthorAppearance(genericLine, out var authorId))
             return provider.GetAppearances(authorId);
-        if (line.Content.OfType<InlinedCommand>().FirstOrDefault(IsCursorOver) is { } inlined)
-            return commandHandler.Handle(inlined.Command, position, lineText, scriptName);
-        if (line.Content.OfType<GenericText>().FirstOrDefault(IsCursorOver) is { } text)
+        if (genericLine.Content.OfType<InlinedCommand>().FirstOrDefault(IsCursorOver) is { } inlined)
+            return commandHandler.Handle(inlined.Command, position, line, scriptName);
+        if (genericLine.Content.OfType<MixedValue>().FirstOrDefault(IsCursorOver) is { } text)
             return GetForGenericText(text);
         return Array.Empty<CompletionItem>();
     }
 
-    private bool ShouldCompleteAuthorAppearance (GenericTextLine line, out string authorId)
+    private bool ShouldCompleteAuthorAppearance (GenericLine genericLine, out string authorId)
     {
-        authorId = line.Prefix.AuthorIdentifier;
-        if (IsCursorOver(line.Prefix.AuthorAppearance)) return true;
+        authorId = genericLine.Prefix?.Author;
+        if (IsCursorOver(genericLine.Prefix?.Appearance)) return true;
         return charBehindCursor == Identifiers.AuthorAppearance[0] &&
-               !(authorId = lineText[..(position.Character - 1)]).Any(char.IsWhiteSpace);
+               !(authorId = line.Text[..(position.Character - 1)]).Any(char.IsWhiteSpace);
     }
 
-    private CompletionItem[] GetForGenericText (GenericText text)
+    private CompletionItem[] GetForGenericText (MixedValue text)
     {
-        if (!text.Expressions.Any(IsCursorOver))
+        if (!text.OfType<Expression>().Any(IsCursorOver))
             return Array.Empty<CompletionItem>();
         if (charBehindCursor == Identifiers.ExpressionClose[0])
             return Array.Empty<CompletionItem>();

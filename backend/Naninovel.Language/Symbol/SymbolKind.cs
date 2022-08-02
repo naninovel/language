@@ -1,6 +1,6 @@
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#symbolKind
+// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolKind
 
 public enum SymbolKind
 {

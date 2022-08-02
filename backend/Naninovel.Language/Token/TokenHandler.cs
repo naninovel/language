@@ -1,15 +1,17 @@
 using System;
+using System.Linq;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#textDocument_semanticTokens
+// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens
 
 public class TokenHandler
 {
     private readonly DocumentRegistry registry;
     private readonly TokenBuilder builder = new();
 
+    private DocumentLine line = null!;
     private Range range = null!;
     private int lineIndex;
 
@@ -39,7 +41,7 @@ public class TokenHandler
     {
         ResetState(range);
         for (int i = lineIndex; i <= range.End.Line; i++)
-            AppendLine(document.Lines[i].Script);
+            AppendLine(document.Lines[i]);
         return new Tokens(builder.Build());
     }
 
@@ -57,37 +59,39 @@ public class TokenHandler
         lineIndex = range.Start.Line;
     }
 
-    private void AppendLine (IScriptLine line)
+    private void AppendLine (DocumentLine line)
     {
-        if (line is CommentLine comment) AppendCommentLine(comment);
-        else if (line is LabelLine label) AppendLabelLine(label);
-        else if (line is CommandLine command) AppendCommandLine(command);
-        else if (line is GenericTextLine generic) AppendGenericLine(generic);
+        this.line = line;
+        if (line.Script is CommentLine comment) AppendCommentLine(comment);
+        else if (line.Script is LabelLine label) AppendLabelLine(label);
+        else if (line.Script is CommandLine command) AppendCommandLine(command);
+        else if (line.Script is GenericLine generic) AppendGenericLine(generic);
         lineIndex++;
     }
 
     private void AppendCommentLine (CommentLine line)
     {
-        AppendContent(line, TokenType.CommentLine);
-        AppendContent(line.CommentText, TokenType.CommentText);
+        AppendContent(this.line.Range, TokenType.CommentLine);
+        AppendContent(line.Comment, TokenType.CommentText);
     }
 
     private void AppendLabelLine (LabelLine line)
     {
-        AppendContent(line, TokenType.LabelLine);
-        AppendContent(line.LabelText, TokenType.LabelText);
+        AppendContent(this.line.Range, TokenType.LabelLine);
+        AppendContent(line.Label, TokenType.LabelText);
     }
 
     private void AppendCommandLine (CommandLine line)
     {
-        AppendContent(line, TokenType.CommandLine);
+        AppendContent(this.line.Range, TokenType.CommandLine);
         AppendCommand(line.Command);
     }
 
-    private void AppendGenericLine (GenericTextLine line)
+    private void AppendGenericLine (GenericLine line)
     {
-        AppendContent(line, TokenType.GenericTextLine);
-        AppendGenericPrefix(line.Prefix);
+        AppendContent(this.line.Range, TokenType.GenericTextLine);
+        if (line.Prefix is not null)
+            AppendGenericPrefix(line.Prefix);
         foreach (var content in line.Content)
             AppendGenericContent(content);
     }
@@ -107,29 +111,30 @@ public class TokenHandler
         AppendParameterValue(parameter.Value);
     }
 
-    private void AppendParameterValue (ParameterValue value)
+    private void AppendParameterValue (MixedValue value)
     {
         AppendContent(value, TokenType.ParameterValue);
-        foreach (var expression in value.Expressions)
+        foreach (var expression in value.OfType<Expression>())
             AppendExpression(expression);
     }
 
-    private void AppendExpression (LineText expression)
+    private void AppendExpression (Expression expression)
     {
         AppendContent(expression, TokenType.Expression);
     }
 
-    private void AppendGenericPrefix (GenericTextPrefix prefix)
+    private void AppendGenericPrefix (GenericPrefix prefix)
     {
         AppendContent(prefix, TokenType.GenericTextPrefix);
-        AppendContent(prefix.AuthorIdentifier, TokenType.GenericTextAuthor);
-        AppendContent(prefix.AuthorAppearance, TokenType.GenericTextAuthorAppearance);
+        AppendContent(prefix.Author, TokenType.GenericTextAuthor);
+        if (prefix.Appearance is not null)
+            AppendContent(prefix.Appearance, TokenType.GenericTextAuthorAppearance);
     }
 
     private void AppendGenericContent (IGenericContent content)
     {
         if (content is InlinedCommand inlined) AppendInlined(inlined);
-        else if (content is GenericText text) AppendGenericText(text);
+        else if (content is MixedValue text) AppendGenericText(text);
     }
 
     private void AppendInlined (InlinedCommand inlined)
@@ -138,24 +143,31 @@ public class TokenHandler
         AppendCommand(inlined.Command);
     }
 
-    private void AppendGenericText (GenericText text)
+    private void AppendGenericText (MixedValue text)
     {
-        foreach (var expression in text.Expressions)
+        foreach (var expression in text.OfType<Expression>())
             AppendExpression(expression);
     }
 
-    private void AppendContent (LineContent content, TokenType type)
+    private void AppendContent (ILineComponent? content, TokenType type)
     {
-        if (content.Length <= 0 || !IsInRange(content)) return;
-        builder.Append(lineIndex, content.StartIndex, content.Length, type);
+        if (content is null || !line.Mapper.TryResolve(content, out var lineRange)) return;
+        if (lineRange.Length <= 0 || !IsInRange(lineRange)) return;
+        builder.Append(lineIndex, lineRange.StartIndex, lineRange.Length, type);
     }
 
-    private bool IsInRange (LineContent content)
+    private void AppendContent (LineRange lineRange, TokenType type)
+    {
+        if (lineRange.Length <= 0 || !IsInRange(lineRange)) return;
+        builder.Append(lineIndex, lineRange.StartIndex, lineRange.Length, type);
+    }
+
+    private bool IsInRange (LineRange lineRange)
     {
         if (lineIndex == range.Start.Line)
-            return content.StartIndex >= range.Start.Character;
+            return lineRange.StartIndex >= range.Start.Character;
         if (lineIndex == range.End.Line)
-            return content.StartIndex < range.End.Character;
+            return lineRange.StartIndex < range.End.Character;
         return true;
     }
 }

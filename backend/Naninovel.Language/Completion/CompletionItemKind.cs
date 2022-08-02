@@ -1,6 +1,6 @@
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#completionItemKind
+// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionItemKind
 
 public enum CompletionItemKind
 {
