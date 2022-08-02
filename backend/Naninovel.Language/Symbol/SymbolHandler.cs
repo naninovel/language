@@ -5,7 +5,7 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#textDocument_documentSymbol
+// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_documentSymbol
 
 public class SymbolHandler
 {
@@ -14,6 +14,7 @@ public class SymbolHandler
     private readonly List<Symbol> symbols = new();
 
     private int lineIndex;
+    private DocumentLine line = null!;
     private string commandId = "";
 
     public SymbolHandler (MetadataProvider meta, DocumentRegistry registry)
@@ -27,80 +28,73 @@ public class SymbolHandler
         symbols.Clear();
         var document = registry.Get(documentUri);
         for (int i = 0; i < document.Lines.Count; i++)
-            symbols.Add(CreateForLine(document.Lines[i].Script, i));
+            symbols.Add(CreateForLine(document.Lines[i], i));
         return symbols.ToArray();
     }
 
-    private Symbol CreateForLine (IScriptLine scriptLine, int lineIndex)
+    private Symbol CreateForLine (DocumentLine documentLine, int lineIndex)
     {
         this.lineIndex = lineIndex;
-        return scriptLine switch {
+        line = documentLine;
+        return documentLine.Script switch {
             LabelLine label => CreateForLabelLine(label),
             CommentLine comment => CreateForCommentLine(comment),
             CommandLine command => CreateForCommandLine(command),
-            GenericTextLine generic => CreateForGenericLine(generic),
-            _ => CreateForEmptyLine()
+            _ => CreateForGenericLine((GenericLine)documentLine.Script)
         };
     }
 
-    private Symbol CreateForLabelLine (LabelLine line) => new() {
+    private Symbol CreateForLabelLine (LabelLine labelLine) => new() {
         Name = nameof(LabelLine),
         Kind = SymbolKind.Namespace,
-        Range = Range.FromContent(line, lineIndex),
-        SelectionRange = Range.FromContent(line, lineIndex),
-        Children = new[] { CreateForLabelText(line.LabelText) }
+        Range = line.GetRange(lineIndex),
+        SelectionRange = line.GetRange(lineIndex),
+        Children = new[] { CreateForLabelText(labelLine.Label) }
     };
 
-    private Symbol CreateForCommentLine (CommentLine line) => new() {
+    private Symbol CreateForCommentLine (CommentLine commentLine) => new() {
         Name = nameof(CommentLine),
         Kind = SymbolKind.String,
-        Range = Range.FromContent(line, lineIndex),
-        SelectionRange = Range.FromContent(line, lineIndex),
-        Children = new[] { CreateForCommentText(line.CommentText) }
+        Range = line.GetRange(lineIndex),
+        SelectionRange = line.GetRange(lineIndex),
+        Children = new[] { CreateForCommentText(commentLine.Comment) }
     };
 
-    private Symbol CreateForCommandLine (CommandLine line) => new() {
+    private Symbol CreateForCommandLine (CommandLine commandLine) => new() {
         Name = nameof(CommandLine),
         Kind = SymbolKind.Struct,
-        Range = Range.FromContent(line, lineIndex),
-        SelectionRange = Range.FromContent(line, lineIndex),
-        Children = new[] { CreateForCommand(line.Command) }
+        Range = line.GetRange(lineIndex),
+        SelectionRange = line.GetRange(lineIndex),
+        Children = new[] { CreateForCommand(commandLine.Command) }
     };
 
-    private Symbol CreateForGenericLine (GenericTextLine line) => new() {
-        Name = nameof(GenericTextLine),
+    private Symbol CreateForGenericLine (GenericLine genericLine) => new() {
+        Name = "GenericTextLine",
         Kind = SymbolKind.String,
-        Range = Range.FromContent(line, lineIndex),
-        SelectionRange = Range.FromContent(line, lineIndex),
-        Children = CreateGenericChildren(line)
+        Range = line.GetRange(lineIndex),
+        SelectionRange = line.GetRange(lineIndex),
+        Children = CreateGenericChildren(genericLine)
     };
 
-    private Symbol CreateForEmptyLine () => new() {
-        Name = nameof(EmptyLine),
-        Kind = SymbolKind.Null,
-        Range = new Range(new(lineIndex, 0), new(lineIndex, 0)),
-        SelectionRange = new Range(new(lineIndex, 0), new(lineIndex, 0))
-    };
-
-    private Symbol CreateForLabelText (LineText text) => new() {
+    private Symbol CreateForLabelText (PlainText text) => new() {
         Name = "LabelText",
         Kind = SymbolKind.String,
-        Range = Range.FromContent(text, lineIndex),
-        SelectionRange = Range.FromContent(text, lineIndex)
+        Range = line.GetRange(text, lineIndex),
+        SelectionRange = line.GetRange(text, lineIndex)
     };
 
-    private Symbol CreateForCommentText (LineText text) => new() {
+    private Symbol CreateForCommentText (PlainText text) => new() {
         Name = "CommentText",
         Kind = SymbolKind.String,
-        Range = Range.FromContent(text, lineIndex),
-        SelectionRange = Range.FromContent(text, lineIndex)
+        Range = line.GetRange(text, lineIndex),
+        SelectionRange = line.GetRange(text, lineIndex)
     };
 
     private Symbol CreateForCommand (Parsing.Command command) => new() {
         Name = nameof(Parsing.Command),
         Kind = SymbolKind.Function,
-        Range = Range.FromContent(command, lineIndex),
-        SelectionRange = Range.FromContent(command, lineIndex),
+        Range = line.GetRange(command, lineIndex),
+        SelectionRange = line.GetRange(command, lineIndex),
         Children = CreateCommandChildren(command)
     };
 
@@ -114,73 +108,73 @@ public class SymbolHandler
         return symbols.ToArray();
     }
 
-    private Symbol[] CreateGenericChildren (GenericTextLine line)
+    private Symbol[] CreateGenericChildren (GenericLine genericLine)
     {
         var symbols = new List<Symbol>();
-        if (!line.Prefix.Empty)
-            symbols.Add(CreateForGenericPrefix(line.Prefix));
-        foreach (var content in line.Content)
+        if (genericLine.Prefix is not null)
+            symbols.Add(CreateForGenericPrefix(genericLine.Prefix));
+        foreach (var content in genericLine.Content)
             if (content is InlinedCommand inlined) symbols.Add(CreateForInlined(inlined));
-            else symbols.Add(CreateForGenericText((GenericText)content));
+            else symbols.Add(CreateForGenericText((MixedValue)content));
         return symbols.ToArray();
     }
 
-    private Symbol CreateForGenericPrefix (GenericTextPrefix prefix)
+    private Symbol CreateForGenericPrefix (GenericPrefix prefix)
     {
-        var children = new List<Symbol> { CreateForGenericAuthor(prefix.AuthorIdentifier) };
-        if (!prefix.AuthorAppearance.Empty)
-            children.Add(CreateForGenericAppearance(prefix.AuthorAppearance));
+        var children = new List<Symbol> { CreateForGenericAuthor(prefix.Author) };
+        if (prefix.Appearance is not null)
+            children.Add(CreateForGenericAppearance(prefix.Appearance));
         return new Symbol {
-            Name = nameof(GenericTextPrefix),
+            Name = "GenericTextPrefix",
             Kind = SymbolKind.Constant,
-            Range = Range.FromContent(prefix, lineIndex),
-            SelectionRange = Range.FromContent(prefix, lineIndex),
+            Range = line.GetRange(prefix, lineIndex),
+            SelectionRange = line.GetRange(prefix, lineIndex),
             Children = children.ToArray()
         };
     }
 
-    private Symbol CreateForGenericAuthor (LineText author) => new() {
+    private Symbol CreateForGenericAuthor (PlainText author) => new() {
         Name = "GenericTextAuthor",
         Kind = SymbolKind.Key,
-        Range = Range.FromContent(author, lineIndex),
-        SelectionRange = Range.FromContent(author, lineIndex)
+        Range = line.GetRange(author, lineIndex),
+        SelectionRange = line.GetRange(author, lineIndex)
     };
 
-    private Symbol CreateForGenericAppearance (LineText appearance) => new() {
+    private Symbol CreateForGenericAppearance (PlainText appearance) => new() {
         Name = "GenericTextAuthorAppearance",
         Kind = SymbolKind.Enum,
-        Range = Range.FromContent(appearance, lineIndex),
-        SelectionRange = Range.FromContent(appearance, lineIndex)
+        Range = line.GetRange(appearance, lineIndex),
+        SelectionRange = line.GetRange(appearance, lineIndex)
     };
 
     private Symbol CreateForInlined (InlinedCommand inlined) => new() {
         Name = nameof(InlinedCommand),
         Kind = SymbolKind.Struct,
-        Range = Range.FromContent(inlined, lineIndex),
-        SelectionRange = Range.FromContent(inlined, lineIndex),
+        Range = line.GetRange(inlined, lineIndex),
+        SelectionRange = line.GetRange(inlined, lineIndex),
         Children = new[] { CreateForCommand(inlined.Command) }
     };
 
-    private Symbol CreateForGenericText (GenericText text) => new() {
-        Name = nameof(GenericText),
+    private Symbol CreateForGenericText (MixedValue text) => new() {
+        Name = "GenericText",
         Kind = SymbolKind.String,
-        Range = Range.FromContent(text, lineIndex),
-        SelectionRange = Range.FromContent(text, lineIndex),
-        Children = text.Expressions.Select(CreateForExpression).ToArray()
+        Range = line.GetRange(text, lineIndex),
+        SelectionRange = line.GetRange(text, lineIndex),
+        Children = text.OfType<Expression>().Select(CreateForExpression).ToArray()
     };
 
-    private Symbol CreateForCommandIdentifier (LineText identifier) => new() {
+    private Symbol CreateForCommandIdentifier (PlainText identifier) => new() {
         Name = "CommandIdentifier",
         Kind = SymbolKind.Key,
-        Range = Range.FromContent(identifier, lineIndex),
-        SelectionRange = Range.FromContent(identifier, lineIndex)
+        Range = line.GetRange(identifier, lineIndex),
+        SelectionRange = line.GetRange(identifier, lineIndex)
     };
 
     private Symbol CreateForCommandParameter (Parsing.Parameter parameter) => new() {
         Name = nameof(Parsing.Parameter),
         Kind = SymbolKind.Field,
-        Range = Range.FromContent(parameter, lineIndex),
-        SelectionRange = Range.FromContent(parameter, lineIndex),
+        Range = line.GetRange(parameter, lineIndex),
+        SelectionRange = line.GetRange(parameter, lineIndex),
         Children = CreateParameterChildren(parameter)
     };
 
@@ -193,26 +187,26 @@ public class SymbolHandler
         return symbols.ToArray();
     }
 
-    private Symbol CreateForParameterIdentifier (LineText identifier) => new() {
+    private Symbol CreateForParameterIdentifier (PlainText identifier) => new() {
         Name = "ParameterIdentifier",
         Kind = SymbolKind.Key,
-        Range = Range.FromContent(identifier, lineIndex),
-        SelectionRange = Range.FromContent(identifier, lineIndex)
+        Range = line.GetRange(identifier, lineIndex),
+        SelectionRange = line.GetRange(identifier, lineIndex)
     };
 
     private Symbol CreateForParameterValue (Parsing.Parameter parameter) => new() {
-        Name = nameof(ParameterValue),
+        Name = "ParameterValue",
         Kind = GetParameterValueKind(parameter),
-        Range = Range.FromContent(parameter.Value, lineIndex),
-        SelectionRange = Range.FromContent(parameter.Value, lineIndex),
-        Children = parameter.Value.Expressions.Select(CreateForExpression).ToArray()
+        Range = line.GetRange(parameter.Value, lineIndex),
+        SelectionRange = line.GetRange(parameter.Value, lineIndex),
+        Children = parameter.Value.OfType<Expression>().Select(CreateForExpression).ToArray()
     };
 
-    private Symbol CreateForExpression (LineText expression) => new() {
+    private Symbol CreateForExpression (Expression expression) => new() {
         Name = "Expression",
         Kind = SymbolKind.Property,
-        Range = Range.FromContent(expression, lineIndex),
-        SelectionRange = Range.FromContent(expression, lineIndex)
+        Range = line.GetRange(expression, lineIndex),
+        SelectionRange = line.GetRange(expression, lineIndex)
     };
 
     private SymbolKind GetParameterValueKind (Parsing.Parameter parameter)

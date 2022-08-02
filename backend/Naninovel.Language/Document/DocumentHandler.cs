@@ -1,24 +1,25 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#textDocument_synchronization
+// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_synchronization
 
 public class DocumentHandler
 {
     private readonly DocumentRegistry registry;
     private readonly IDiagnoser diagnoser;
-    private readonly ScriptParser parser = new();
+    private readonly ScriptParser parser;
     private readonly StringBuilder builder = new();
-    private readonly List<ParseError> errors = new();
+    private readonly ErrorCollector errors = new();
+    private readonly RangeMapper mapper = new();
 
     public DocumentHandler (DocumentRegistry registry, IDiagnoser diagnoser)
     {
         this.registry = registry;
         this.diagnoser = diagnoser;
+        parser = new ScriptParser(errors, mapper);
     }
 
     public void Open (string uri, string text)
@@ -45,8 +46,10 @@ public class DocumentHandler
 
     private DocumentLine CreateLine (string lineText)
     {
-        var script = parser.ParseLine(lineText, errors);
-        return new DocumentLine(lineText, script, CollectErrors());
+        var lineModel = parser.ParseLine(lineText);
+        var lineErrors = CollectErrors();
+        var lineMapper = MapComponents();
+        return new DocumentLine(lineText, lineModel, lineErrors, lineMapper);
     }
 
     private ParseError[] CollectErrors ()
@@ -55,6 +58,15 @@ public class DocumentHandler
         var lineErrors = errors.ToArray();
         errors.Clear();
         return lineErrors;
+    }
+
+    private RangeMapper MapComponents ()
+    {
+        var lineMapper = new RangeMapper();
+        foreach (var (component, range) in mapper)
+            lineMapper.Associate(component, range);
+        mapper.Clear();
+        return lineMapper;
     }
 
     private void ApplyChange (Document document, DocumentChange change)

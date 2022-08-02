@@ -16,6 +16,7 @@ public class Diagnoser : IDiagnoser
     private readonly List<Diagnostic> diagnostics = new();
 
     private int lineIndex;
+    private DocumentLine line = null!;
 
     public Diagnoser (MetadataProvider meta, PublishDiagnostics publish)
     {
@@ -46,9 +47,10 @@ public class Diagnoser : IDiagnoser
 
     private void DiagnoseLine (DocumentLine line)
     {
+        this.line = line;
         foreach (var error in line.Errors)
             AddParseError(error);
-        if (line.Script is GenericTextLine genericLine)
+        if (line.Script is GenericLine genericLine)
             DiagnoseGenericLine(genericLine);
         else if (line.Script is CommandLine commandLine)
             DiagnoseCommand(commandLine.Command);
@@ -62,9 +64,9 @@ public class Diagnoser : IDiagnoser
         diagnostics.Add(new(range, DiagnosticSeverity.Error, error.Message));
     }
 
-    private void DiagnoseGenericLine (GenericTextLine line)
+    private void DiagnoseGenericLine (GenericLine genericLine)
     {
-        foreach (var content in line.Content)
+        foreach (var content in genericLine.Content)
             if (content is InlinedCommand inlined)
                 DiagnoseCommand(inlined.Command);
     }
@@ -90,21 +92,20 @@ public class Diagnoser : IDiagnoser
     {
         var paramMeta = meta.FindParameter(commandMeta.Id, param.Identifier);
         if (paramMeta is null) AddUnknownParameter(param, commandMeta);
-        else if (param.Value.Empty || param.Value.Dynamic) return;
-        else if (!IsValueValid(param.Value, paramMeta))
-            AddInvalidValue(param.Value, paramMeta);
+        else if (param.Value.Count == 0 || param.Value.Dynamic || param.Value[0] is not PlainText value) return;
+        else if (!IsValueValid(value, paramMeta)) AddInvalidValue(value, paramMeta);
     }
 
     private void AddUnknownCommand (Parsing.Command command)
     {
-        var range = Range.FromContent(command, lineIndex);
+        var range = line.GetRange(command, lineIndex);
         var message = $"Command '{command.Identifier}' is unknown.";
         diagnostics.Add(new(range, DiagnosticSeverity.Error, message));
     }
 
     private void AddUnknownParameter (Parsing.Parameter param, Metadata.Command commandMeta)
     {
-        var range = Range.FromContent(param, lineIndex);
+        var range = line.GetRange(param, lineIndex);
         var message = param.Nameless
             ? $"Command '{commandMeta.Label}' doesn't have a nameless parameter."
             : $"Command '{commandMeta.Label}' doesn't have '{param.Identifier}' parameter.";
@@ -113,14 +114,14 @@ public class Diagnoser : IDiagnoser
 
     private void AddMissingRequiredParameter (Parsing.Command command, Metadata.Parameter missingParam)
     {
-        var range = Range.FromContent(command, lineIndex);
+        var range = line.GetRange(command, lineIndex);
         var message = $"Required parameter '{missingParam.Label}' is missing.";
         diagnostics.Add(new(range, DiagnosticSeverity.Error, message));
     }
 
-    private void AddInvalidValue (ParameterValue value, Metadata.Parameter paramMeta)
+    private void AddInvalidValue (PlainText value, Metadata.Parameter paramMeta)
     {
-        var range = Range.FromContent(value, lineIndex);
+        var range = line.GetRange(value, lineIndex);
         var message = $"Invalid value: '{value}' is not a {paramMeta.TypeLabel}.";
         diagnostics.Add(new(range, DiagnosticSeverity.Error, message));
     }
@@ -128,12 +129,13 @@ public class Diagnoser : IDiagnoser
     private static bool IsParameterDefined (Metadata.Parameter paramMeta, Parsing.Command command)
     {
         foreach (var param in command.Parameters)
-            if (string.Equals(param.Identifier, paramMeta.Id, StringComparison.OrdinalIgnoreCase)) return true;
+            if (param.Nameless && paramMeta.Nameless) return true;
+            else if (string.Equals(param.Identifier, paramMeta.Id, StringComparison.OrdinalIgnoreCase)) return true;
             else if (string.Equals(param.Identifier, paramMeta.Alias, StringComparison.OrdinalIgnoreCase)) return true;
         return false;
     }
 
-    private static bool IsValueValid (ParameterValue value, Metadata.Parameter paramMeta)
+    private static bool IsValueValid (PlainText value, Metadata.Parameter paramMeta)
     {
         if (paramMeta.ValueContainerType is ValueContainerType.List)
             return value.Text.Split(',', StringSplitOptions.RemoveEmptyEntries).All(IsValid);

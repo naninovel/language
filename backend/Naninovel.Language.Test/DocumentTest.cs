@@ -70,7 +70,7 @@ public class DocumentTest
     {
         handler.Open("@", "generic\n@command\n#label\n;comment");
         var document = registry.Get("@");
-        Assert.IsType<GenericTextLine>(document[0].Script);
+        Assert.IsType<GenericLine>(document[0].Script);
         Assert.IsType<CommandLine>(document[1].Script);
         Assert.IsType<LabelLine>(document[2].Script);
         Assert.IsType<CommentLine>(document[3].Script);
@@ -198,5 +198,22 @@ public class DocumentTest
         handler.Change("foo", Array.Empty<DocumentChange>());
         Assert.Equal(2, diagnoser.DiagnoseRequests.Count);
         Assert.Equal("foo", diagnoser.DiagnoseRequests[1]);
+    }
+
+    [Fact]
+    public void WhenCantGetLineRangeReturnsEmpty ()
+    {
+        var line = new DocumentLine("", new LabelLine(""), Array.Empty<ParseError>(), new());
+        Assert.Equal(new LineRange(0, 0), line.GetLineRange(null));
+        Assert.Equal(new LineRange(0, 0), line.GetLineRange(new PlainText("")));
+    }
+
+    [Fact]
+    public void WhenCantExtractTextReturnsEmpty ()
+    {
+        var line = new DocumentLine("", new LabelLine(""), Array.Empty<ParseError>(), new());
+        Assert.Empty(line.Extract(null));
+        Assert.Empty(line.Extract(new PlainText("")));
+        Assert.Empty(line.Extract(new LineRange(9, 1)));
     }
 }

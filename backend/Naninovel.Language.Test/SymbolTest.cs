@@ -37,8 +37,8 @@ public class SymbolTest
     public void EmptyLineSymbolsAraValid ()
     {
         var symbol = GetSymbol("");
-        Assert.Equal("EmptyLine", symbol.Name);
-        Assert.Equal(SymbolKind.Null, symbol.Kind);
+        Assert.Equal("GenericTextLine", symbol.Name);
+        Assert.Equal(SymbolKind.String, symbol.Kind);
         Assert.Equal(Range.Empty, symbol.Range);
     }
 
@@ -116,7 +116,7 @@ public class SymbolTest
         Assert.Equal(3, symbol.Children!.Length);
         Assert.Equal("GenericTextPrefix", symbol.Children[0].Name);
         Assert.Equal(SymbolKind.Constant, symbol.Children[0].Kind);
-        Assert.Equal(new Range(new(0, 0), new(0, 18)), symbol.Children[0].Range);
+        Assert.Equal(new Range(new(0, 0), new(0, 19)), symbol.Children[0].Range);
         Assert.Equal("InlinedCommand", symbol.Children[1].Name);
         Assert.Equal(SymbolKind.Struct, symbol.Children[1].Kind);
         Assert.Equal(new Range(new(0, 19), new(0, 24)), symbol.Children[1].Range);

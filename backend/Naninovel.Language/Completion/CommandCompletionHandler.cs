@@ -11,10 +11,10 @@ internal class CommandCompletionHandler
     private readonly CompletionProvider provider;
 
     private int cursor => position.Character;
-    private char charBehindCursor => position.GetCharBehindCursor(lineText);
+    private char charBehindCursor => line.GetCharBehindCursor(position);
     private Parsing.Command command = null!;
     private Position position = null!;
-    private string lineText = string.Empty;
+    private DocumentLine line = null!;
     private string scriptName = string.Empty;
 
     public CommandCompletionHandler (MetadataProvider meta, CompletionProvider provider)
@@ -23,9 +23,9 @@ internal class CommandCompletionHandler
         this.provider = provider;
     }
 
-    public CompletionItem[] Handle (Parsing.Command command, Position position, string lineText, string scriptName)
+    public CompletionItem[] Handle (Parsing.Command command, Position position, DocumentLine line, string scriptName)
     {
-        ResetState(command, position, lineText, scriptName);
+        ResetState(command, position, line, scriptName);
         if (ShouldCompleteCommandId())
             return provider.GetCommands();
         if (meta.FindCommand(command.Identifier) is not { } commandMeta)
@@ -37,15 +37,15 @@ internal class CommandCompletionHandler
         return provider.GetParameters(commandMeta.Id);
     }
 
-    private void ResetState (Parsing.Command command, Position position, string lineText, string scriptName)
+    private void ResetState (Parsing.Command command, Position position, DocumentLine line, string scriptName)
     {
+        this.line = line;
         this.command = command;
         this.position = position;
-        this.lineText = lineText;
         this.scriptName = scriptName;
     }
 
-    private bool IsCursorOver (LineContent content) => position.IsCursorOver(content);
+    private bool IsCursorOver (ILineComponent content) => line.IsCursorOver(content, position);
 
     private bool ShouldCompleteCommandId ()
     {
@@ -58,7 +58,8 @@ internal class CommandCompletionHandler
     {
         return command.Parameters.Any(p => p.Nameless && IsCursorOver(p)) ||
                commandMeta.Parameters.Any(p => p.Nameless) &&
-               cursor == command.Identifier.EndIndex + 2;
+               line.Mapper.TryResolve(command.Identifier, out var idRange) &&
+               cursor == idRange.EndIndex + 2;
     }
 
     private bool ShouldCompleteNamedValue ()
@@ -95,16 +96,16 @@ internal class CommandCompletionHandler
 
     private bool ShouldCompleteExpressions ()
     {
-        return command.Parameters.Any(p => p.Value.Expressions.Any(IsCursorOver)) &&
+        return command.Parameters.Any(p => p.Value.OfType<Expression>().Any(IsCursorOver)) &&
                charBehindCursor != Identifiers.ExpressionClose[0];
     }
 
     private ValueContext? FindValueContext (Metadata.Command commandMeta, Metadata.Parameter paramMeta)
     {
         var value = command.Parameters.FirstOrDefault(IsCursorOver)?.Value;
-        if (paramMeta.ValueContainerType != ValueContainerType.Named || string.IsNullOrEmpty(value))
+        if (value is null || paramMeta.ValueContainerType != ValueContainerType.Named)
             return paramMeta.ValueContext;
-        var lastDotIndex = value.StartIndex + value.Text.LastIndexOf('.');
+        var lastDotIndex = line.GetLineRange(value).StartIndex + line.Extract(value).LastIndexOf('.');
         if (lastDotIndex < 0 || cursor <= lastDotIndex) return paramMeta.ValueContext;
         return paramMeta.NamedValueContext;
     }
@@ -127,18 +128,21 @@ internal class CommandCompletionHandler
         foreach (var param in command.Parameters)
             if (meta.FindParameter(commandMeta.Id, param.Identifier) is not { } paramMeta) continue;
             else if (paramMeta.ValueContext?.Type == ValueContextType.Actor)
-                return paramMeta.ValueContainerType == ValueContainerType.Named ? GetNamedValue(param.Value, true) : param.Value;
+                return paramMeta.ValueContainerType == ValueContainerType.Named
+                    ? GetNamedValue(param.Value, true)
+                    : line.Extract(param.Value);
             else if (paramMeta.NamedValueContext?.Type == ValueContextType.Actor)
                 return GetNamedValue(param.Value, false);
         return null;
     }
 
-    private static string? GetNamedValue (string value, bool name)
+    private string? GetNamedValue (MixedValue value, bool name)
     {
-        var dotIndex = value.LastIndexOf('.');
-        if (dotIndex < 0 && name) return value;
+        var valueText = line.Extract(value);
+        var dotIndex = valueText.LastIndexOf('.');
+        if (dotIndex < 0 && name) return valueText;
         if (dotIndex < 0 && !name) return null;
-        var result = name ? value[..dotIndex] : value[(dotIndex + 1)..];
+        var result = name ? valueText[..dotIndex] : valueText[(dotIndex + 1)..];
         return string.IsNullOrEmpty(result) ? null : result;
     }
 
@@ -151,7 +155,7 @@ internal class CommandCompletionHandler
         {
             foreach (var param in command.Parameters)
                 if (meta.FindParameter(commandMeta.Id, param.Identifier) is { } paramMeta && paramMeta.Id == id)
-                    return index.HasValue ? GetNamedValue(param.Value, index == 0) : param.Value;
+                    return index.HasValue ? GetNamedValue(param.Value, index == 0) : line.Extract(param.Value);
             return null;
         }
     }

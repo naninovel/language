@@ -129,8 +129,8 @@ public class TokenTest
         var tokens = GetTokens("author: hello");
         Assert.Equal(3, tokens.Length);
         Assert.Equal(new(0, 0, 6, TokenType.GenericTextAuthor), tokens[0]);
-        Assert.Equal(new(0, 6, 1, TokenType.GenericTextPrefix), tokens[1]);
-        Assert.Equal(new(0, 1, 6, TokenType.GenericTextLine), tokens[2]);
+        Assert.Equal(new(0, 6, 2, TokenType.GenericTextPrefix), tokens[1]);
+        Assert.Equal(new(0, 2, 5, TokenType.GenericTextLine), tokens[2]);
     }
 
     [Fact]
@@ -141,8 +141,8 @@ public class TokenTest
         Assert.Equal(new(0, 0, 6, TokenType.GenericTextAuthor), tokens[0]);
         Assert.Equal(new(0, 6, 1, TokenType.GenericTextPrefix), tokens[1]);
         Assert.Equal(new(0, 1, 10, TokenType.GenericTextAuthorAppearance), tokens[2]);
-        Assert.Equal(new(0, 10, 1, TokenType.GenericTextPrefix), tokens[3]);
-        Assert.Equal(new(0, 1, 6, TokenType.GenericTextLine), tokens[4]);
+        Assert.Equal(new(0, 10, 2, TokenType.GenericTextPrefix), tokens[3]);
+        Assert.Equal(new(0, 2, 5, TokenType.GenericTextLine), tokens[4]);
     }
 
     [Fact]
