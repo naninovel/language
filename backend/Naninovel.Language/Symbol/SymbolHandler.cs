@@ -187,7 +187,7 @@ public class SymbolHandler
         return symbols.ToArray();
     }
 
-    private Symbol CreateForParameterIdentifier (PlainText identifier) => new() {
+    private Symbol CreateForParameterIdentifier (PlainText? identifier) => new() {
         Name = "ParameterIdentifier",
         Kind = SymbolKind.Key,
         Range = line.GetRange(identifier, lineIndex),

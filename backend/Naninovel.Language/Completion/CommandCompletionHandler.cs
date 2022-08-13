@@ -115,8 +115,8 @@ internal class CommandCompletionHandler
         return context.Type switch {
             ValueContextType.Expression => provider.GetExpressions(),
             ValueContextType.Constant => GetConstantValues(context, commandMeta),
-            ValueContextType.Resource => provider.GetResources(context.SubType),
-            ValueContextType.Actor => provider.GetActors(context.SubType),
+            ValueContextType.Resource => provider.GetResources(context.SubType ?? ""),
+            ValueContextType.Actor => provider.GetActors(context.SubType ?? ""),
             ValueContextType.Appearance when FindActorId(commandMeta) is { } id => provider.GetAppearances(id),
             ValueContextType.Appearance when !string.IsNullOrEmpty(context.SubType) => provider.GetAppearances(context.SubType),
             _ => Array.Empty<CompletionItem>()
@@ -148,7 +148,7 @@ internal class CommandCompletionHandler
 
     private CompletionItem[] GetConstantValues (ValueContext context, Metadata.Command commandMeta)
     {
-        var name = ConstantEvaluator.EvaluateName(context.SubType, scriptName, GetParamValue);
+        var name = ConstantEvaluator.EvaluateName(context.SubType ?? "", scriptName, GetParamValue);
         return provider.GetConstants(name);
 
         string? GetParamValue (string id, int? index)

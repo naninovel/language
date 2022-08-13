@@ -66,7 +66,7 @@ public class HoverHandler
             builder.Append($"## Summary\n{commandMeta.Summary}\n");
         if (!string.IsNullOrEmpty(commandMeta.Remarks))
             builder.Append($"## Remarks\n{commandMeta.Remarks}\n");
-        if (commandMeta.Parameters?.Length > 0)
+        if (commandMeta.Parameters.Length > 0)
             AppendParameters(commandMeta.Parameters);
         if (!string.IsNullOrEmpty(commandMeta.Examples))
             builder.Append($"## Examples\n```nani\n{commandMeta.Examples}\n```");
