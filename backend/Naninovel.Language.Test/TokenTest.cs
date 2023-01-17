@@ -207,9 +207,9 @@ public class TokenTest
     {
         // Data format as per the LSP protocol:
         //
-        //    1st token,  2nd token,  ...  
+        //    1st token,  2nd token,  ...
         // [  0,1,2,3,4,  0,1,2,3,4,  ...  ]
-        // 
+        //
         // 0. Line index delta over previous token's line index (actual index for the first line in document)
         // 1. Start char index delta over previous start char (actual index for the first char in line)
         // 2. Token length
