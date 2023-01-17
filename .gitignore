@@ -1,5 +1,6 @@
 .vs
 .idea
+.nupkg
 
 [Bb]in
 [Oo]bj
@@ -7,7 +8,6 @@
 
 *.suo
 *.user
-*.nupkg
 
 node_modules
 dist
