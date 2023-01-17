@@ -17,7 +17,7 @@ jobs:
           dotnet-version: 6.0.x
       - name: cover
         run: |
-          dotnet nuget add source https://nuget.pkg.github.com/Naninovel/index.json -n github --username ${{ github.repository_owner }} --password ${{ github.token }}
+          dotnet nuget add source https://nuget.pkg.github.com/Naninovel/index.json -n github --username ${{ github.repository_owner }} --password ${{ github.token }} --store-password-in-clear-text
           dotnet test backend/Naninovel.Language.sln /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
       - name: upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
