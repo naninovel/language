@@ -204,7 +204,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverUnknownContextTypeResultIsEmpty ()
     {
-        var param = new Parameter { Id = "x", ValueContext = new() { Type = (ValueContextType)255 } };
+        var param = new Parameter { Id = "x", ValueContext = new ValueContext[] { new() { Type = (ValueContextType)255 } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         Assert.Empty(Complete("@cmd x:", 7));
     }
@@ -212,7 +212,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverActorContextActorIdsAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueContext = new() { Type = ValueContextType.Actor, SubType = "foo" } };
+        var param = new Parameter { Id = "id", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Actor, SubType = "foo" } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Actors = new[] { new Actor { Id = "1", Type = "foo" } };
         Assert.Equal("1", Complete("@cmd id:x", 9)[0].Label);
@@ -221,7 +221,7 @@ public class CompletionTest
     [Fact]
     public void WhenWildcardSpecifiedForActorTypeAllActorsAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueContext = new() { Type = ValueContextType.Actor, SubType = "*" } };
+        var param = new Parameter { Id = "id", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Actor, SubType = "*" } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Actors = new[] {
             new Actor { Id = "1", Type = "foo" },
@@ -234,8 +234,8 @@ public class CompletionTest
     [Fact]
     public void WhenOverAppearanceContextActorAppearancesAreReturned ()
     {
-        var idParam = new Parameter { Id = "id", ValueContext = new() { Type = ValueContextType.Actor, SubType = "@" } };
-        var apParam = new Parameter { Id = "ap", ValueContext = new() { Type = ValueContextType.Appearance } };
+        var idParam = new Parameter { Id = "id", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Actor, SubType = "@" } } };
+        var apParam = new Parameter { Id = "ap", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Appearance } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { idParam, apParam } } };
         meta.Actors = new[] { new Actor { Id = "Ai", Type = "@", Appearances = new[] { "Normal" } } };
         Assert.Equal("Normal", Complete("@cmd id:Ai ap:", 14)[0].Label);
@@ -244,7 +244,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverAppearanceContextButParameterWithActorContextIsNotFoundResultIsEmpty ()
     {
-        var apParam = new Parameter { Id = "ap", ValueContext = new() { Type = ValueContextType.Appearance } };
+        var apParam = new Parameter { Id = "ap", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Appearance } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { apParam } } };
         Assert.Empty(Complete("@cmd id:Ai ap:", 14));
     }
@@ -255,8 +255,10 @@ public class CompletionTest
         var param = new Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
-            ValueContext = new() { Type = ValueContextType.Actor, SubType = "@" },
-            NamedValueContext = new() { Type = ValueContextType.Appearance }
+            ValueContext = new ValueContext[] {
+                new() { Type = ValueContextType.Actor, SubType = "@" },
+                new() { Type = ValueContextType.Appearance }
+            }
         };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Actors = new[] { new Actor { Id = "Ai", Type = "@", Appearances = new[] { "Normal" } } };
@@ -269,8 +271,10 @@ public class CompletionTest
         var param = new Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
-            ValueContext = new() { Type = ValueContextType.Appearance },
-            NamedValueContext = new() { Type = ValueContextType.Actor, SubType = "@" }
+            ValueContext = new ValueContext[] {
+                new() { Type = ValueContextType.Appearance },
+                new() { Type = ValueContextType.Actor, SubType = "@" }
+            }
         };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Actors = new[] { new Actor { Id = "Ai", Type = "@", Appearances = new[] { "Normal" } } };
@@ -280,11 +284,11 @@ public class CompletionTest
     [Fact]
     public void WhenOverAppearanceContextAndActorIsSpecifiedInNamedParameterAppearancesAreReturned ()
     {
-        var apParam = new Parameter { Id = "ap", ValueContext = new() { Type = ValueContextType.Appearance } };
+        var apParam = new Parameter { Id = "ap", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Appearance } } };
         var idParam = new Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
-            ValueContext = new() { Type = ValueContextType.Actor, SubType = "@" }
+            ValueContext = new ValueContext[] { new() { Type = ValueContextType.Actor, SubType = "@" } }
         };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { apParam, idParam } } };
         meta.Actors = new[] { new Actor { Id = "Ai", Type = "@", Appearances = new[] { "Normal" } } };
@@ -294,11 +298,11 @@ public class CompletionTest
     [Fact]
     public void WhenOverAppearanceContextButActorIdIsNotSpecifiedResultIsEmpty ()
     {
-        var apParam = new Parameter { Id = "ap", ValueContext = new() { Type = ValueContextType.Appearance } };
+        var apParam = new Parameter { Id = "ap", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Appearance } } };
         var idParam = new Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
-            NamedValueContext = new() { Type = ValueContextType.Actor, SubType = "@" }
+            ValueContext = new ValueContext[] { null, new() { Type = ValueContextType.Actor, SubType = "@" } }
         };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { apParam, idParam } } };
         meta.Actors = new[] { new Actor { Id = "Ai", Type = "@", Appearances = new[] { "Normal" } } };
@@ -311,7 +315,7 @@ public class CompletionTest
         var param = new Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
-            ValueContext = new() { Type = ValueContextType.Appearance, SubType = "MainBackground" }
+            ValueContext = new ValueContext[] { new() { Type = ValueContextType.Appearance, SubType = "MainBackground" } }
         };
         meta.Commands = new[] { new Command { Id = "back", Parameters = new[] { param } } };
         meta.Actors = new[] {
@@ -335,7 +339,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverExpressionContextVariablesAndFunctionsAreReturned ()
     {
-        var param = new Parameter { Id = "ex", ValueContext = new() { Type = ValueContextType.Expression } };
+        var param = new Parameter { Id = "ex", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Expression } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Variables = new[] { "foo" };
         meta.Functions = new[] { "bar" };
@@ -348,7 +352,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverConstantContextConstantValuesAreReturned ()
     {
-        var param = new Parameter { Id = "ct", ValueContext = new() { Type = ValueContextType.Constant, SubType = "foo" } };
+        var param = new Parameter { Id = "ct", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Constant, SubType = "foo" } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Constants = new[] { new Constant { Name = "foo", Values = new[] { "bar" } } };
         Assert.Equal("bar", Complete("@cmd ct:", 8)[0].Label);
@@ -361,7 +365,7 @@ public class CompletionTest
             Id = "Path",
             Nameless = true,
             ValueContainerType = ValueContainerType.Named,
-            NamedValueContext = new() { Type = ValueContextType.Constant, SubType = "Labels/{:Path[0]??$Script}" }
+            ValueContext = new ValueContext[] { null, new() { Type = ValueContextType.Constant, SubType = "Labels/{:Path[0]??$Script}" } }
         };
         meta.Commands = new[] { new Command { Id = "Goto", Parameters = new[] { param } } };
         meta.Constants = new[] {
@@ -375,7 +379,7 @@ public class CompletionTest
     [Fact]
     public void WhenUnknownParameterInConstantExpressionResultIsEmpty ()
     {
-        var param = new Parameter { Id = "foo", ValueContext = new() { Type = ValueContextType.Constant, SubType = "{:bar}" } };
+        var param = new Parameter { Id = "foo", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Constant, SubType = "{:bar}" } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         Assert.Empty(Complete("@cmd foo:", 9));
     }
@@ -383,7 +387,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverResourceContextResourcePathsAreReturned ()
     {
-        var param = new Parameter { Id = "re", ValueContext = new() { Type = ValueContextType.Resource, SubType = "foo" } };
+        var param = new Parameter { Id = "re", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Resource, SubType = "foo" } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Resources = new[] { new Resource { Type = "foo", Path = "nyan/pass" } };
         Assert.Equal("nyan/pass", Complete("@cmd re:", 8)[0].Label);

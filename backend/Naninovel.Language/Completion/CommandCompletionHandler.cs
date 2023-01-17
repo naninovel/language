@@ -104,10 +104,10 @@ internal class CommandCompletionHandler
     {
         var value = command.Parameters.FirstOrDefault(IsCursorOver)?.Value;
         if (value is null || paramMeta.ValueContainerType != ValueContainerType.Named)
-            return paramMeta.ValueContext;
+            return paramMeta.ValueContext?.ElementAtOrDefault(0);
         var lastDotIndex = line.GetLineRange(value).StartIndex + line.Extract(value).LastIndexOf('.');
-        if (lastDotIndex < 0 || cursor <= lastDotIndex) return paramMeta.ValueContext;
-        return paramMeta.NamedValueContext;
+        if (lastDotIndex < 0 || cursor <= lastDotIndex) return paramMeta.ValueContext?.ElementAtOrDefault(0);
+        return paramMeta.ValueContext?.ElementAtOrDefault(1);
     }
 
     public CompletionItem[] GetContextValues (ValueContext context, Metadata.Command commandMeta)
@@ -127,11 +127,11 @@ internal class CommandCompletionHandler
     {
         foreach (var param in command.Parameters)
             if (meta.FindParameter(commandMeta.Id, param.Identifier) is not { } paramMeta) continue;
-            else if (paramMeta.ValueContext?.Type == ValueContextType.Actor)
+            else if (paramMeta.ValueContext?.ElementAtOrDefault(0)?.Type == ValueContextType.Actor)
                 return paramMeta.ValueContainerType == ValueContainerType.Named
                     ? GetNamedValue(param.Value, true)
                     : line.Extract(param.Value);
-            else if (paramMeta.NamedValueContext?.Type == ValueContextType.Actor)
+            else if (paramMeta.ValueContext?.ElementAtOrDefault(1)?.Type == ValueContextType.Actor)
                 return GetNamedValue(param.Value, false);
         return null;
     }
