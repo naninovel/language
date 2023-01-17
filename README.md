@@ -1,3 +1,4 @@
+[![npm](https://img.shields.io/npm/v/@naninovel/language)](https://www.npmjs.com/package/@naninovel/language)
 [![CodeFactor](https://www.codefactor.io/repository/github/naninovel/language/badge/main)](https://www.codefactor.io/repository/github/naninovel/language/overview/main)
 [![codecov](https://codecov.io/gh/naninovel/language/branch/main/graph/badge.svg)](https://codecov.io/gh/naninovel/language)
 [![CodeQL](https://github.com/naninovel/language/actions/workflows/codeql.yml/badge.svg)](https://github.com/naninovel/language/actions/workflows/codeql.yml)
