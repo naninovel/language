@@ -1,6 +1,6 @@
 .vs
 .idea
-.nupkg
+.nuget
 
 [Bb]in
 [Oo]bj
