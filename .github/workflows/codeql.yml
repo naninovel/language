@@ -33,8 +33,7 @@ jobs:
           languages: ${{ matrix.language }}
       - name: build
         run: |
-          chmod +x scripts/build-backend.sh
-          ./scripts/build-backend.sh
+          dotnet publish backend/Naninovel.Language.WASM/Naninovel.Language.WASM.csproj
           npm ci
           npm run build
       - name: analyze
