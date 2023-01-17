@@ -33,6 +33,7 @@ jobs:
           languages: ${{ matrix.language }}
       - name: build
         run: |
+          dotnet nuget add source https://nuget.pkg.github.com/Naninovel/index.json -n github
           dotnet publish backend/Naninovel.Language.WASM/Naninovel.Language.WASM.csproj
           npm ci
           npm run build
