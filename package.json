@@ -18,7 +18,7 @@
     },
     "dependencies": {
         "vscode-languageserver": "^8.0.2",
-        "@naninovel/common": "^1.0.12"
+        "@naninovel/common": "^1.0.17"
     },
     "devDependencies": {
         "typescript": "^4.7.4",
