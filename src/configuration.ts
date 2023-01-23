@@ -12,7 +12,7 @@ function createCapabilities(): ServerCapabilities {
     return {
         textDocumentSync: TextDocumentSyncKind.Incremental,
         completionProvider: { triggerCharacters: ["@", ":", "[", " ", ".", ",", "{"] },
-        semanticTokensProvider: { legend: Language.GetTokenLegend(), full: { delta: false }, range: true },
+        semanticTokensProvider: { legend: Language.getTokenLegend(), full: { delta: false }, range: true },
         documentSymbolProvider: {},
         foldingRangeProvider: {},
         hoverProvider: {}

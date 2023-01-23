@@ -19,6 +19,10 @@ jobs:
         run: |
           dotnet nuget add source https://nuget.pkg.github.com/Naninovel/index.json -n github --username ${{ secrets.GH_USER }} --password ${{ secrets.GH_TOKEN }} --store-password-in-clear-text
           dotnet test backend/Naninovel.Language.sln /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+          dotnet publish backend/Naninovel.Language.WASM/Naninovel.Language.WASM.csproj
+          npm ci
+          npm run build
+          npm run cover
       - name: upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:

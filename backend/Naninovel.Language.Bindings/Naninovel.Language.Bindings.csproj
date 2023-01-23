@@ -12,7 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DotNetJS" Version="0.21.1"/>
+        <PackageReference Include="DotNetJS" Version="0.22.0"/>
         <PackageReference Include="Naninovel.Common.Bindings" Version="2023.1.17.2343"/>
     </ItemGroup>
 
