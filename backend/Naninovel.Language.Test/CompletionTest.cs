@@ -365,15 +365,17 @@ public class CompletionTest
             Id = "Path",
             Nameless = true,
             ValueContainerType = ValueContainerType.Named,
-            ValueContext = new ValueContext[] { null, new() { Type = ValueContextType.Constant, SubType = "Labels/{:Path[0]??$Script}" } }
+            ValueContext = new ValueContext[] { null, new() { Type = ValueContextType.Constant, SubType = "Labels/{:Path[0]??$Script}+Test" } }
         };
         meta.Commands = new[] { new Command { Id = "Goto", Parameters = new[] { param } } };
         meta.Constants = new[] {
             new Constant { Name = "Labels/Script001", Values = new[] { "foo" } },
-            new Constant { Name = "Labels/Script002", Values = new[] { "bar" } }
+            new Constant { Name = "Labels/Script002", Values = new[] { "bar" } },
+            new Constant { Name = "Test", Values = new[] { "test" } }
         };
         Assert.Equal("foo", Complete("@goto .", 7, "root/Script001.nani")[0].Label);
         Assert.Equal("bar", Complete("@goto Script002.", 16)[0].Label);
+        Assert.Equal("test", Complete("@goto Script002.", 16)[1].Label);
     }
 
     [Fact]

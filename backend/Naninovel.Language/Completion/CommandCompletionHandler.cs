@@ -148,8 +148,8 @@ internal class CommandCompletionHandler
 
     private CompletionItem[] GetConstantValues (ValueContext context, Metadata.Command commandMeta)
     {
-        var name = ConstantEvaluator.EvaluateName(context.SubType ?? "", scriptName, GetParamValue);
-        return provider.GetConstants(name);
+        var names = ConstantEvaluator.EvaluateNames(context.SubType ?? "", scriptName, GetParamValue);
+        return names.SelectMany(provider.GetConstants).ToArray();
 
         string? GetParamValue (string id, int? index)
         {
