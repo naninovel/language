@@ -34,10 +34,11 @@ public class DocumentTest
     }
 
     [Fact]
-    public void WhenDocumentWithExistingKeyAddedExceptionIsThrown ()
+    public void WhenDocumentWithExistingKeySetItsReplaced ()
     {
-        registry.Add("foo", null);
-        Assert.Throws<ArgumentException>(() => registry.Add("foo", null));
+        registry.Set("foo", new Document { Lines = { Capacity = 0 } });
+        registry.Set("foo", new Document { Lines = { Capacity = 1 } });
+        Assert.Equal(1, registry.Get("foo").Lines.Capacity);
     }
 
     [Fact]

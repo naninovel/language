@@ -27,7 +27,7 @@ public class DocumentHandler
         var document = new Document();
         foreach (var lineText in ScriptParser.SplitText(text))
             document.Lines.Add(CreateLine(lineText));
-        registry.Add(uri, document);
+        registry.Set(uri, document);
         diagnoser.Diagnose(uri, document);
     }
 

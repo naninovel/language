@@ -15,6 +15,7 @@ function createCapabilities(): ServerCapabilities {
         semanticTokensProvider: { legend: Language.getTokenLegend(), full: { delta: false }, range: true },
         documentSymbolProvider: {},
         foldingRangeProvider: {},
-        hoverProvider: {}
+        hoverProvider: {},
+        definitionProvider: {}
     };
 }

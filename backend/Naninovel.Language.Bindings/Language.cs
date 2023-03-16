@@ -17,6 +17,7 @@ public static partial class Language
     private static TokenHandler token = null!;
     private static HoverHandler hover = null!;
     private static FoldingHandler folding = null!;
+    private static DefinitionHandler definition = null!;
 
     [JSInvokable]
     public static void CreateHandlers (Project metadata)
@@ -29,18 +30,20 @@ public static partial class Language
         token = new TokenHandler(registry);
         hover = new HoverHandler(provider, registry);
         folding = new FoldingHandler(registry);
+        definition = new DefinitionHandler(registry, new EndpointResolver(provider));
     }
 
-    [JSInvokable] public static void OpenDocument (string uri, string text) => Try(() => document.Open(uri, text));
-    [JSInvokable] public static void CloseDocument (string uri) => Try(() => document.Close(uri));
-    [JSInvokable] public static void ChangeDocument (string uri, DocumentChange[] changes) => Try(() => document.Change(uri, changes));
-    [JSInvokable] public static CompletionItem[] Complete (string uri, Position pos) => Try(() => completion.Complete(uri, pos));
-    [JSInvokable] public static Symbol[] GetSymbols (string uri) => Try(() => symbol.GetSymbols(uri));
+    [JSInvokable] public static void OpenDocument (string uri, string text) => Try(document.Open, uri, text);
+    [JSInvokable] public static void CloseDocument (string uri) => Try(document.Close, uri);
+    [JSInvokable] public static void ChangeDocument (string uri, DocumentChange[] changes) => Try(document.Change, uri, changes);
+    [JSInvokable] public static CompletionItem[] Complete (string uri, Position pos) => Try(completion.Complete, uri, pos);
+    [JSInvokable] public static Symbol[] GetSymbols (string uri) => Try(symbol.GetSymbols, uri);
     [JSInvokable] public static TokenLegend GetTokenLegend () => Try(token.GetTokenLegend);
-    [JSInvokable] public static Tokens GetAllTokens (string uri) => Try(() => token.GetAllTokens(uri));
-    [JSInvokable] public static Tokens GetTokens (string uri, Range range) => Try(() => token.GetTokens(uri, range));
-    [JSInvokable] public static Hover? Hover (string uri, Position pos) => Try(() => hover.Hover(uri, pos));
-    [JSInvokable] public static FoldingRange[] GetFoldingRanges (string uri) => Try(() => folding.GetFoldingRanges(uri));
+    [JSInvokable] public static Tokens GetAllTokens (string uri) => Try(token.GetAllTokens, uri);
+    [JSInvokable] public static Tokens GetTokens (string uri, Range range) => Try(token.GetTokens, uri, range);
+    [JSInvokable] public static Hover? Hover (string uri, Position pos) => Try(hover.Hover, uri, pos);
+    [JSInvokable] public static FoldingRange[] GetFoldingRanges (string uri) => Try(folding.GetFoldingRanges, uri);
+    [JSInvokable] public static LocationLink[]? GotoDefinition (string uri, Position pos) => Try(definition.GotoDefinition, uri, pos);
 
     [JSFunction] public static partial void PublishDiagnostics (string uri, Diagnostic[] diagnostics);
 }
