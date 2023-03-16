@@ -4,7 +4,6 @@ import { bootLanguageServer, applyCustomMetadata, loadScriptDocument, LanguageMe
 import { createConfiguration } from "../src/configuration";
 import { mergeMetadata, getDefaultMetadata } from "@naninovel/common";
 import * as vscode from "vscode-languageserver/browser";
-import openDocument = Language.openDocument;
 
 class MockMessage implements Message {
     constructor(public jsonrpc: string) {}
