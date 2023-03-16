@@ -25,7 +25,7 @@ public class DefinitionHandler
         ResetState(documentLine, position, documentUri);
         return documentLine.Script switch {
             GenericLine line => FromGenericLine(line),
-            CommandLine line => FromCommandLine(line),
+            CommandLine line => FromCommand(line.Command),
             _ => null
         };
     }
@@ -44,11 +44,6 @@ public class DefinitionHandler
         if (line.Content.OfType<InlinedCommand>().FirstOrDefault(IsCursorOver) is { } inlined)
             return FromCommand(inlined.Command);
         return null;
-    }
-
-    private LocationLink[]? FromCommandLine (CommandLine line)
-    {
-        return IsCursorOver(line.Command) ? FromCommand(line.Command) : null;
     }
 
     private LocationLink[]? FromCommand (Command command)
