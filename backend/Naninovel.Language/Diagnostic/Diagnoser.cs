@@ -149,7 +149,7 @@ public class Diagnoser : IDiagnoser
             Metadata.ValueType.Integer => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _),
             Metadata.ValueType.Decimal => float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out _),
             Metadata.ValueType.Boolean => bool.TryParse(value, out _),
-            Metadata.ValueType.String or _ => true
+            _ => true
         };
     }
 

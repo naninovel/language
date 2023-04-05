@@ -220,7 +220,7 @@ public class SymbolHandler
             ValueType.Integer => SymbolKind.Number,
             ValueType.Decimal => SymbolKind.Number,
             ValueType.Boolean => SymbolKind.Boolean,
-            ValueType.String or _ => SymbolKind.String
+            _ => SymbolKind.String
         };
     }
 }
