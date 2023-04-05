@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 
@@ -98,17 +97,17 @@ public class SymbolHandler
         Children = CreateCommandChildren(command)
     };
 
-    private Symbol[] CreateCommandChildren (Parsing.Command command)
+    private IReadOnlyList<Symbol> CreateCommandChildren (Parsing.Command command)
     {
         commandId = command.Identifier;
         var symbols = new List<Symbol>();
         symbols.Add(CreateForCommandIdentifier(command.Identifier));
         foreach (var parameter in command.Parameters)
             symbols.Add(CreateForCommandParameter(parameter));
-        return symbols.ToArray();
+        return symbols;
     }
 
-    private Symbol[] CreateGenericChildren (GenericLine genericLine)
+    private IReadOnlyList<Symbol> CreateGenericChildren (GenericLine genericLine)
     {
         var symbols = new List<Symbol>();
         if (genericLine.Prefix is not null)
@@ -116,7 +115,7 @@ public class SymbolHandler
         foreach (var content in genericLine.Content)
             if (content is InlinedCommand inlined) symbols.Add(CreateForInlined(inlined));
             else symbols.Add(CreateForGenericText((MixedValue)content));
-        return symbols.ToArray();
+        return symbols;
     }
 
     private Symbol CreateForGenericPrefix (GenericPrefix prefix)
@@ -129,7 +128,7 @@ public class SymbolHandler
             Kind = SymbolKind.Constant,
             Range = line.GetRange(prefix, lineIndex),
             SelectionRange = line.GetRange(prefix, lineIndex),
-            Children = children.ToArray()
+            Children = children
         };
     }
 
@@ -160,7 +159,7 @@ public class SymbolHandler
         Kind = SymbolKind.String,
         Range = line.GetRange(text, lineIndex),
         SelectionRange = line.GetRange(text, lineIndex),
-        Children = text.OfType<Expression>().Select(CreateForExpression).ToArray()
+        Children = CreateForMixed(text)
     };
 
     private Symbol CreateForCommandIdentifier (PlainText identifier) => new() {
@@ -178,13 +177,13 @@ public class SymbolHandler
         Children = CreateParameterChildren(parameter)
     };
 
-    private Symbol[] CreateParameterChildren (Parsing.Parameter parameter)
+    private IReadOnlyList<Symbol> CreateParameterChildren (Parsing.Parameter parameter)
     {
         var symbols = new List<Symbol>();
         if (!parameter.Nameless)
             symbols.Add(CreateForParameterIdentifier(parameter.Identifier));
         symbols.Add(CreateForParameterValue(parameter));
-        return symbols.ToArray();
+        return symbols;
     }
 
     private Symbol CreateForParameterIdentifier (PlainText? identifier) => new() {
@@ -199,14 +198,32 @@ public class SymbolHandler
         Kind = GetParameterValueKind(parameter),
         Range = line.GetRange(parameter.Value, lineIndex),
         SelectionRange = line.GetRange(parameter.Value, lineIndex),
-        Children = parameter.Value.OfType<Expression>().Select(CreateForExpression).ToArray()
+        Children = CreateForMixed(parameter.Value)
     };
+
+    private IReadOnlyList<Symbol> CreateForMixed (MixedValue mixed)
+    {
+        var symbols = new List<Symbol>();
+        foreach (var component in mixed)
+            if (component is Expression expression)
+                symbols.Add(CreateForExpression(expression));
+            else if (component is IdentifiedText id)
+                symbols.Add(CreateForTextIdentifier(id.Id));
+        return symbols;
+    }
 
     private Symbol CreateForExpression (Expression expression) => new() {
         Name = "Expression",
         Kind = SymbolKind.Property,
         Range = line.GetRange(expression, lineIndex),
         SelectionRange = line.GetRange(expression, lineIndex)
+    };
+
+    private Symbol CreateForTextIdentifier (TextIdentifier textIdentifier) => new() {
+        Name = "TextIdentifier",
+        Kind = SymbolKind.String,
+        Range = line.GetRange(textIdentifier, lineIndex),
+        SelectionRange = line.GetRange(textIdentifier, lineIndex)
     };
 
     private SymbolKind GetParameterValueKind (Parsing.Parameter parameter)

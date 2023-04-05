@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Naninovel.Language;
 
@@ -6,6 +7,6 @@ namespace Naninovel.Language;
 
 public record TokenLegend
 {
-    public string[] TokenTypes { get; set; } = Array.Empty<string>();
-    public string[] TokenModifiers { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> TokenTypes { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> TokenModifiers { get; set; } = Array.Empty<string>();
 }
