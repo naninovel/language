@@ -68,6 +68,22 @@ public class HoverTest
     }
 
     [Fact]
+    public void ParameterWithTextIdHoverRangeIsEqualToContentRange ()
+    {
+        var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
+        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        Assert.Equal(new Range(new(0, 3), new(0, 10)), Hover("@c p:v|id|", 5).Range);
+    }
+
+    [Fact]
+    public void TextIdHoverRangeIsEqualToParameterContentRange ()
+    {
+        var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
+        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        Assert.Equal(new Range(new(0, 3), new(0, 10)), Hover("@c p:v|id|", 9).Range);
+    }
+
+    [Fact]
     public void CommandSummaryHasCorrectMarkup ()
     {
         meta.Commands = new[] { new Command { Id = "c", Summary = "foo" } };

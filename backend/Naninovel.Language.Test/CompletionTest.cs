@@ -170,6 +170,14 @@ public class CompletionTest
     }
 
     [Fact]
+    public void WhenOverNamelessParameterWithTextIdValuesAreReturned ()
+    {
+        var param = new Parameter { Id = "foo", Nameless = true, ValueType = ValueType.Boolean };
+        meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
+        Assert.Equal("true", Complete("@cmd x|x|", 6)[0].Label);
+    }
+
+    [Fact]
     public void WhenOverParameterAssignmentValuesAreReturned ()
     {
         var param = new Parameter { Id = "id", ValueType = ValueType.Boolean };

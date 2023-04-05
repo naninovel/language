@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
@@ -108,19 +107,18 @@ public class TokenHandler
     {
         AppendContent(parameter, TokenType.Parameter);
         AppendContent(parameter.Identifier, TokenType.ParameterIdentifier);
-        AppendParameterValue(parameter.Value);
-    }
-
-    private void AppendParameterValue (MixedValue value)
-    {
-        AppendContent(value, TokenType.ParameterValue);
-        foreach (var expression in value.OfType<Expression>())
-            AppendExpression(expression);
+        AppendContent(parameter.Value, TokenType.ParameterValue);
+        AppendMixedValue(parameter.Value);
     }
 
     private void AppendExpression (Expression expression)
     {
         AppendContent(expression, TokenType.Expression);
+    }
+
+    private void AppendTextIdentifier (TextIdentifier textIdentifier)
+    {
+        AppendContent(textIdentifier, TokenType.TextIdentifier);
     }
 
     private void AppendGenericPrefix (GenericPrefix prefix)
@@ -134,7 +132,7 @@ public class TokenHandler
     private void AppendGenericContent (IGenericContent content)
     {
         if (content is InlinedCommand inlined) AppendInlined(inlined);
-        else if (content is MixedValue text) AppendGenericText(text);
+        else if (content is MixedValue text) AppendMixedValue(text);
     }
 
     private void AppendInlined (InlinedCommand inlined)
@@ -143,10 +141,13 @@ public class TokenHandler
         AppendCommand(inlined.Command);
     }
 
-    private void AppendGenericText (MixedValue text)
+    private void AppendMixedValue (MixedValue mixed)
     {
-        foreach (var expression in text.OfType<Expression>())
-            AppendExpression(expression);
+        foreach (var component in mixed)
+            if (component is Expression expression)
+                AppendExpression(expression);
+            else if (component is IdentifiedText id)
+                AppendTextIdentifier(id.Id);
     }
 
     private void AppendContent (ILineComponent? content, TokenType type)
