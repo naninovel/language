@@ -23,8 +23,8 @@ public class DiagnosticTest
             LexingErrors.GetFor(ErrorType.MissingCommandId)), Diagnose("@")[0]);
         Assert.Equal(new(new(new(0, 3), new(0, 4)), DiagnosticSeverity.Error,
             LexingErrors.GetFor(ErrorType.SpaceInLabel)), Diagnose("# l l")[0]);
-        Assert.Equal(new(new(new(0, 0), new(0, 2)), DiagnosticSeverity.Error,
-            LexingErrors.GetFor(ErrorType.MissingTextIdBody)), Diagnose("||")[0]);
+        Assert.Equal(new(new(new(0, 0), new(0, 3)), DiagnosticSeverity.Error,
+            LexingErrors.GetFor(ErrorType.MissingTextIdBody)), Diagnose("|#|")[0]);
     }
 
     [Fact]

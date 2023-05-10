@@ -19,7 +19,7 @@ public class DocumentHandler
     {
         this.registry = registry;
         this.diagnoser = diagnoser;
-        parser = new ScriptParser(errors, mapper);
+        parser = new ScriptParser(new() { ErrorHandler = errors, RangeAssociator = mapper });
     }
 
     public void Open (string uri, string text)

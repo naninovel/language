@@ -71,14 +71,14 @@ public class SymbolTest
     [Fact]
     public void CommandLineSymbolsAraValid ()
     {
-        var symbol = GetSymbol("@cmd nameless param:{exp}x|id|");
+        var symbol = GetSymbol("@cmd nameless param:{exp}x|#id|");
         Assert.Equal("CommandLine", symbol.Name);
         Assert.Equal(SymbolKind.Struct, symbol.Kind);
-        Assert.Equal(new Range(new(0, 0), new(0, 30)), symbol.Range);
+        Assert.Equal(new Range(new(0, 0), new(0, 31)), symbol.Range);
         Assert.Single(symbol.Children);
         Assert.Equal("Command", symbol.Children[0].Name);
         Assert.Equal(SymbolKind.Function, symbol.Children[0].Kind);
-        Assert.Equal(new Range(new(0, 1), new(0, 30)), symbol.Children[0].Range);
+        Assert.Equal(new Range(new(0, 1), new(0, 31)), symbol.Children[0].Range);
         Assert.Equal(3, symbol.Children[0].Children!.Count);
         Assert.Equal("CommandIdentifier", symbol.Children[0].Children[0].Name);
         Assert.Equal(SymbolKind.Key, symbol.Children[0].Children[0].Kind);
@@ -88,7 +88,7 @@ public class SymbolTest
         Assert.Equal(new Range(new(0, 5), new(0, 13)), symbol.Children[0].Children[1].Range);
         Assert.Equal("Parameter", symbol.Children[0].Children[2].Name);
         Assert.Equal(SymbolKind.Field, symbol.Children[0].Children[2].Kind);
-        Assert.Equal(new Range(new(0, 14), new(0, 30)), symbol.Children[0].Children[2].Range);
+        Assert.Equal(new Range(new(0, 14), new(0, 31)), symbol.Children[0].Children[2].Range);
         Assert.Single(symbol.Children[0].Children[1].Children);
         Assert.Equal("ParameterValue", symbol.Children[0].Children[1].Children[0].Name);
         Assert.Equal(SymbolKind.String, symbol.Children[0].Children[1].Children[0].Kind);
@@ -99,23 +99,23 @@ public class SymbolTest
         Assert.Equal(new Range(new(0, 14), new(0, 19)), symbol.Children[0].Children[2].Children[0].Range);
         Assert.Equal("ParameterValue", symbol.Children[0].Children[2].Children[1].Name);
         Assert.Equal(SymbolKind.String, symbol.Children[0].Children[2].Children[1].Kind);
-        Assert.Equal(new Range(new(0, 20), new(0, 30)), symbol.Children[0].Children[2].Children[1].Range);
+        Assert.Equal(new Range(new(0, 20), new(0, 31)), symbol.Children[0].Children[2].Children[1].Range);
         Assert.Equal(2, symbol.Children[0].Children[2].Children[1].Children!.Count);
         Assert.Equal("Expression", symbol.Children[0].Children[2].Children[1].Children[0].Name);
         Assert.Equal(SymbolKind.Property, symbol.Children[0].Children[2].Children[1].Children[0].Kind);
         Assert.Equal(new Range(new(0, 20), new(0, 25)), symbol.Children[0].Children[2].Children[1].Children[0].Range);
         Assert.Equal("TextIdentifier", symbol.Children[0].Children[2].Children[1].Children[1].Name);
         Assert.Equal(SymbolKind.String, symbol.Children[0].Children[2].Children[1].Children[1].Kind);
-        Assert.Equal(new Range(new(0, 26), new(0, 30)), symbol.Children[0].Children[2].Children[1].Children[1].Range);
+        Assert.Equal(new Range(new(0, 26), new(0, 31)), symbol.Children[0].Children[2].Children[1].Children[1].Range);
     }
 
     [Fact]
     public void GenericLineSymbolsAraValid ()
     {
-        var symbol = GetSymbol("author.appearance: [cmd] text {exp} |id|");
+        var symbol = GetSymbol("author.appearance: [cmd] text {exp} |#id|");
         Assert.Equal("GenericTextLine", symbol.Name);
         Assert.Equal(SymbolKind.String, symbol.Kind);
-        Assert.Equal(new Range(new(0, 0), new(0, 40)), symbol.Range);
+        Assert.Equal(new Range(new(0, 0), new(0, 41)), symbol.Range);
         Assert.Equal(3, symbol.Children!.Count);
         Assert.Equal("GenericTextPrefix", symbol.Children[0].Name);
         Assert.Equal(SymbolKind.Constant, symbol.Children[0].Kind);
@@ -125,14 +125,14 @@ public class SymbolTest
         Assert.Equal(new Range(new(0, 19), new(0, 24)), symbol.Children[1].Range);
         Assert.Equal("GenericText", symbol.Children[2].Name);
         Assert.Equal(SymbolKind.String, symbol.Children[2].Kind);
-        Assert.Equal(new Range(new(0, 24), new(0, 40)), symbol.Children[2].Range);
+        Assert.Equal(new Range(new(0, 24), new(0, 41)), symbol.Children[2].Range);
         Assert.Equal(2, symbol.Children[2].Children!.Count);
         Assert.Equal("Expression", symbol.Children[2].Children[0].Name);
         Assert.Equal(SymbolKind.Property, symbol.Children[2].Children[0].Kind);
         Assert.Equal(new Range(new(0, 30), new(0, 35)), symbol.Children[2].Children[0].Range);
         Assert.Equal("TextIdentifier", symbol.Children[2].Children[1].Name);
         Assert.Equal(SymbolKind.String, symbol.Children[2].Children[1].Kind);
-        Assert.Equal(new Range(new(0, 36), new(0, 40)), symbol.Children[2].Children[1].Range);
+        Assert.Equal(new Range(new(0, 36), new(0, 41)), symbol.Children[2].Children[1].Range);
         Assert.Equal(2, symbol.Children[0].Children!.Count);
         Assert.Equal("GenericTextAuthor", symbol.Children[0].Children[0].Name);
         Assert.Equal(SymbolKind.Key, symbol.Children[0].Children[0].Kind);

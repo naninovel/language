@@ -100,11 +100,11 @@ public class TokenTest
     [Fact]
     public void NamelessParameterWithTextIdTokenizedCorrectly ()
     {
-        var tokens = GetTokens("@cmd nameless|id|");
+        var tokens = GetTokens("@cmd nameless|#id|");
         Assert.Equal(5, tokens.Length);
         Assert.Equal(new(0, 3, 1, TokenType.Command), tokens[2]);
         Assert.Equal(new(0, 1, 8, TokenType.ParameterValue), tokens[3]);
-        Assert.Equal(new(0, 8, 4, TokenType.TextIdentifier), tokens[4]);
+        Assert.Equal(new(0, 8, 5, TokenType.TextIdentifier), tokens[4]);
     }
 
     [Fact]
@@ -120,23 +120,23 @@ public class TokenTest
     [Fact]
     public void ParameterWithTextIdTokenizedCorrectly ()
     {
-        var tokens = GetTokens("@cmd p:v|id|");
+        var tokens = GetTokens("@cmd p:v|#id|");
         Assert.Equal(7, tokens.Length);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterIdentifier), tokens[3]);
         Assert.Equal(new(0, 1, 1, TokenType.Parameter), tokens[4]);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterValue), tokens[5]);
-        Assert.Equal(new(0, 1, 4, TokenType.TextIdentifier), tokens[6]);
+        Assert.Equal(new(0, 1, 5, TokenType.TextIdentifier), tokens[6]);
     }
 
     [Fact]
     public void ParameterWithEmptyTextIdTokenizedCorrectly ()
     {
-        var tokens = GetTokens("@cmd p:v||");
+        var tokens = GetTokens("@cmd p:v|#|");
         Assert.Equal(7, tokens.Length);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterIdentifier), tokens[3]);
         Assert.Equal(new(0, 1, 1, TokenType.Parameter), tokens[4]);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterValue), tokens[5]);
-        Assert.Equal(new(0, 1, 2, TokenType.TextIdentifier), tokens[6]);
+        Assert.Equal(new(0, 1, 3, TokenType.TextIdentifier), tokens[6]);
     }
 
     [Fact]
@@ -150,13 +150,13 @@ public class TokenTest
     [Fact]
     public void ExpressionWithTextIdInCommandTokenizedCorrectly ()
     {
-        var tokens = GetTokens("@cmd p:x|x|{exp}x|x|");
+        var tokens = GetTokens("@cmd p:x|#x|{exp}x|#x|");
         Assert.Equal(10, tokens.Length);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterValue), tokens[5]);
-        Assert.Equal(new(0, 1, 3, TokenType.TextIdentifier), tokens[6]);
-        Assert.Equal(new(0, 3, 5, TokenType.Expression), tokens[7]);
+        Assert.Equal(new(0, 1, 4, TokenType.TextIdentifier), tokens[6]);
+        Assert.Equal(new(0, 4, 5, TokenType.Expression), tokens[7]);
         Assert.Equal(new(0, 5, 1, TokenType.ParameterValue), tokens[8]);
-        Assert.Equal(new(0, 1, 3, TokenType.TextIdentifier), tokens[9]);
+        Assert.Equal(new(0, 1, 4, TokenType.TextIdentifier), tokens[9]);
     }
 
     [Fact]
@@ -212,10 +212,10 @@ public class TokenTest
     [Fact]
     public void TextIdInGenericTextTokenizedCorrectly ()
     {
-        var tokens = GetTokens("x|id|");
+        var tokens = GetTokens("x|#id|");
         Assert.Equal(2, tokens.Length);
         Assert.Equal(new(0, 0, 1, TokenType.GenericTextLine), tokens[0]);
-        Assert.Equal(new(0, 1, 4, TokenType.TextIdentifier), tokens[1]);
+        Assert.Equal(new(0, 1, 5, TokenType.TextIdentifier), tokens[1]);
     }
 
     [Fact]
