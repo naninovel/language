@@ -1,25 +1,32 @@
+using System.Collections.Generic;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class DocumentLine
+public readonly record struct DocumentLine
 {
     public string Text { get; }
     public IScriptLine Script { get; }
-    public ParseError[] Errors { get; }
-    public RangeMapper Mapper { get; }
+    public IReadOnlyList<ParseError> Errors { get; }
     public LineRange Range { get; }
+
+    private readonly RangeMapper mapper;
 
     public DocumentLine (string text, IScriptLine script, ParseError[] errors, RangeMapper mapper)
     {
         Text = text;
         Script = script;
         Errors = errors;
-        Mapper = mapper;
+        this.mapper = mapper;
         Range = new LineRange(0, Text.Length);
     }
 
-    public string Extract (LineRange range)
+    public bool TryResolve (ILineComponent component, out LineRange range)
+    {
+        return mapper.TryResolve(component, out range);
+    }
+
+    public string Extract (in LineRange range)
     {
         if (range.StartIndex < 0 || range.Length <= 0 ||
             range.StartIndex + range.Length > Text.Length) return "";
@@ -28,18 +35,18 @@ public class DocumentLine
 
     public string Extract (ILineComponent? content)
     {
-        if (content is null || !Mapper.TryResolve(content, out var range)) return "";
+        if (content is null || !mapper.TryResolve(content, out var range)) return "";
         return Extract(range);
     }
 
-    public bool IsCursorOver (ILineComponent? content, Position cursor)
+    public bool IsCursorOver (ILineComponent? content, in Position cursor)
     {
-        if (content is null || !Mapper.TryResolve(content, out var range)) return false;
+        if (content is null || !mapper.TryResolve(content, out var range)) return false;
         return cursor.Character >= range.StartIndex &&
                cursor.Character <= range.EndIndex + 1;
     }
 
-    public char GetCharBehindCursor (Position cursor)
+    public char GetCharBehindCursor (in Position cursor)
     {
         if (cursor.Character <= 0 || cursor.Character > Text.Length) return default;
         return Text[cursor.Character - 1];
@@ -47,7 +54,7 @@ public class DocumentLine
 
     public LineRange GetLineRange (ILineComponent? content)
     {
-        if (content is null || !Mapper.TryResolve(content, out var range))
+        if (content is null || !mapper.TryResolve(content, out var range))
             return new LineRange(0, 0);
         return range;
     }
@@ -61,7 +68,7 @@ public class DocumentLine
 
     public Range GetRange (ILineComponent? content, int lineIndex)
     {
-        if (content is null || !Mapper.TryResolve(content, out var range))
+        if (content is null || !mapper.TryResolve(content, out var range))
             return Language.Range.Empty;
         var start = new Position(lineIndex, range.StartIndex);
         var end = new Position(lineIndex, range.EndIndex + 1);

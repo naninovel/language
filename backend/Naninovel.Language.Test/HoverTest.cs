@@ -10,29 +10,29 @@ public class HoverTest
     [Fact]
     public void WhenCommandMetadataNotFoundNullIsReturned ()
     {
-        Assert.Null(Hover("@c", 1));
-        Assert.Null(Hover("[c]", 1));
+        Assert.Null(HoverNullable("@c", 1));
+        Assert.Null(HoverNullable("[c]", 1));
     }
 
     [Fact]
     public void WhenParameterMetadataNotFoundNullIsReturned ()
     {
         meta.Commands = new[] { new Command { Id = "c" } };
-        Assert.Null(Hover("@c p", 3));
-        Assert.Null(Hover("[c p]", 3));
+        Assert.Null(HoverNullable("@c p", 3));
+        Assert.Null(HoverNullable("[c p]", 3));
     }
 
     [Fact]
     public void WhenOverNothingHoverableNullIsReturned ()
     {
         meta.Commands = new[] { new Command { Id = "c" } };
-        Assert.Null(Hover("", 0));
-        Assert.Null(Hover("; comment", 5));
-        Assert.Null(Hover("# label", 0));
-        Assert.Null(Hover("generic text", 5));
-        Assert.Null(Hover("@c ", 3));
-        Assert.Null(Hover("[c]", 3));
-        Assert.Null(Hover("{expression}", 5));
+        Assert.Null(HoverNullable("", 0));
+        Assert.Null(HoverNullable("; comment", 5));
+        Assert.Null(HoverNullable("# label", 0));
+        Assert.Null(HoverNullable("generic text", 5));
+        Assert.Null(HoverNullable("@c ", 3));
+        Assert.Null(HoverNullable("[c]", 3));
+        Assert.Null(HoverNullable("{expression}", 5));
     }
 
     [Fact]
@@ -125,6 +125,11 @@ public class HoverTest
     }
 
     private Hover Hover (string lineText, int charOffset)
+    {
+        return HoverNullable(lineText, charOffset) ?? default;
+    }
+
+    private Hover? HoverNullable (string lineText, int charOffset)
     {
         var registry = new DocumentRegistry();
         var handler = new HoverHandler(new MetadataProvider(meta), registry);

@@ -10,8 +10,8 @@ public class TokenHandler
     private readonly DocumentRegistry registry;
     private readonly TokenBuilder builder = new();
 
-    private DocumentLine line = null!;
-    private Range range = null!;
+    private DocumentLine line;
+    private Range range;
     private int lineIndex;
 
     public TokenHandler (DocumentRegistry registry)
@@ -36,7 +36,7 @@ public class TokenHandler
         return CreateTokens(document, range);
     }
 
-    private Tokens CreateTokens (Document document, Range range)
+    private Tokens CreateTokens (Document document, in Range range)
     {
         ResetState(range);
         for (int i = lineIndex; i <= range.End.Line; i++)
@@ -51,14 +51,14 @@ public class TokenHandler
         return new Range(new(0, 0), new(endLine, endChar));
     }
 
-    private void ResetState (Range range)
+    private void ResetState (in Range range)
     {
         builder.Clear();
         this.range = range;
         lineIndex = range.Start.Line;
     }
 
-    private void AppendLine (DocumentLine line)
+    private void AppendLine (in DocumentLine line)
     {
         this.line = line;
         if (line.Script is CommentLine comment) AppendCommentLine(comment);
@@ -152,18 +152,18 @@ public class TokenHandler
 
     private void AppendContent (ILineComponent? content, TokenType type)
     {
-        if (content is null || !line.Mapper.TryResolve(content, out var lineRange)) return;
+        if (content is null || !line.TryResolve(content, out var lineRange)) return;
         if (lineRange.Length <= 0 || !IsInRange(lineRange)) return;
         builder.Append(lineIndex, lineRange.StartIndex, lineRange.Length, type);
     }
 
-    private void AppendContent (LineRange lineRange, TokenType type)
+    private void AppendContent (in LineRange lineRange, TokenType type)
     {
         if (lineRange.Length <= 0 || !IsInRange(lineRange)) return;
         builder.Append(lineIndex, lineRange.StartIndex, lineRange.Length, type);
     }
 
-    private bool IsInRange (LineRange lineRange)
+    private bool IsInRange (in LineRange lineRange)
     {
         if (lineIndex == range.Start.Line)
             return lineRange.StartIndex >= range.Start.Character;

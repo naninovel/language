@@ -16,8 +16,8 @@ public class CompletionHandler
     private readonly CommandCompletionHandler commandHandler;
 
     private char charBehindCursor => line.GetCharBehindCursor(position);
-    private Position position = null!;
-    private DocumentLine line = null!;
+    private Position position;
+    private DocumentLine line;
     private string scriptName = string.Empty;
 
     public CompletionHandler (MetadataProvider meta, DocumentRegistry registry)
@@ -39,7 +39,7 @@ public class CompletionHandler
         };
     }
 
-    private void ResetState (DocumentLine line, Position position, string scriptName)
+    private void ResetState (in DocumentLine line, in Position position, string scriptName)
     {
         this.line = line;
         this.position = position;

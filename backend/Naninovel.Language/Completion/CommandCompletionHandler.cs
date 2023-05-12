@@ -13,8 +13,8 @@ internal class CommandCompletionHandler
     private int cursor => position.Character;
     private char charBehindCursor => line.GetCharBehindCursor(position);
     private Parsing.Command command = null!;
-    private Position position = null!;
-    private DocumentLine line = null!;
+    private Position position;
+    private DocumentLine line;
     private string scriptName = string.Empty;
 
     public CommandCompletionHandler (MetadataProvider meta, CompletionProvider provider)
@@ -23,7 +23,7 @@ internal class CommandCompletionHandler
         this.provider = provider;
     }
 
-    public CompletionItem[] Handle (Parsing.Command command, Position position, DocumentLine line, string scriptName)
+    public CompletionItem[] Handle (Parsing.Command command, in Position position, in DocumentLine line, string scriptName)
     {
         ResetState(command, position, line, scriptName);
         if (ShouldCompleteCommandId())
@@ -37,7 +37,7 @@ internal class CommandCompletionHandler
         return provider.GetParameters(commandMeta.Id);
     }
 
-    private void ResetState (Parsing.Command command, Position position, DocumentLine line, string scriptName)
+    private void ResetState (Parsing.Command command, in Position position, in DocumentLine line, string scriptName)
     {
         this.line = line;
         this.command = command;
@@ -58,7 +58,7 @@ internal class CommandCompletionHandler
     {
         return command.Parameters.Any(p => p.Nameless && IsCursorOver(p)) ||
                commandMeta.Parameters.Any(p => p.Nameless) &&
-               line.Mapper.TryResolve(command.Identifier, out var idRange) &&
+               line.TryResolve(command.Identifier, out var idRange) &&
                cursor == idRange.EndIndex + 2;
     }
 

@@ -12,8 +12,8 @@ public class HoverHandler
     private readonly DocumentRegistry registry;
     private readonly StringBuilder builder = new();
 
-    private Position position = null!;
-    private DocumentLine line = null!;
+    private Position position;
+    private DocumentLine line;
 
     public HoverHandler (MetadataProvider meta, DocumentRegistry registry)
     {
@@ -32,7 +32,7 @@ public class HoverHandler
         };
     }
 
-    private void ResetState (Position position)
+    private void ResetState (in Position position)
     {
         this.position = position;
         builder.Clear();

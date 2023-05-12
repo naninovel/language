@@ -9,8 +9,8 @@ public class DefinitionHandler
 {
     private readonly DocumentRegistry registry;
     private readonly IEndpointResolver resolver;
-    private Position position = null!;
-    private DocumentLine line = null!;
+    private Position position;
+    private DocumentLine line;
     private string documentUri = null!;
 
     public DefinitionHandler (DocumentRegistry registry, IEndpointResolver resolver)
@@ -30,7 +30,7 @@ public class DefinitionHandler
         };
     }
 
-    private void ResetState (DocumentLine line, Position position, string documentUri)
+    private void ResetState (in DocumentLine line, in Position position, string documentUri)
     {
         this.line = line;
         this.position = position;

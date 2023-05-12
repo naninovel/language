@@ -69,7 +69,7 @@ public class DocumentHandler
         return lineMapper;
     }
 
-    private void ApplyChange (Document document, DocumentChange change)
+    private void ApplyChange (Document document, in DocumentChange change)
     {
         var startLineIdx = change.Range.Start.Line;
         var endLineIdx = change.Range.End.Line;
@@ -81,7 +81,7 @@ public class DocumentHandler
             document.Lines.Insert(startLineIdx + i, CreateLine(changedLines[i]));
     }
 
-    private string[] GetChangedLines (string startLineText, string endLineText, DocumentChange change)
+    private string[] GetChangedLines (string startLineText, string endLineText, in DocumentChange change)
     {
         builder.Clear();
         builder.Append(startLineText.AsSpan(0, change.Range.Start.Character));

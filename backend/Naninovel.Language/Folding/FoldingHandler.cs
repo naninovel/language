@@ -43,14 +43,14 @@ public class FoldingHandler
 
     private void FoldLine (IScriptLine line)
     {
-        if (range is null) range = new(lineIndex, lineIndex);
-        else if (lineIndex > range.EndLine + 1) AddRange();
-        else range.EndLine = lineIndex;
+        if (!range.HasValue) range = new(lineIndex, lineIndex);
+        else if (lineIndex > range.Value.EndLine + 1) AddRange();
+        else range = new FoldingRange(range.Value.StartLine, lineIndex);
     }
 
     private void AddRange ()
     {
-        ranges.Add(range!);
+        ranges.Add(range!.Value);
         range = new(lineIndex, lineIndex);
     }
 }

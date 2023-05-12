@@ -13,7 +13,7 @@ public class SymbolHandler
     private readonly List<Symbol> symbols = new();
 
     private int lineIndex;
-    private DocumentLine line = null!;
+    private DocumentLine line;
     private string commandId = "";
 
     public SymbolHandler (MetadataProvider meta, DocumentRegistry registry)
@@ -31,7 +31,7 @@ public class SymbolHandler
         return symbols.ToArray();
     }
 
-    private Symbol CreateForLine (DocumentLine documentLine, int lineIndex)
+    private Symbol CreateForLine (in DocumentLine documentLine, int lineIndex)
     {
         this.lineIndex = lineIndex;
         line = documentLine;

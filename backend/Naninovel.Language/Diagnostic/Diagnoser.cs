@@ -16,7 +16,7 @@ public class Diagnoser : IDiagnoser
     private readonly List<Diagnostic> diagnostics = new();
 
     private int lineIndex;
-    private DocumentLine line = null!;
+    private DocumentLine line;
 
     public Diagnoser (MetadataProvider meta, PublishDiagnostics publish)
     {
@@ -45,7 +45,7 @@ public class Diagnoser : IDiagnoser
         else publish(documentUri, diagnostics.ToArray());
     }
 
-    private void DiagnoseLine (DocumentLine line)
+    private void DiagnoseLine (in DocumentLine line)
     {
         this.line = line;
         foreach (var error in line.Errors)
