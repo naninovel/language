@@ -127,11 +127,91 @@ public class DiagnosticTest
         Assert.Empty(Diagnose("@c foo"));
     }
 
-    private Diagnostic[] Diagnose (string lineText)
+    [Fact]
+    public void WhenUnusedLabelWarningIsDiagnosed ()
+    {
+        var diags = Diagnose("# label");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 0), new(0, 7)), DiagnosticSeverity.Warning,
+            "Unused label."), diags[0]);
+    }
+
+    [Fact]
+    public void WhenLabelIsUsedWarningIsNotDiagnosed ()
+    {
+        SetupCommandWithEndpointNamelessParameter("goto");
+        Assert.Empty(Diagnose("# label\n@goto .label"));
+    }
+
+    [Fact]
+    public void WhenUnknownEndpointScriptWarningIsDiagnosed ()
+    {
+        SetupCommandWithEndpointNamelessParameter("goto");
+        var diags = Diagnose("@goto other");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 6), new(0, 9)), DiagnosticSeverity.Warning,
+            "Unknown script 'other'."), diags[0]);
+    }
+
+    [Fact]
+    public void WhenUnknownEndpointLabelInCurrentScriptWarningIsDiagnosed ()
+    {
+        SetupCommandWithEndpointNamelessParameter("goto");
+        var diags = Diagnose("@goto .label");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 7), new(0, 12)), DiagnosticSeverity.Warning,
+            "Unknown label 'label' in current script."), diags[0]);
+    }
+
+    [Fact]
+    public void WhenUnknownEndpointLabelInOtherScriptWarningIsDiagnosed ()
+    {
+        SetupCommandWithEndpointNamelessParameter("goto");
+        var diags = Diagnose(("", "@goto other.label"), ("other", ""));
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 12), new(0, 17)), DiagnosticSeverity.Warning,
+            "Unknown label 'label' in script 'other'."), diags[0]);
+    }
+
+    [Fact]
+    public void WhenKnownEndpointWarningIsNotDiagnosed ()
+    {
+        SetupCommandWithEndpointNamelessParameter("goto");
+        Assert.Empty(Diagnose(("", "@goto other"), ("other", "")));
+        Assert.Empty(Diagnose(("", "@goto other.label"), ("other", "# label")));
+        Assert.Empty(Diagnose(("", "@goto .label\n# label")));
+        Assert.Empty(Diagnose(("this", "@goto this.label\n# label")));
+    }
+
+    private void SetupCommandWithEndpointNamelessParameter (string commandId)
+    {
+        var parameters = new[] {
+            new Parameter {
+                Id = "",
+                Nameless = true,
+                ValueType = ValueType.String,
+                ValueContainerType = ValueContainerType.Named,
+                ValueContext = new[] {
+                    new ValueContext(),
+                    new ValueContext { Type = ValueContextType.Constant, SubType = Constants.LabelExpression }
+                }
+            }
+        };
+        meta.Commands = new[] { new Command { Id = commandId, Parameters = parameters } };
+    }
+
+    private Diagnostic[] Diagnose (string scriptText)
+    {
+        return Diagnose(("@", scriptText));
+    }
+
+    private Diagnostic[] Diagnose (params (string name, string text)[] scripts)
     {
         var result = default(Diagnostic[]);
         var diagnoser = new Diagnoser(new(meta), Publish);
-        new DocumentHandler(new(), diagnoser).Open("@", lineText);
+        var handler = new DocumentHandler(new(), diagnoser);
+        foreach (var (name, text) in scripts)
+            handler.Open(name, text);
         return result;
 
         void Publish (string _, Diagnostic[] diags) => result = diags;
