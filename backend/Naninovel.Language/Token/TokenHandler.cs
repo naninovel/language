@@ -19,9 +19,10 @@ public class TokenHandler
         this.registry = registry;
     }
 
-    public TokenLegend GetTokenLegend () => new() {
-        TokenTypes = Enum.GetNames<TokenType>()
-    };
+    public TokenLegend GetTokenLegend () => new(
+        TokenTypes: Enum.GetNames<TokenType>(),
+        TokenModifiers: Array.Empty<string>()
+    );
 
     public Tokens GetAllTokens (string documentUri)
     {
