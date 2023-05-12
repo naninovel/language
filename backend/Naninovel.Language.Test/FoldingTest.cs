@@ -43,9 +43,9 @@ public class FoldingTest
 
     private FoldingRange[] GetRanges (string documentText)
     {
-        var registry = new DocumentRegistry();
+        var registry = new DocumentRegistry(new());
         var handler = new FoldingHandler(registry);
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", documentText);
+        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", documentText));
         return handler.GetFoldingRanges("@");
     }
 }

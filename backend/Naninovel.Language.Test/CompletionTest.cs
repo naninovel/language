@@ -455,9 +455,9 @@ public class CompletionTest
     private CompletionItem[] Complete (string lineText, int charOffset, string scriptUri = null)
     {
         scriptUri ??= "@";
-        var registry = new DocumentRegistry();
+        var registry = new DocumentRegistry(new());
         var handler = new CompletionHandler(new MetadataProvider(meta), registry);
-        new DocumentHandler(registry, new MockDiagnoser()).Open(scriptUri, lineText);
+        new DocumentHandler(registry, new MockDiagnoser()).Open(new(scriptUri, lineText));
         return handler.Complete(scriptUri, new Position(0, charOffset));
     }
 }

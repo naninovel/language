@@ -208,10 +208,11 @@ public class DiagnosticTest
     private Diagnostic[] Diagnose (params (string name, string text)[] scripts)
     {
         var result = default(Diagnostic[]);
-        var diagnoser = new Diagnoser(new(meta), Publish);
-        var handler = new DocumentHandler(new(), diagnoser);
+        var docs = new DocumentRegistry(new());
+        var diagnoser = new Diagnoser(new(meta), docs, Publish);
+        var handler = new DocumentHandler(docs, diagnoser);
         foreach (var (name, text) in scripts)
-            handler.Open(name, text);
+            handler.Open(new(name, text));
         return result;
 
         void Publish (string _, Diagnostic[] diags) => result = diags;

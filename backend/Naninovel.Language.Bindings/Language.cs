@@ -9,7 +9,8 @@ namespace Naninovel.Language.Bindings.Language;
 
 public static partial class Language
 {
-    private static readonly DocumentRegistry registry = new();
+    private static readonly EndpointRegistry endpoints = new();
+    private static readonly DocumentRegistry docs = new(endpoints);
     private static Diagnoser diagnoser = null!;
     private static DocumentHandler document = null!;
     private static CompletionHandler completion = null!;
@@ -23,17 +24,18 @@ public static partial class Language
     public static void CreateHandlers (Project metadata)
     {
         var provider = new MetadataProvider(metadata);
-        diagnoser = new Diagnoser(provider, PublishDiagnostics);
-        document = new DocumentHandler(registry, diagnoser);
-        completion = new CompletionHandler(provider, registry);
-        symbol = new SymbolHandler(provider, registry);
-        token = new TokenHandler(registry);
-        hover = new HoverHandler(provider, registry);
-        folding = new FoldingHandler(registry);
-        definition = new DefinitionHandler(registry, new EndpointResolver(provider));
+        diagnoser = new Diagnoser(provider, docs, PublishDiagnostics);
+        document = new DocumentHandler(docs, diagnoser);
+        completion = new CompletionHandler(provider, docs);
+        symbol = new SymbolHandler(provider, docs);
+        token = new TokenHandler(docs);
+        hover = new HoverHandler(provider, docs);
+        folding = new FoldingHandler(docs);
+        definition = new DefinitionHandler(docs, new EndpointResolver(provider));
     }
 
-    [JSInvokable] public static void OpenDocument (string uri, string text) => Try(document.Open, uri, text);
+    [JSInvokable] public static void OpenDocument (DocumentInfo info) => Try(document.Open, info);
+    [JSInvokable] public static void OpenDocuments (DocumentInfo[] infos) => Try(document.OpenBatch, infos);
     [JSInvokable] public static void CloseDocument (string uri) => Try(document.Close, uri);
     [JSInvokable] public static void ChangeDocument (string uri, DocumentChange[] changes) => Try(document.Change, uri, changes);
     [JSInvokable] public static CompletionItem[] Complete (string uri, Position pos) => Try(completion.Complete, uri, pos);

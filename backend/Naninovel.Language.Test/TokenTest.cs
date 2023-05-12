@@ -12,14 +12,14 @@ public class TokenTest
     [Fact]
     public void LegendModifiersAreEmpty ()
     {
-        var legend = new TokenHandler(new()).GetTokenLegend();
+        var legend = new TokenHandler(new(new())).GetTokenLegend();
         Assert.Empty(legend.TokenModifiers);
     }
 
     [Fact]
     public void LegendTypesAreEqualToTokenEnumNames ()
     {
-        var legend = new TokenHandler(new()).GetTokenLegend();
+        var legend = new TokenHandler(new(new())).GetTokenLegend();
         Assert.Equal(Enum.GetNames<TokenType>(), legend.TokenTypes);
     }
 
@@ -228,16 +228,16 @@ public class TokenTest
     [Fact]
     public void WhenGettingAllTokensFromEmptyDocumentResultIsEmpty ()
     {
-        var registry = new DocumentRegistry();
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", "");
+        var registry = new DocumentRegistry(new());
+        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", ""));
         Assert.Empty(new TokenHandler(registry).GetAllTokens("@").Data);
     }
 
     [Fact]
     public void WhenGettingAllTokensAllDocumentLinesAreTokenized ()
     {
-        var registry = new DocumentRegistry();
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", "; comment\n# label\ngeneric");
+        var registry = new DocumentRegistry(new());
+        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", "; comment\n# label\ngeneric"));
         var tokens = DecodeTokenData(new TokenHandler(registry).GetAllTokens("@").Data);
         Assert.Equal(5, tokens.Length);
     }
@@ -250,8 +250,8 @@ public class TokenTest
 
     private Token[] GetTokens (string documentText, Range range)
     {
-        var registry = new DocumentRegistry();
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", documentText);
+        var registry = new DocumentRegistry(new());
+        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", documentText));
         var data = new TokenHandler(registry).GetTokens("@", range).Data;
         return DecodeTokenData(data);
     }

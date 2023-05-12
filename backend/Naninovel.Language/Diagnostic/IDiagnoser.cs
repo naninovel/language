@@ -2,5 +2,5 @@ namespace Naninovel.Language;
 
 public interface IDiagnoser
 {
-    void Diagnose (string documentUri, Document document);
+    void Diagnose (string documentUri);
 }

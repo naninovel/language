@@ -16,8 +16,8 @@ export function applyCustomMetadata(customMetadata: Metadata.Project) {
     Language.createHandlers(mergedMeta);
 }
 
-export function loadScriptDocument(uri: string, text: string) {
-    Language.openDocument(uri, text);
+export function openDocuments(infos: Language.DocumentInfo[]) {
+    Language.openDocuments(infos);
 }
 
 function startServer(reader: Emitter<Message>, writer: Emitter<Message>) {
@@ -31,7 +31,7 @@ function startServer(reader: Emitter<Message>, writer: Emitter<Message>) {
 
 function attachHandlers(connection: Connection) {
     Language.publishDiagnostics = (uri, diags) => connection.sendDiagnostics({ uri: uri, diagnostics: diags as never });
-    connection.onDidOpenTextDocument(p => Language.openDocument(p.textDocument.uri, p.textDocument.text));
+    connection.onDidOpenTextDocument(p => Language.openDocument({ uri: p.textDocument.uri, text: p.textDocument.text }));
     connection.onDidChangeTextDocument(p => Language.changeDocument(p.textDocument.uri, p.contentChanges as never));
     connection.onCompletion(p => Language.complete(p.textDocument.uri, p.position) as never);
     connection.onDocumentSymbol(p => Language.getSymbols(p.textDocument.uri) as never);

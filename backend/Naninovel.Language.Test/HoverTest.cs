@@ -131,9 +131,9 @@ public class HoverTest
 
     private Hover? HoverNullable (string lineText, int charOffset)
     {
-        var registry = new DocumentRegistry();
+        var registry = new DocumentRegistry(new());
         var handler = new HoverHandler(new MetadataProvider(meta), registry);
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", lineText);
+        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", lineText));
         return handler.Hover("@", new Position(0, charOffset));
     }
 }

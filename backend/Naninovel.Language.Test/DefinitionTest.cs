@@ -7,7 +7,7 @@ namespace Naninovel.Language.Test;
 public class DefinitionTest
 {
     private readonly Mock<IEndpointResolver> resolver = new();
-    private readonly DocumentRegistry registry = new();
+    private readonly DocumentRegistry registry = new(new());
     private readonly DefinitionHandler handler;
 
     public DefinitionTest ()
@@ -98,6 +98,6 @@ public class DefinitionTest
     private void SetupScript (string uri, params string[] lines)
     {
         var text = string.Join('\n', lines);
-        new DocumentHandler(registry, new MockDiagnoser()).Open(uri, text);
+        new DocumentHandler(registry, new MockDiagnoser()).Open(new(uri, text));
     }
 }

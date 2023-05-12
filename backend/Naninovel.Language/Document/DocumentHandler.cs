@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Naninovel.Parsing;
 
@@ -19,16 +20,21 @@ public class DocumentHandler
     {
         this.registry = registry;
         this.diagnoser = diagnoser;
-        parser = new ScriptParser(new() { ErrorHandler = errors, RangeAssociator = mapper });
+        parser = new(new() { ErrorHandler = errors, RangeAssociator = mapper });
     }
 
-    public void Open (string uri, string text)
+    public void Open (DocumentInfo info)
     {
-        var document = new Document();
-        foreach (var lineText in ScriptParser.SplitText(text))
-            document.Lines.Add(CreateLine(lineText));
-        registry.Set(uri, document);
-        diagnoser.Diagnose(uri, document);
+        registry.Set(info.Uri, CreateDocument(info.Text));
+        diagnoser.Diagnose(info.Uri);
+    }
+
+    public void OpenBatch (IReadOnlyList<DocumentInfo> infos)
+    {
+        foreach (var info in infos)
+            registry.Set(info.Uri, CreateDocument(info.Text));
+        foreach (var info in infos)
+            diagnoser.Diagnose(info.Uri);
     }
 
     public void Close (string uri)
@@ -36,12 +42,22 @@ public class DocumentHandler
         registry.Remove(uri);
     }
 
-    public void Change (string uri, DocumentChange[] changes)
+    public void Change (string uri, IReadOnlyList<DocumentChange> changes)
     {
         var document = registry.Get(uri);
         foreach (var change in changes)
             ApplyChange(document, change);
-        diagnoser.Diagnose(uri, document);
+        foreach (var change in changes)
+            registry.RegisterChange(uri, change.Range);
+        diagnoser.Diagnose(uri);
+    }
+
+    private Document CreateDocument (string text)
+    {
+        var document = new Document();
+        foreach (var lineText in ScriptParser.SplitText(text))
+            document.Lines.Add(CreateLine(lineText));
+        return document;
     }
 
     private DocumentLine CreateLine (string lineText)

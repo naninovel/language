@@ -1,6 +1,6 @@
 ﻿import { Language, Metadata } from "backend";
 import { Emitter, Message } from "vscode-languageserver";
-import { bootLanguageServer, applyCustomMetadata, loadScriptDocument, LanguageMessageReader, LanguageMessageWriter } from "../src";
+import { bootLanguageServer, applyCustomMetadata, openDocuments, LanguageMessageReader, LanguageMessageWriter } from "../src";
 import { createConfiguration } from "../src/configuration";
 import { mergeMetadata, getDefaultMetadata } from "@naninovel/common";
 import * as vscode from "vscode-languageserver/browser";
@@ -36,6 +36,7 @@ beforeEach(() => {
     Language.getAllTokens = jest.fn();
     Language.getSymbols = jest.fn();
     Language.openDocument = jest.fn();
+    Language.openDocuments = jest.fn();
     Language.changeDocument = jest.fn();
     Language.closeDocument = jest.fn();
     Language.getFoldingRanges = jest.fn();
@@ -68,9 +69,9 @@ test("can create configuration", () => {
     expect(createConfiguration()).not.toBeNull();
 });
 
-test("when loading script document open handler is invoked", () => {
-    loadScriptDocument("foo", "bar");
-    expect(Language.openDocument).toBeCalledWith("foo", "bar");
+test("when opening multiple script documents open documents handler is invoked", () => {
+    openDocuments([{ uri: "foo", text: "bar" }]);
+    expect(Language.openDocuments).toBeCalledWith([{ uri: "foo", text: "bar" }]);
 });
 
 test("when applying custom metadata handlers are re-created with merged meta", () => {
@@ -89,7 +90,7 @@ test("open document handler is routed", () => {
     jest.mocked(connection.onDidOpenTextDocument).mock.calls[0][0]({
         textDocument: { uri: "foo", text: "bar", version: 0, languageId: "" }
     });
-    expect(Language.openDocument).toBeCalledWith("foo", "bar");
+    expect(Language.openDocument).toBeCalledWith({ uri: "foo", text: "bar" });
 });
 
 test("change document handler is routed", () => {

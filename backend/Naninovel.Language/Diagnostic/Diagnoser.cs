@@ -13,29 +13,36 @@ public class Diagnoser : IDiagnoser
 {
     private readonly MetadataProvider meta;
     private readonly PublishDiagnostics publish;
+    private readonly EndpointDiagnoser endpoints;
+    private readonly DocumentRegistry docs;
     private readonly List<Diagnostic> diagnostics = new();
 
+    private string documentUri = null!;
     private int lineIndex;
     private DocumentLine line;
 
-    public Diagnoser (MetadataProvider meta, PublishDiagnostics publish)
+    public Diagnoser (MetadataProvider meta, DocumentRegistry docs, PublishDiagnostics publish)
     {
         this.meta = meta;
         this.publish = publish;
+        this.docs = docs;
+        endpoints = new(meta);
     }
 
-    public void Diagnose (string documentUri, Document document)
+    public void Diagnose (string documentUri)
     {
-        ResetState();
+        ResetState(documentUri);
+        var document = docs.Get(documentUri);
         for (; lineIndex < document.Lines.Count; lineIndex++)
             DiagnoseLine(document[lineIndex]);
         Publish(documentUri);
     }
 
-    private void ResetState ()
+    private void ResetState (string documentUri)
     {
         diagnostics.Clear();
         lineIndex = 0;
+        this.documentUri = documentUri;
     }
 
     private void Publish (string documentUri)
@@ -50,10 +57,12 @@ public class Diagnoser : IDiagnoser
         this.line = line;
         foreach (var error in line.Errors)
             AddParseError(error);
-        if (line.Script is GenericLine genericLine)
-            DiagnoseGenericLine(genericLine);
-        else if (line.Script is CommandLine commandLine)
+        if (line.Script is LabelLine labelLine)
+            DiagnoseLabel(labelLine.Label);
+        if (line.Script is CommandLine commandLine)
             DiagnoseCommand(commandLine.Command);
+        else if (line.Script is GenericLine genericLine)
+            DiagnoseGenericLine(genericLine);
     }
 
     private void AddParseError (ParseError error)
@@ -64,12 +73,7 @@ public class Diagnoser : IDiagnoser
         diagnostics.Add(new(range, DiagnosticSeverity.Error, error.Message));
     }
 
-    private void DiagnoseGenericLine (GenericLine genericLine)
-    {
-        foreach (var content in genericLine.Content)
-            if (content is InlinedCommand inlined)
-                DiagnoseCommand(inlined.Command);
-    }
+    private void DiagnoseLabel (PlainText label) { }
 
     private void DiagnoseCommand (Parsing.Command command)
     {
@@ -77,6 +81,13 @@ public class Diagnoser : IDiagnoser
         var commandMeta = meta.FindCommand(command.Identifier);
         if (commandMeta is null) AddUnknownCommand(command);
         else DiagnoseCommand(command, commandMeta);
+    }
+
+    private void DiagnoseGenericLine (GenericLine genericLine)
+    {
+        foreach (var content in genericLine.Content)
+            if (content is InlinedCommand inlined)
+                DiagnoseCommand(inlined.Command);
     }
 
     private void DiagnoseCommand (Parsing.Command command, Metadata.Command commandMeta)
