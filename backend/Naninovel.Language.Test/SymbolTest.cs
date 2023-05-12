@@ -40,6 +40,8 @@ public class SymbolTest
         Assert.Equal("GenericTextLine", symbol.Name);
         Assert.Equal(SymbolKind.String, symbol.Kind);
         Assert.Equal(Range.Empty, symbol.Range);
+        Assert.Null(symbol.Detail);
+        Assert.Null(symbol.Tags);
     }
 
     [Fact]
