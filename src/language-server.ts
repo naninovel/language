@@ -30,14 +30,14 @@ function startServer(reader: Emitter<Message>, writer: Emitter<Message>) {
 }
 
 function attachHandlers(connection: Connection) {
-    Language.publishDiagnostics = (uri, diags) => connection.sendDiagnostics({ uri: uri, diagnostics: diags as any });
+    Language.publishDiagnostics = (uri, diags) => connection.sendDiagnostics({ uri: uri, diagnostics: diags as never });
     connection.onDidOpenTextDocument(p => Language.openDocument(p.textDocument.uri, p.textDocument.text));
-    connection.onDidChangeTextDocument(p => Language.changeDocument(p.textDocument.uri, p.contentChanges as any));
-    connection.onCompletion(p => Language.complete(p.textDocument.uri, p.position) as any);
-    connection.onDocumentSymbol(p => Language.getSymbols(p.textDocument.uri) as any);
+    connection.onDidChangeTextDocument(p => Language.changeDocument(p.textDocument.uri, p.contentChanges as never));
+    connection.onCompletion(p => Language.complete(p.textDocument.uri, p.position) as never);
+    connection.onDocumentSymbol(p => Language.getSymbols(p.textDocument.uri) as never);
     connection.onRequest("textDocument/semanticTokens/full", p => Language.getAllTokens(p.textDocument.uri));
     connection.onRequest("textDocument/semanticTokens/range", p => Language.getTokens(p.textDocument.uri, p.range));
-    connection.onHover(p => Language.hover(p.textDocument.uri, p.position) as any);
+    connection.onHover(p => Language.hover(p.textDocument.uri, p.position) as never);
     connection.onFoldingRanges(p => Language.getFoldingRanges(p.textDocument.uri));
     connection.onDefinition(p => Language.gotoDefinition(p.textDocument.uri, p.position));
 }

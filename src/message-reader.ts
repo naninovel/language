@@ -3,7 +3,7 @@
 export class LanguageMessageReader extends AbstractMessageReader implements MessageReader {
     constructor(private emitter: Emitter<Message>) { super(); }
 
-    listen(callback: any): Disposable {
+    listen(callback: never): Disposable {
         return this.emitter.event(callback);
     }
 }

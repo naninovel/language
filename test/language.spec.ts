@@ -47,14 +47,16 @@ test("language server can boot", () => {
 });
 
 test("reader can read messages", async () => {
-    let resolve, promise = new Promise<Message>(r => resolve = r);
+    let resolve: (value: Message) => void;
+    const promise = new Promise<Message>(r => resolve = r);
     new LanguageMessageReader(reader).listen(resolve);
     reader.fire(new MockMessage("foo"));
     expect((await promise).jsonrpc).toEqual("foo");
 });
 
 test("writer can write messages", async () => {
-    let resolve: any, promise = new Promise<Message>(r => resolve = r);
+    let resolve: (value: Message) => void;
+    const promise = new Promise<Message>(r => resolve = r);
     writer.event(resolve);
     const client = new LanguageMessageWriter(writer);
     await client.write(new MockMessage("foo"));
@@ -114,14 +116,12 @@ test("symbol handler is routed", () => {
 });
 
 test("semantic full handler is routed", () => {
-    // @ts-ignore
-    jest.mocked(connection.onRequest).mock.calls[0][1]({ textDocument: { uri: "foo" } });
+    simulateCustomRequest(0, { textDocument: { uri: "foo" } });
     expect(Language.getAllTokens).toBeCalledWith("foo");
 });
 
 test("semantic range handler is routed", () => {
-    // @ts-ignore
-    jest.mocked(connection.onRequest).mock.calls[1][1]({ textDocument: { uri: "foo" }, range: {} });
+    simulateCustomRequest(1, { textDocument: { uri: "foo" }, range: {} });
     expect(Language.getTokens).toBeCalledWith("foo", {});
 });
 
@@ -139,3 +139,7 @@ test("folding handler is routed", () => {
     }, {} as never, {} as never);
     expect(Language.getFoldingRanges).toBeCalledWith("foo");
 });
+
+function simulateCustomRequest(callId: number, params: object) {
+    jest.mocked(connection.onRequest).mock.calls[callId].at(1)?.(params as never, {} as never, {} as never);
+}
