@@ -47,7 +47,7 @@ test("language server can boot", () => {
 });
 
 test("reader can read messages", async () => {
-    let resolve: (value: Message) => void;
+    let resolve: (value: Message) => void = null as never;
     const promise = new Promise<Message>(r => resolve = r);
     new LanguageMessageReader(reader).listen(resolve);
     reader.fire(new MockMessage("foo"));
@@ -55,7 +55,7 @@ test("reader can read messages", async () => {
 });
 
 test("writer can write messages", async () => {
-    let resolve: (value: Message) => void;
+    let resolve: (value: Message) => void = null as never;
     const promise = new Promise<Message>(r => resolve = r);
     writer.event(resolve);
     const client = new LanguageMessageWriter(writer);
