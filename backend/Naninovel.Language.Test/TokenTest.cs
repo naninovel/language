@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Moq;
 using Xunit;
 
 namespace Naninovel.Language.Test;
@@ -9,17 +10,19 @@ public class TokenTest
 {
     private record Token(int Line, int Char, int Length, TokenType Type);
 
+    private readonly Mock<IDocumentRegistry> docs = new();
+
     [Fact]
     public void LegendModifiersAreEmpty ()
     {
-        var legend = new TokenHandler(new(new())).GetTokenLegend();
+        var legend = new TokenHandler(docs.Object).GetTokenLegend();
         Assert.Empty(legend.TokenModifiers);
     }
 
     [Fact]
     public void LegendTypesAreEqualToTokenEnumNames ()
     {
-        var legend = new TokenHandler(new(new())).GetTokenLegend();
+        var legend = new TokenHandler(docs.Object).GetTokenLegend();
         Assert.Equal(Enum.GetNames<TokenType>(), legend.TokenTypes);
     }
 
@@ -229,7 +232,7 @@ public class TokenTest
     public void WhenGettingAllTokensFromEmptyDocumentResultIsEmpty ()
     {
         var registry = new DocumentRegistry(new());
-        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", ""));
+        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new("@", ""));
         Assert.Empty(new TokenHandler(registry).GetAllTokens("@").Data);
     }
 
@@ -237,7 +240,7 @@ public class TokenTest
     public void WhenGettingAllTokensAllDocumentLinesAreTokenized ()
     {
         var registry = new DocumentRegistry(new());
-        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", "; comment\n# label\ngeneric"));
+        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new("@", "; comment\n# label\ngeneric"));
         var tokens = DecodeTokenData(new TokenHandler(registry).GetAllTokens("@").Data);
         Assert.Equal(5, tokens.Length);
     }
@@ -251,7 +254,7 @@ public class TokenTest
     private Token[] GetTokens (string documentText, Range range)
     {
         var registry = new DocumentRegistry(new());
-        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", documentText));
+        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new("@", documentText));
         var data = new TokenHandler(registry).GetTokens("@", range).Data;
         return DecodeTokenData(data);
     }

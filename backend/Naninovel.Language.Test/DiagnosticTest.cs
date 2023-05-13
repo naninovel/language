@@ -1,8 +1,8 @@
+using System;
+using Moq;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 using Xunit;
-using Command = Naninovel.Metadata.Command;
-using Parameter = Naninovel.Metadata.Parameter;
 
 namespace Naninovel.Language.Test;
 
@@ -39,7 +39,7 @@ public class DiagnosticTest
     [Fact]
     public void WhenParameterMetaNotFoundErrorIsDiagnosed ()
     {
-        meta.Commands = new[] { new Command { Id = "c" } };
+        meta.Commands = new[] { new Metadata.Command { Id = "c" } };
         var diags = Diagnose("@c p:v");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 3), new(0, 6)), DiagnosticSeverity.Error,
@@ -49,7 +49,7 @@ public class DiagnosticTest
     [Fact]
     public void WhenNamelessParameterMetaNotFoundErrorIsDiagnosed ()
     {
-        meta.Commands = new[] { new Command { Id = "c" } };
+        meta.Commands = new[] { new Metadata.Command { Id = "c" } };
         var diags = Diagnose("[c n]");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 3), new(0, 4)), DiagnosticSeverity.Error,
@@ -59,8 +59,8 @@ public class DiagnosticTest
     [Fact]
     public void WhenValueIsMissingErrorIsDiagnosed ()
     {
-        var parameters = new[] { new Parameter { Id = "p" } };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        var parameters = new[] { new Metadata.Parameter { Id = "p" } };
+        meta.Commands = new[] { new Metadata.Command { Id = "c", Parameters = parameters } };
         var diags = Diagnose("@c p:");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 3), new(0, 5)), DiagnosticSeverity.Error,
@@ -71,12 +71,12 @@ public class DiagnosticTest
     public void WhenInvalidValueErrorIsDiagnosed ()
     {
         var parameters = new[] {
-            new Parameter { Id = "sb", ValueType = ValueType.Boolean, ValueContainerType = ValueContainerType.Single },
-            new Parameter { Id = "nd", ValueType = ValueType.Decimal, ValueContainerType = ValueContainerType.Named },
-            new Parameter { Id = "il", ValueType = ValueType.Integer, ValueContainerType = ValueContainerType.List },
-            new Parameter { Id = "nbl", ValueType = ValueType.Boolean, ValueContainerType = ValueContainerType.NamedList }
+            new Metadata.Parameter { Id = "sb", ValueType = Metadata.ValueType.Boolean, ValueContainerType = ValueContainerType.Single },
+            new Metadata.Parameter { Id = "nd", ValueType = Metadata.ValueType.Decimal, ValueContainerType = ValueContainerType.Named },
+            new Metadata.Parameter { Id = "il", ValueType = Metadata.ValueType.Integer, ValueContainerType = ValueContainerType.List },
+            new Metadata.Parameter { Id = "nbl", ValueType = Metadata.ValueType.Boolean, ValueContainerType = ValueContainerType.NamedList }
         };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        meta.Commands = new[] { new Metadata.Command { Id = "c", Parameters = parameters } };
         var diags = Diagnose("@c sb:- nd:x.- il:,1.0 nbl:x.,x,.,.-");
         Assert.Equal(4, diags.Length);
         Assert.Equal(new(new(new(0, 6), new(0, 7)), DiagnosticSeverity.Error,
@@ -92,16 +92,16 @@ public class DiagnosticTest
     [Fact]
     public void WhenValueContainExpressionTypeValidityIsNotChecked ()
     {
-        var parameters = new[] { new Parameter { Id = "p", ValueType = ValueType.Boolean } };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        var parameters = new[] { new Metadata.Parameter { Id = "p", ValueType = Metadata.ValueType.Boolean } };
+        meta.Commands = new[] { new Metadata.Command { Id = "c", Parameters = parameters } };
         Assert.Empty(Diagnose("@c p:{x}"));
     }
 
     [Fact]
     public void WhenMissingRequiredParameterErrorIsDiagnosed ()
     {
-        var parameters = new[] { new Parameter { Id = "p", Required = true } };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        var parameters = new[] { new Metadata.Parameter { Id = "p", Required = true } };
+        meta.Commands = new[] { new Metadata.Command { Id = "c", Parameters = parameters } };
         var diags = Diagnose("@c");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 1), new(0, 2)), DiagnosticSeverity.Error,
@@ -112,18 +112,18 @@ public class DiagnosticTest
     public void WhenCommandIsValidNoErrorsAreDiagnosed ()
     {
         var parameters = new[] {
-            new Parameter { Id = "Foo", Alias = "f", Required = true },
-            new Parameter { Id = "Bar", Required = true }
+            new Metadata.Parameter { Id = "Foo", Alias = "f", Required = true },
+            new Metadata.Parameter { Id = "Bar", Required = true }
         };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        meta.Commands = new[] { new Metadata.Command { Id = "c", Parameters = parameters } };
         Assert.Empty(Diagnose("@c f:x bar:x"));
     }
 
     [Fact]
     public void NamelessRequiredParametersAreResolved ()
     {
-        var param = new Parameter { Id = "*", Alias = "", Nameless = true, Required = true };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = new[] { param } } };
+        var param = new Metadata.Parameter { Id = "*", Alias = "", Nameless = true, Required = true };
+        meta.Commands = new[] { new Metadata.Command { Id = "c", Parameters = new[] { param } } };
         Assert.Empty(Diagnose("@c foo"));
     }
 
@@ -183,13 +183,28 @@ public class DiagnosticTest
         Assert.Empty(Diagnose(("this", "@goto this.label\n# label")));
     }
 
+    [Fact]
+    public void WhenRangeSpecifiedDiagnosesOnlyAffectedLines ()
+    {
+        var docs = new Mock<IDocumentRegistry>();
+        var doc = new Mock<IDocument>();
+        docs.Setup(d => d.Get(It.IsAny<string>())).Returns(doc.Object);
+        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentLine("#", new LabelLine(""), Array.Empty<ParseError>(), new()));
+        var diagnoser = new Diagnoser(new Mock<MetadataProvider>().Object, docs.Object, new Mock<PublishDiagnostics>().Object);
+        diagnoser.Diagnose("", new Range(new(1, 0), new(2, 0)));
+        doc.VerifyGet(l => l[0], Times.Never);
+        doc.VerifyGet(l => l[1], Times.Once);
+        doc.VerifyGet(l => l[2], Times.Once);
+        doc.VerifyGet(l => l[3], Times.Never);
+    }
+
     private void SetupCommandWithEndpointNamelessParameter (string commandId)
     {
         var parameters = new[] {
-            new Parameter {
+            new Metadata.Parameter {
                 Id = "",
                 Nameless = true,
-                ValueType = ValueType.String,
+                ValueType = Metadata.ValueType.String,
                 ValueContainerType = ValueContainerType.Named,
                 ValueContext = new[] {
                     new ValueContext(),
@@ -197,7 +212,7 @@ public class DiagnosticTest
                 }
             }
         };
-        meta.Commands = new[] { new Command { Id = commandId, Parameters = parameters } };
+        meta.Commands = new[] { new Metadata.Command { Id = commandId, Parameters = parameters } };
     }
 
     private Diagnostic[] Diagnose (string scriptText)

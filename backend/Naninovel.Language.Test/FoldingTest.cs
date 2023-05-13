@@ -1,3 +1,4 @@
+using Moq;
 using Xunit;
 
 namespace Naninovel.Language.Test;
@@ -45,7 +46,7 @@ public class FoldingTest
     {
         var registry = new DocumentRegistry(new());
         var handler = new FoldingHandler(registry);
-        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", documentText));
+        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new("@", documentText));
         return handler.GetFoldingRanges("@");
     }
 }

@@ -1,4 +1,5 @@
 using System.Linq;
+using Moq;
 using Naninovel.Metadata;
 using Xunit;
 
@@ -457,7 +458,7 @@ public class CompletionTest
         scriptUri ??= "@";
         var registry = new DocumentRegistry(new());
         var handler = new CompletionHandler(new MetadataProvider(meta), registry);
-        new DocumentHandler(registry, new MockDiagnoser()).Open(new(scriptUri, lineText));
+        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new(scriptUri, lineText));
         return handler.Complete(scriptUri, new Position(0, charOffset));
     }
 }

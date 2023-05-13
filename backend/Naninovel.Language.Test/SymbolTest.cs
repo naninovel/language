@@ -1,3 +1,4 @@
+using Moq;
 using Naninovel.Metadata;
 using Xunit;
 
@@ -217,7 +218,7 @@ public class SymbolTest
     private Symbol[] GetSymbols (string documentText)
     {
         var registry = new DocumentRegistry(new());
-        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", documentText));
+        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new("@", documentText));
         return new SymbolHandler(new MetadataProvider(meta), registry).GetSymbols("@");
     }
 

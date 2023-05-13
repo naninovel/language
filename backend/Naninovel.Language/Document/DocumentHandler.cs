@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
-using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
@@ -9,32 +6,16 @@ namespace Naninovel.Language;
 
 public class DocumentHandler
 {
-    private readonly DocumentRegistry registry;
-    private readonly IDiagnoser diagnoser;
-    private readonly ScriptParser parser;
-    private readonly StringBuilder builder = new();
-    private readonly ErrorCollector errors = new();
-    private readonly RangeMapper mapper = new();
+    private readonly IDocumentRegistry registry;
 
-    public DocumentHandler (DocumentRegistry registry, IDiagnoser diagnoser)
+    public DocumentHandler (IDocumentRegistry registry)
     {
         this.registry = registry;
-        this.diagnoser = diagnoser;
-        parser = new(new() { ErrorHandler = errors, RangeAssociator = mapper });
     }
 
-    public void Open (DocumentInfo info)
+    public void Open (IReadOnlyList<DocumentInfo> docs)
     {
-        registry.Set(info.Uri, CreateDocument(info.Text));
-        diagnoser.Diagnose(info.Uri);
-    }
-
-    public void OpenBatch (IReadOnlyList<DocumentInfo> infos)
-    {
-        foreach (var info in infos)
-            registry.Set(info.Uri, CreateDocument(info.Text));
-        foreach (var info in infos)
-            diagnoser.Diagnose(info.Uri);
+        registry.Upsert(docs);
     }
 
     public void Close (string uri)
@@ -44,65 +25,6 @@ public class DocumentHandler
 
     public void Change (string uri, IReadOnlyList<DocumentChange> changes)
     {
-        var document = registry.Get(uri);
-        foreach (var change in changes)
-            ApplyChange(document, change);
-        foreach (var change in changes)
-            registry.RegisterChange(uri, change.Range);
-        diagnoser.Diagnose(uri);
-    }
-
-    private Document CreateDocument (string text)
-    {
-        var document = new Document();
-        foreach (var lineText in ScriptParser.SplitText(text))
-            document.Lines.Add(CreateLine(lineText));
-        return document;
-    }
-
-    private DocumentLine CreateLine (string lineText)
-    {
-        var lineModel = parser.ParseLine(lineText);
-        var lineErrors = CollectErrors();
-        var lineMapper = MapComponents();
-        return new DocumentLine(lineText, lineModel, lineErrors, lineMapper);
-    }
-
-    private ParseError[] CollectErrors ()
-    {
-        if (errors.Count == 0) return Array.Empty<ParseError>();
-        var lineErrors = errors.ToArray();
-        errors.Clear();
-        return lineErrors;
-    }
-
-    private RangeMapper MapComponents ()
-    {
-        var lineMapper = new RangeMapper();
-        foreach (var (component, range) in mapper)
-            lineMapper.Associate(component, range);
-        mapper.Clear();
-        return lineMapper;
-    }
-
-    private void ApplyChange (Document document, in DocumentChange change)
-    {
-        var startLineIdx = change.Range.Start.Line;
-        var endLineIdx = change.Range.End.Line;
-        var changedLines = GetChangedLines(document[startLineIdx].Text, document[endLineIdx].Text, change);
-        for (int i = endLineIdx; i >= startLineIdx; i--)
-            if (i - startLineIdx >= changedLines.Length) document.Lines.RemoveAt(i);
-            else document[i] = CreateLine(changedLines[i - startLineIdx]);
-        for (int i = endLineIdx - startLineIdx + 1; i < changedLines.Length; i++)
-            document.Lines.Insert(startLineIdx + i, CreateLine(changedLines[i]));
-    }
-
-    private string[] GetChangedLines (string startLineText, string endLineText, in DocumentChange change)
-    {
-        builder.Clear();
-        builder.Append(startLineText.AsSpan(0, change.Range.Start.Character));
-        builder.Append(change.Text);
-        builder.Append(endLineText.AsSpan(change.Range.End.Character));
-        return ScriptParser.SplitText(builder.ToString());
+        registry.Change(uri, changes);
     }
 }

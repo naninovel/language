@@ -9,13 +9,13 @@ namespace Naninovel.Language;
 public class HoverHandler
 {
     private readonly MetadataProvider meta;
-    private readonly DocumentRegistry registry;
+    private readonly IDocumentRegistry registry;
     private readonly StringBuilder builder = new();
 
     private Position position;
     private DocumentLine line;
 
-    public HoverHandler (MetadataProvider meta, DocumentRegistry registry)
+    public HoverHandler (MetadataProvider meta, IDocumentRegistry registry)
     {
         this.meta = meta;
         this.registry = registry;

@@ -7,13 +7,13 @@ namespace Naninovel.Language;
 
 public class DefinitionHandler
 {
-    private readonly DocumentRegistry registry;
+    private readonly IDocumentRegistry registry;
     private readonly IEndpointResolver resolver;
     private Position position;
     private DocumentLine line;
     private string documentUri = null!;
 
-    public DefinitionHandler (DocumentRegistry registry, IEndpointResolver resolver)
+    public DefinitionHandler (IDocumentRegistry registry, IEndpointResolver resolver)
     {
         this.registry = registry;
         this.resolver = resolver;
@@ -64,27 +64,27 @@ public class DefinitionHandler
         return null;
     }
 
-    private (Range Range, Range Selection) GetRanges (Document document, string? label)
+    private (Range Range, Range Selection) GetRanges (IDocument document, string? label)
     {
         var startLineIndex = FindLabelLineIndex(document, label) ?? 0;
-        var endLineIndex = (FindNextLabelLineIndex(document, startLineIndex + 1) ?? document.Lines.Count) - 1;
-        var range = new Range(new(startLineIndex, 0), new(endLineIndex, document.Lines[endLineIndex].Range.EndIndex + 1));
-        var selection = new Range(new(startLineIndex, 0), new(startLineIndex, document.Lines[startLineIndex].Range.EndIndex + 1));
+        var endLineIndex = (FindNextLabelLineIndex(document, startLineIndex + 1) ?? document.LineCount) - 1;
+        var range = new Range(new(startLineIndex, 0), new(endLineIndex, document[endLineIndex].Range.EndIndex + 1));
+        var selection = new Range(new(startLineIndex, 0), new(startLineIndex, document[startLineIndex].Range.EndIndex + 1));
         return (range, selection);
     }
 
-    private int? FindLabelLineIndex (Document document, string? label)
+    private int? FindLabelLineIndex (IDocument document, string? label)
     {
-        for (int i = 0; i < document.Lines.Count; i++)
-            if (document.Lines[i] is { Script: LabelLine labelLine } && labelLine.Label == label)
+        for (int i = 0; i < document.LineCount; i++)
+            if (document[i] is { Script: LabelLine labelLine } && labelLine.Label == label)
                 return i;
         return null;
     }
 
-    private int? FindNextLabelLineIndex (Document document, int startLineIndex)
+    private int? FindNextLabelLineIndex (IDocument document, int startLineIndex)
     {
-        for (int i = startLineIndex; i < document.Lines.Count; i++)
-            if (document.Lines[i] is { Script: LabelLine })
+        for (int i = startLineIndex; i < document.LineCount; i++)
+            if (document[i] is { Script: LabelLine })
                 return i;
         return null;
     }

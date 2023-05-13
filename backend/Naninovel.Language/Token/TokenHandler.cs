@@ -7,14 +7,14 @@ namespace Naninovel.Language;
 
 public class TokenHandler
 {
-    private readonly DocumentRegistry registry;
+    private readonly IDocumentRegistry registry;
     private readonly TokenBuilder builder = new();
 
     private DocumentLine line;
     private Range range;
     private int lineIndex;
 
-    public TokenHandler (DocumentRegistry registry)
+    public TokenHandler (IDocumentRegistry registry)
     {
         this.registry = registry;
     }
@@ -37,18 +37,18 @@ public class TokenHandler
         return CreateTokens(document, range);
     }
 
-    private Tokens CreateTokens (Document document, in Range range)
+    private Tokens CreateTokens (IDocument document, in Range range)
     {
         ResetState(range);
         for (int i = lineIndex; i <= range.End.Line; i++)
-            AppendLine(document.Lines[i]);
+            AppendLine(document[i]);
         return new Tokens(builder.Build());
     }
 
-    private Range GetFullRange (Document document)
+    private Range GetFullRange (IDocument document)
     {
-        var endLine = document.Lines.Count - 1;
-        var endChar = document.Lines[^1].Text.Length;
+        var endLine = document.LineCount - 1;
+        var endChar = document[^1].Text.Length;
         return new Range(new(0, 0), new(endLine, endChar));
     }
 

@@ -1,4 +1,5 @@
-﻿using DotNetJS;
+﻿using System.Collections.Generic;
+using DotNetJS;
 using Microsoft.JSInterop;
 using Naninovel.Metadata;
 using static Naninovel.Common.Bindings.Utilities;
@@ -25,7 +26,7 @@ public static partial class Language
     {
         var provider = new MetadataProvider(metadata);
         diagnoser = new Diagnoser(provider, docs, PublishDiagnostics);
-        document = new DocumentHandler(docs, diagnoser);
+        document = new DocumentHandler(docs);
         completion = new CompletionHandler(provider, docs);
         symbol = new SymbolHandler(provider, docs);
         token = new TokenHandler(docs);
@@ -34,10 +35,9 @@ public static partial class Language
         definition = new DefinitionHandler(docs, new EndpointResolver(provider));
     }
 
-    [JSInvokable] public static void OpenDocument (DocumentInfo info) => Try(document.Open, info);
-    [JSInvokable] public static void OpenDocuments (DocumentInfo[] infos) => Try(document.OpenBatch, infos);
+    [JSInvokable] public static void OpenDocuments (IReadOnlyList<DocumentInfo> infos) => Try(document.Open, infos);
     [JSInvokable] public static void CloseDocument (string uri) => Try(document.Close, uri);
-    [JSInvokable] public static void ChangeDocument (string uri, DocumentChange[] changes) => Try(document.Change, uri, changes);
+    [JSInvokable] public static void ChangeDocument (string uri, IReadOnlyList<DocumentChange> changes) => Try(document.Change, uri, changes);
     [JSInvokable] public static CompletionItem[] Complete (string uri, Position pos) => Try(completion.Complete, uri, pos);
     [JSInvokable] public static Symbol[] GetSymbols (string uri) => Try(symbol.GetSymbols, uri);
     [JSInvokable] public static TokenLegend GetTokenLegend () => Try(token.GetTokenLegend);
@@ -47,5 +47,5 @@ public static partial class Language
     [JSInvokable] public static FoldingRange[] GetFoldingRanges (string uri) => Try(folding.GetFoldingRanges, uri);
     [JSInvokable] public static LocationLink[]? GotoDefinition (string uri, Position pos) => Try(definition.GotoDefinition, uri, pos);
 
-    [JSFunction] public static partial void PublishDiagnostics (string uri, Diagnostic[] diagnostics);
+    [JSFunction] public static partial void PublishDiagnostics (string uri, IReadOnlyList<Diagnostic> diagnostics);
 }

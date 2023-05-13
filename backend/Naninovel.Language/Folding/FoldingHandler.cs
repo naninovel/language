@@ -7,13 +7,13 @@ namespace Naninovel.Language;
 
 public class FoldingHandler
 {
-    private readonly DocumentRegistry registry;
+    private readonly IDocumentRegistry registry;
     private readonly List<FoldingRange> ranges = new();
 
     private int lineIndex;
     private FoldingRange? range;
 
-    public FoldingHandler (DocumentRegistry registry)
+    public FoldingHandler (IDocumentRegistry registry)
     {
         this.registry = registry;
     }
@@ -21,10 +21,10 @@ public class FoldingHandler
     public FoldingRange[] GetFoldingRanges (string documentUri)
     {
         ResetState();
-        var lines = registry.Get(documentUri).Lines;
-        for (; lineIndex < lines.Count; lineIndex++)
-            if (ShouldFold(lines[lineIndex].Script))
-                FoldLine(lines[lineIndex].Script);
+        var doc = registry.Get(documentUri);
+        for (; lineIndex < doc.LineCount; lineIndex++)
+            if (ShouldFold(doc[lineIndex].Script))
+                FoldLine(doc[lineIndex].Script);
         if (range is not null) AddRange();
         return ranges.ToArray();
     }

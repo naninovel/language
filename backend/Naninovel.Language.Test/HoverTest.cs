@@ -1,3 +1,4 @@
+using Moq;
 using Naninovel.Metadata;
 using Xunit;
 
@@ -133,7 +134,7 @@ public class HoverTest
     {
         var registry = new DocumentRegistry(new());
         var handler = new HoverHandler(new MetadataProvider(meta), registry);
-        new DocumentHandler(registry, new MockDiagnoser()).Open(new("@", lineText));
+        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new("@", lineText));
         return handler.Hover("@", new Position(0, charOffset));
     }
 }

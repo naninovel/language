@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Moq;
 using Naninovel.Parsing;
 using Xunit;
 
@@ -8,14 +9,13 @@ namespace Naninovel.Language.Test;
 public class DocumentTest
 {
     private readonly DocumentRegistry registry;
-    private readonly MockDiagnoser diagnoser;
+    private readonly Mock<IDiagnoser> diagnoser = new();
     private readonly DocumentHandler handler;
 
     public DocumentTest ()
     {
         registry = new DocumentRegistry(new());
-        diagnoser = new MockDiagnoser();
-        handler = new DocumentHandler(registry, diagnoser);
+        handler = new DocumentHandler(registry, diagnoser.Object);
     }
 
     [Fact]
@@ -36,22 +36,22 @@ public class DocumentTest
     [Fact]
     public void WhenDocumentWithExistingKeySetItsReplaced ()
     {
-        registry.Set("foo", new Document { Lines = { Capacity = 0 } });
-        registry.Set("foo", new Document { Lines = { Capacity = 1 } });
-        Assert.Equal(1, registry.Get("foo").Lines.Capacity);
+        registry.Set("foo", new Document(new List<DocumentLine> { Capacity = 0 }));
+        registry.Set("foo", new Document(new List<DocumentLine> { Capacity = 1 }));
+        Assert.Equal(1, (((Document)registry.Get("foo")).Lines).Capacity);
     }
 
     [Fact]
     public void WhenDocumentNotFoundExceptionIsThrown ()
     {
-        Assert.Throws<KeyNotFoundException>(() => registry.Get("foo"));
+        Assert.Contains("not found", Assert.Throws<Error>(() => registry.Get("foo")).Message);
     }
 
     [Fact]
     public void OpenedDocumentWithEmptyContentHasSingleEmptyLine ()
     {
         handler.Open(new("@", ""));
-        Assert.Single(registry.Get("@").Lines);
+        Assert.Equal(1, registry.Get("@").LineCount);
         Assert.Empty(registry.Get("@")[0].Text);
     }
 
@@ -90,7 +90,7 @@ public class DocumentTest
     {
         handler.Open(new("@", ""));
         handler.Change("@", new[] { new DocumentChange(new(new(0, 0), new(0, 0)), "\n\n") });
-        Assert.Equal(3, registry.Get("@").Lines.Count);
+        Assert.Equal(3, registry.Get("@").LineCount);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class DocumentTest
     {
         handler.Open(new("@", "\n\n"));
         handler.Change("@", new[] { new DocumentChange(new(new(0, 0), new(2, 0)), "") });
-        Assert.Single(registry.Get("@").Lines);
+        Assert.Equal(1, registry.Get("@").LineCount);
         Assert.Empty(registry.Get("@")[0].Text);
     }
 
@@ -123,7 +123,7 @@ public class DocumentTest
     {
         handler.Open(new("@", "a\nb\r\nc"));
         handler.Change("@", new[] { new DocumentChange(new(new(0, 0), new(2, 0)), "") });
-        Assert.Single(registry.Get("@").Lines);
+        Assert.Equal(1, registry.Get("@").LineCount);
         Assert.Equal("c", registry.Get("@")[0].Text);
     }
 
@@ -132,7 +132,7 @@ public class DocumentTest
     {
         handler.Open(new("@", "a\n\nbc\nd"));
         handler.Change("@", new[] { new DocumentChange(new(new(0, 1), new(2, 1)), "e") });
-        Assert.Equal(2, registry.Get("@").Lines.Count);
+        Assert.Equal(2, registry.Get("@").LineCount);
         Assert.Equal("aec", registry.Get("@")[0].Text);
         Assert.Equal("d", registry.Get("@")[1].Text);
     }
@@ -165,7 +165,7 @@ public class DocumentTest
             new DocumentChange(new(new(0, 0), new(0, 0)), "a\nb\nc"),
             new DocumentChange(new(new(2, 1), new(2, 1)), "\n")
         });
-        Assert.Equal(4, registry.Get("@").Lines.Count);
+        Assert.Equal(4, registry.Get("@").LineCount);
         Assert.Equal("a", registry.Get("@")[0].Text);
         Assert.Equal("b", registry.Get("@")[1].Text);
         Assert.Equal("c", registry.Get("@")[2].Text);
@@ -178,7 +178,7 @@ public class DocumentTest
         handler.Open(new("@", "foo\n"));
         handler.Change("@", new[] { new DocumentChange(new(new(0, 3), new(0, 3)), "\nbar") });
         var document = registry.Get("@");
-        Assert.Equal(3, document.Lines.Count);
+        Assert.Equal(3, document.LineCount);
         Assert.Equal("foo", document[0].Text);
         Assert.Equal("bar", document[1].Text);
         Assert.Empty(document[2].Text);
@@ -188,17 +188,23 @@ public class DocumentTest
     public void OpenedDocumentIsDiagnosed ()
     {
         handler.Open(new("foo", ""));
-        Assert.Single(diagnoser.DiagnoseRequests);
-        Assert.Equal("foo", diagnoser.DiagnoseRequests[0]);
+        diagnoser.Verify(d => d.Diagnose("foo"), Times.Once);
+    }
+
+    [Fact]
+    public void OpenedDocumentsAreDiagnosed ()
+    {
+        handler.OpenBatch(new DocumentInfo[] { new("foo", ""), new("bar", "") });
+        diagnoser.Verify(d => d.Diagnose("foo"), Times.Once);
+        diagnoser.Verify(d => d.Diagnose("bar"), Times.Once);
     }
 
     [Fact]
     public void ChangedDocumentIsDiagnosed ()
     {
-        handler.Open(new("foo", ""));
-        handler.Change("foo", Array.Empty<DocumentChange>());
-        Assert.Equal(2, diagnoser.DiagnoseRequests.Count);
-        Assert.Equal("foo", diagnoser.DiagnoseRequests[1]);
+        handler.Open(new("foo", "a"));
+        handler.Change("foo", new[] { new DocumentChange(new(new(0, 0), new(0, 1)), "b") });
+        diagnoser.Verify(d => d.Diagnose("foo", new(new(0, 0), new(0, 1))), Times.Once);
     }
 
     [Fact]
@@ -216,13 +222,5 @@ public class DocumentTest
         Assert.Empty(line.Extract(null));
         Assert.Empty(line.Extract(new PlainText("")));
         Assert.Empty(line.Extract(new LineRange(9, 1)));
-    }
-
-    [Fact]
-    public void WhenOpeningMultipleDocumentsTheyAreDiagnosedAfterRegistration ()
-    {
-        handler.Open(new("foo", ""));
-        Assert.Single(diagnoser.DiagnoseRequests);
-        Assert.Equal("foo", diagnoser.DiagnoseRequests[0]);
     }
 }

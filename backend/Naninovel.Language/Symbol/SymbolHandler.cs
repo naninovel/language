@@ -9,14 +9,14 @@ namespace Naninovel.Language;
 public class SymbolHandler
 {
     private readonly MetadataProvider meta;
-    private readonly DocumentRegistry registry;
+    private readonly IDocumentRegistry registry;
     private readonly List<Symbol> symbols = new();
 
     private int lineIndex;
     private DocumentLine line;
     private string commandId = "";
 
-    public SymbolHandler (MetadataProvider meta, DocumentRegistry registry)
+    public SymbolHandler (MetadataProvider meta, IDocumentRegistry registry)
     {
         this.meta = meta;
         this.registry = registry;
@@ -26,8 +26,8 @@ public class SymbolHandler
     {
         symbols.Clear();
         var document = registry.Get(documentUri);
-        for (int i = 0; i < document.Lines.Count; i++)
-            symbols.Add(CreateForLine(document.Lines[i], i));
+        for (int i = 0; i < document.LineCount; i++)
+            symbols.Add(CreateForLine(document[i], i));
         return symbols.ToArray();
     }
 

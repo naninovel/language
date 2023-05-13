@@ -98,6 +98,6 @@ public class DefinitionTest
     private void SetupScript (string uri, params string[] lines)
     {
         var text = string.Join('\n', lines);
-        new DocumentHandler(registry, new MockDiagnoser()).Open(new(uri, text));
+        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new(uri, text));
     }
 }

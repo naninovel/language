@@ -11,7 +11,7 @@ namespace Naninovel.Language;
 
 public class CompletionHandler
 {
-    private readonly DocumentRegistry registry;
+    private readonly IDocumentRegistry registry;
     private readonly CompletionProvider provider;
     private readonly CommandCompletionHandler commandHandler;
 
@@ -20,7 +20,7 @@ public class CompletionHandler
     private DocumentLine line;
     private string scriptName = string.Empty;
 
-    public CompletionHandler (MetadataProvider meta, DocumentRegistry registry)
+    public CompletionHandler (MetadataProvider meta, IDocumentRegistry registry)
     {
         this.registry = registry;
         provider = new CompletionProvider(meta);

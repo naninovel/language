@@ -14,14 +14,14 @@ public class Diagnoser : IDiagnoser
     private readonly MetadataProvider meta;
     private readonly PublishDiagnostics publish;
     private readonly EndpointDiagnoser endpoints;
-    private readonly DocumentRegistry docs;
+    private readonly IDocumentRegistry docs;
     private readonly List<Diagnostic> diagnostics = new();
 
     private string documentUri = null!;
     private int lineIndex;
     private DocumentLine line;
 
-    public Diagnoser (MetadataProvider meta, DocumentRegistry docs, PublishDiagnostics publish)
+    public Diagnoser (MetadataProvider meta, IDocumentRegistry docs, PublishDiagnostics publish)
     {
         this.meta = meta;
         this.publish = publish;
@@ -33,7 +33,18 @@ public class Diagnoser : IDiagnoser
     {
         ResetState(documentUri);
         var document = docs.Get(documentUri);
-        for (; lineIndex < document.Lines.Count; lineIndex++)
+        Diagnose(document, new(new(0, 0), new(document.LineCount - 1, 0)));
+    }
+
+    public void Diagnose (string documentUri, in Range range)
+    {
+        ResetState(documentUri);
+        Diagnose(docs.Get(documentUri), range);
+    }
+
+    private void Diagnose (IDocument document, in Range range)
+    {
+        for (lineIndex = range.Start.Line; lineIndex <= range.End.Line; lineIndex++)
             DiagnoseLine(document[lineIndex]);
         Publish(documentUri);
     }
@@ -41,7 +52,6 @@ public class Diagnoser : IDiagnoser
     private void ResetState (string documentUri)
     {
         diagnostics.Clear();
-        lineIndex = 0;
         this.documentUri = documentUri;
     }
 
