@@ -149,45 +149,45 @@ public class DiagnosticTest
     [Fact]
     public void WhenLabelIsUsedWarningIsNotDiagnosed ()
     {
-        SetupCommandWithEndpointNamelessParameter("goto");
+        meta.SetupCommandWithEndpoint("goto");
         Assert.Empty(Diagnose("# label", "@goto .label"));
     }
 
     [Fact]
     public void WhenUnknownEndpointScriptWarningIsDiagnosed ()
     {
-        SetupCommandWithEndpointNamelessParameter("goto");
+        meta.SetupCommandWithEndpoint("goto");
         var diags = Diagnose("@goto other");
         Assert.Single(diags);
-        Assert.Equal(new(new(new(0, 6), new(0, 9)), DiagnosticSeverity.Warning,
-            "Unknown script 'other'."), diags[0]);
+        Assert.Equal(new(new(new(0, 6), new(0, 11)), DiagnosticSeverity.Warning,
+            "Unknown endpoint: other."), diags[0]);
     }
 
     [Fact]
     public void WhenUnknownEndpointLabelInCurrentScriptWarningIsDiagnosed ()
     {
-        SetupCommandWithEndpointNamelessParameter("goto");
+        meta.SetupCommandWithEndpoint("goto");
         var diags = Diagnose("@goto .label");
         Assert.Single(diags);
-        Assert.Equal(new(new(new(0, 7), new(0, 12)), DiagnosticSeverity.Warning,
-            "Unknown label 'label' in current script."), diags[0]);
+        Assert.Equal(new(new(new(0, 6), new(0, 12)), DiagnosticSeverity.Warning,
+            "Unknown endpoint: .label."), diags[0]);
     }
 
     [Fact]
     public void WhenUnknownEndpointLabelInOtherScriptWarningIsDiagnosed ()
     {
-        SetupCommandWithEndpointNamelessParameter("goto");
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("other", "");
         var diags = Diagnose("@goto other.label");
         Assert.Single(diags);
-        Assert.Equal(new(new(new(0, 12), new(0, 17)), DiagnosticSeverity.Warning,
-            "Unknown label 'label' in script 'other'."), diags[0]);
+        Assert.Equal(new(new(new(0, 6), new(0, 17)), DiagnosticSeverity.Warning,
+            "Unknown endpoint: other.label."), diags[0]);
     }
 
     [Fact]
     public void WhenKnownEndpointWarningIsNotDiagnosed ()
     {
-        SetupCommandWithEndpointNamelessParameter("goto");
+        meta.SetupCommandWithEndpoint("goto");
         Assert.Empty(Diagnose("@goto .label", "# label"));
         Assert.Empty(Diagnose("@goto @.label", "# label"));
         docs.SetupScript("other", "");
@@ -209,30 +209,12 @@ public class DiagnosticTest
         doc.VerifyGet(l => l[3], Times.Never);
     }
 
-    private void SetupCommandWithEndpointNamelessParameter (string commandId)
-    {
-        var parameters = new[] {
-            new Metadata.Parameter {
-                Id = "",
-                Nameless = true,
-                ValueType = Metadata.ValueType.String,
-                ValueContainerType = ValueContainerType.Named,
-                ValueContext = new[] {
-                    new ValueContext(),
-                    new ValueContext { Type = ValueContextType.Constant, SubType = Constants.LabelExpression }
-                }
-            }
-        };
-        meta.Commands = new[] { new Metadata.Command { Id = commandId, Parameters = parameters } };
-    }
-
     private IReadOnlyList<Diagnostic> Diagnose (params string[] lines)
     {
         var diagnostics = new List<Diagnostic[]>();
         docs.SetupScript("@", lines);
         publisher.Setup(p => p.PublishDiagnostics(It.Is<string>(uri => uri == "@"), Capture.In(diagnostics)));
-        diagnoser.HandleMetadataChanged(meta);
-        diagnoser.Diagnose("@");
+        diagnoser.HandleMetadataChanged(meta); // Diagnoses on meta change.
         return diagnostics.SelectMany(d => d).ToArray();
     }
 }

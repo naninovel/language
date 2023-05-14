@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
@@ -7,18 +8,25 @@ public class DocumentRegistry : IDocumentRegistry
     private readonly Dictionary<string, Document> map = new();
     private readonly DocumentFactory factory = new();
     private readonly DocumentChanger changer = new();
-    private readonly EndpointRegistry endpoints;
+    private readonly EndpointRegistry endpoints = new();
     private readonly IDiagnoser diagnoser;
 
-    public DocumentRegistry (EndpointRegistry endpoints, IDiagnoser diagnoser)
+    public DocumentRegistry (IDiagnoser diagnoser)
     {
-        this.endpoints = endpoints;
         this.diagnoser = diagnoser;
     }
 
     public IReadOnlyCollection<string> GetAllUris () => map.Keys;
 
-    public bool Contains (string uri) => map.ContainsKey(uri);
+    public bool Contains (string uri, string? label = null)
+    {
+        if (!map.TryGetValue(uri, out var doc)) return false;
+        if (string.IsNullOrEmpty(label)) return true;
+        foreach (var line in doc.Lines)
+            if (line.Script is LabelLine labelLine && labelLine.Label == label)
+                return true;
+        return false;
+    }
 
     public IDocument Get (string uri)
     {
@@ -55,6 +63,6 @@ public class DocumentRegistry : IDocumentRegistry
 
     private void RegisterChange (string uri, Range? range = null)
     {
-        endpoints.Set(); // TODO: Update endpoint relations.
+        endpoints.HandleChange(); // TODO: Update endpoint relations.
     }
 }

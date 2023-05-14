@@ -33,10 +33,7 @@ public class Language
 
     [JSInvokable, RequiresUnreferencedCode("DI")]
     public static void Boot () => new ServiceCollection()
-        // core services
-        .AddSingleton<ILogger, JSLogger>()
-        .AddSingleton<IEndpointResolver, EndpointResolver>()
-        // language services
+        // handlers
         .AddSingleton<ICompletionHandler, CompletionHandler>()
         .AddSingleton<IDefinitionHandler, DefinitionHandler>()
         .AddSingleton<IDocumentHandler, DocumentHandler>()

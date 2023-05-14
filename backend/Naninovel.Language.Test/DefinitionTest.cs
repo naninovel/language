@@ -1,5 +1,5 @@
 using Moq;
-using Naninovel.Parsing;
+using Naninovel.Metadata;
 using Xunit;
 
 namespace Naninovel.Language.Test;
@@ -7,12 +7,12 @@ namespace Naninovel.Language.Test;
 public class DefinitionTest
 {
     private readonly Mock<IDocumentRegistry> docs = new();
-    private readonly Mock<IEndpointResolver> resolver = new();
+    private readonly Project meta = new();
     private readonly DefinitionHandler handler;
 
     public DefinitionTest ()
     {
-        handler = new(docs.Object, resolver.Object);
+        handler = new(docs.Object);
     }
 
     [Fact]
@@ -36,62 +36,64 @@ public class DefinitionTest
     [Fact]
     public void CanNavigateToScript ()
     {
-        string script = "foo", label = null;
-        resolver.Setup(r => r.TryResolve(It.Is<Command>(c => c.Identifier == "goto"), out script, out label)).Returns(true);
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("/foo.nani",
             "text",
             "more text",
             "# start",
             "@goto foo"
         );
-        Assert.Equal(new(null, "/foo.nani", new(new(0, 0), new(1, 9)), new(new(0, 0), new(0, 4))), handler.GotoDefinition("/foo.nani", new(3, 7))![0]);
+        Assert.Equal(new(null, "/foo.nani", new(new(0, 0), new(1, 9)), new(new(0, 0), new(0, 4))), Goto("/foo.nani", new(3, 7)));
     }
 
     [Fact]
     public void CanNavigateToLabel ()
     {
-        string script = null, label = "start";
-        resolver.Setup(r => r.TryResolve(It.Is<Command>(c => c.Identifier == "goto"), out script, out label)).Returns(true);
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("/foo.nani",
             "text",
             "# start",
             "@goto .start"
         );
-        Assert.Equal(new(null, "/foo.nani", new(new(1, 0), new(2, 12)), new(new(1, 0), new(1, 7))), handler.GotoDefinition("/foo.nani", new(2, 8))![0]);
+        Assert.Equal(new(null, "/foo.nani", new(new(1, 0), new(2, 12)), new(new(1, 0), new(1, 7))), Goto("/foo.nani", new(2, 8)));
     }
 
     [Fact]
     public void WhenCantFindDocumentReturnsNull ()
     {
-        string script = "bar", label = null;
-        resolver.Setup(r => r.TryResolve(It.Is<Command>(c => c.Identifier == "goto"), out script, out label)).Returns(true);
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("/foo.nani", "@goto bar");
+        handler.HandleMetadataChanged(meta);
         Assert.Null(handler.GotoDefinition("/foo.nani", new(0, 7)));
     }
 
     [Fact]
     public void WhenCantFindLabelNavigatesToFirstLine ()
     {
-        string script = "foo", label = "bar";
-        resolver.Setup(r => r.TryResolve(It.Is<Command>(c => c.Identifier == "goto"), out script, out label)).Returns(true);
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("/foo.nani",
             "text",
-            "# start",
-            "@goto foo.start"
+            "# foo",
+            "@goto foo.bar"
         );
-        Assert.Equal(new(null, "/foo.nani", new(new(0, 0), new(0, 4)), new(new(0, 0), new(0, 4))), handler.GotoDefinition("/foo.nani", new(2, 8))![0]);
+        Assert.Equal(new(null, "/foo.nani", new(new(0, 0), new(0, 4)), new(new(0, 0), new(0, 4))), Goto("/foo.nani", new(2, 8)));
     }
 
     [Fact]
     public void WhenNoNextLabelsSelectsWholeScript ()
     {
-        string script = "foo", label = null;
-        resolver.Setup(r => r.TryResolve(It.Is<Command>(c => c.Identifier == "goto"), out script, out label)).Returns(true);
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("/foo.nani",
             "text",
             "more text",
             "@goto foo"
         );
-        Assert.Equal(new(null, "/foo.nani", new(new(0, 0), new(2, 9)), new(new(0, 0), new(0, 4))), handler.GotoDefinition("/foo.nani", new(2, 8))![0]);
+        Assert.Equal(new(null, "/foo.nani", new(new(0, 0), new(2, 9)), new(new(0, 0), new(0, 4))), Goto("/foo.nani", new(2, 8)));
+    }
+
+    private LocationLink Goto (string documentUri, Position position)
+    {
+        handler.HandleMetadataChanged(meta);
+        return handler.GotoDefinition(documentUri, position)![0];
     }
 }

@@ -1,22 +1,26 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Naninovel.Metadata;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class DefinitionHandler : IDefinitionHandler
+public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
 {
+    private readonly MetadataProvider metaProvider = new();
+    private readonly EndpointResolver resolver;
     private readonly IDocumentRegistry registry;
-    private readonly IEndpointResolver resolver;
     private Position position;
     private DocumentLine line;
     private string documentUri = null!;
 
-    public DefinitionHandler (IDocumentRegistry registry, IEndpointResolver resolver)
+    public DefinitionHandler (IDocumentRegistry registry)
     {
         this.registry = registry;
-        this.resolver = resolver;
+        resolver = new(metaProvider);
     }
+
+    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
 
     public IReadOnlyList<LocationLink>? GotoDefinition (string documentUri, Position position)
     {
@@ -45,7 +49,7 @@ public class DefinitionHandler : IDefinitionHandler
         return null;
     }
 
-    private LocationLink[]? FromCommand (Command command)
+    private LocationLink[]? FromCommand (Parsing.Command command)
     {
         if (!resolver.TryResolve(command, out var script, out var label)) return null;
         var uri = script != null ? FindDocumentUriByName(script) : documentUri;

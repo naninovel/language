@@ -10,10 +10,10 @@ namespace Naninovel.Language;
 public class Diagnoser : IDiagnoser, IMetadataObserver
 {
     private readonly MetadataProvider metaProvider = new();
-    private readonly IDiagnosticPublisher publisher;
-    private readonly EndpointDiagnoser endpoints;
-    private readonly IDocumentRegistry docs;
     private readonly List<Diagnostic> diagnostics = new();
+    private readonly EndpointResolver endpoint;
+    private readonly IDocumentRegistry docs;
+    private readonly IDiagnosticPublisher publisher;
 
     private string documentUri = null!;
     private int lineIndex;
@@ -23,7 +23,7 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
     {
         this.publisher = publisher;
         this.docs = docs;
-        endpoints = new(metaProvider);
+        endpoint = new(metaProvider);
     }
 
     public void HandleMetadataChanged (Project meta)
@@ -72,7 +72,7 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         foreach (var error in line.Errors)
             AddParseError(error);
         if (line.Script is LabelLine labelLine)
-            DiagnoseLabel(labelLine.Label);
+            DiagnoseLabelLine(labelLine);
         if (line.Script is CommandLine commandLine)
             DiagnoseCommand(commandLine.Command);
         else if (line.Script is GenericLine genericLine)
@@ -87,7 +87,14 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         diagnostics.Add(new(range, DiagnosticSeverity.Error, error.Message));
     }
 
-    private void DiagnoseLabel (PlainText label) { }
+    private void DiagnoseLabelLine (LabelLine labelLine) { }
+
+    private void DiagnoseGenericLine (GenericLine genericLine)
+    {
+        foreach (var content in genericLine.Content)
+            if (content is InlinedCommand inlined)
+                DiagnoseCommand(inlined.Command);
+    }
 
     private void DiagnoseCommand (Parsing.Command command)
     {
@@ -95,13 +102,6 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         var commandMeta = metaProvider.FindCommand(command.Identifier);
         if (commandMeta is null) AddUnknownCommand(command);
         else DiagnoseCommand(command, commandMeta);
-    }
-
-    private void DiagnoseGenericLine (GenericLine genericLine)
-    {
-        foreach (var content in genericLine.Content)
-            if (content is InlinedCommand inlined)
-                DiagnoseCommand(inlined.Command);
     }
 
     private void DiagnoseCommand (Parsing.Command command, Metadata.Command commandMeta)
@@ -115,6 +115,8 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
 
     private void DiagnoseParameter (Parsing.Parameter param, Metadata.Command commandMeta)
     {
+        if (endpoint.TryResolve(param, commandMeta.Id, out var uri, out var label) && !docs.Contains(uri!, label))
+            AddUnknownEndpoint(param);
         var paramMeta = metaProvider.FindParameter(commandMeta.Id, param.Identifier);
         if (paramMeta is null) AddUnknownParameter(param, commandMeta);
         else if (param.Value.Count == 0 || param.Value.Dynamic || param.Value[0] is not PlainText value) return;
@@ -126,6 +128,13 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         var range = line.GetRange(command, lineIndex);
         var message = $"Command '{command.Identifier}' is unknown.";
         diagnostics.Add(new(range, DiagnosticSeverity.Error, message));
+    }
+
+    private void AddUnknownEndpoint (Parsing.Parameter param)
+    {
+        var range = line.GetRange(param.Value, lineIndex);
+        var message = $"Unknown endpoint: {param.Value}.";
+        diagnostics.Add(new(range, DiagnosticSeverity.Warning, message));
     }
 
     private void AddUnknownParameter (Parsing.Parameter param, Metadata.Command commandMeta)

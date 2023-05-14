@@ -14,7 +14,7 @@ public class DocumentTest
 
     public DocumentTest ()
     {
-        registry = new(new(), diagnoser.Object);
+        registry = new(diagnoser.Object);
         handler = new DocumentHandler(registry);
     }
 

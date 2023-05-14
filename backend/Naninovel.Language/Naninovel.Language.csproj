@@ -7,7 +7,7 @@
         <Version>$([System.DateTime]::Now.ToString("yyyy.MM.dd.HHmm"))</Version>
         <Authors>Elringus</Authors>
         <Company>ReWaffle LLC</Company>
-        <PackageDescription>Language server protocol implementation for Naninovel scenario scripting language.</PackageDescription>
+        <Description>Language server protocol implementation for Naninovel scenario scripting language.</Description>
         <RepositoryUrl>https://github.com/Naninovel/Language</RepositoryUrl>
     </PropertyGroup>
 
