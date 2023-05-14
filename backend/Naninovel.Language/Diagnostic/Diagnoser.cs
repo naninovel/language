@@ -26,7 +26,12 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         endpoints = new(metaProvider);
     }
 
-    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
+    public void HandleMetadataChanged (Project meta)
+    {
+        metaProvider.Update(meta);
+        foreach (var uri in docs.GetAllUris())
+            Diagnose(uri);
+    }
 
     public void Diagnose (string documentUri)
     {
