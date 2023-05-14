@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
+using Naninovel.Utilities;
 
 namespace Naninovel.Language;
 
@@ -115,12 +116,27 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
 
     private void DiagnoseParameter (Parsing.Parameter param, Metadata.Command commandMeta)
     {
-        if (endpoint.TryResolve(param, commandMeta.Id, out var uri, out var label) && !docs.Contains(uri!, label))
+        if (endpoint.TryResolve(param, commandMeta.Id, out var name, out var label) && IsEndpointUnknown(name, label))
             AddUnknownEndpoint(param);
         var paramMeta = metaProvider.FindParameter(commandMeta.Id, param.Identifier);
         if (paramMeta is null) AddUnknownParameter(param, commandMeta);
         else if (param.Value.Count == 0 || param.Value.Dynamic || param.Value[0] is not PlainText value) return;
         else if (!IsValueValid(value, paramMeta)) AddInvalidValue(value, paramMeta);
+    }
+
+    private bool IsEndpointUnknown (string? name, string? label)
+    {
+        var uri = string.IsNullOrEmpty(name) ? documentUri : ResolveUriByScriptName(name);
+        return uri is null || !docs.Contains(uri, label);
+    }
+
+    private string? ResolveUriByScriptName (string name)
+    {
+        var nameWithExtensions = name + ".nani";
+        foreach (var uri in docs.GetAllUris())
+            if (uri.EndsWithOrdinal(nameWithExtensions))
+                return uri;
+        return null;
     }
 
     private void AddUnknownCommand (Parsing.Command command)

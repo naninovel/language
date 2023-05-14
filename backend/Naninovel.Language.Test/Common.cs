@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Moq;
 using Naninovel.Metadata;
@@ -11,7 +12,9 @@ internal static class Common
     {
         var document = new DocumentFactory().CreateDocument(string.Join('\n', lines));
         docs.Setup(d => d.Get(uri)).Returns(document);
-        docs.Setup(d => d.GetAllUris()).Returns(new[] { uri });
+        // ReSharper disable once ConstantNullCoalescingCondition
+        var uris = (docs.Object.GetAllUris() ?? Array.Empty<string>()).Append(uri).ToArray();
+        docs.Setup(d => d.GetAllUris()).Returns(uris);
         docs.Setup(d => d.Contains(It.Is<string>(s => s == uri), It.IsAny<string>()))
             .Returns((string uri, string label) =>
                 string.IsNullOrEmpty(label) ||
@@ -27,7 +30,7 @@ internal static class Common
         var parameter = new Metadata.Parameter {
             Id = "",
             Nameless = true,
-            ValueType = ValueType.String,
+            ValueType = Metadata.ValueType.String,
             ValueContainerType = ValueContainerType.Named,
             ValueContext = context
         };

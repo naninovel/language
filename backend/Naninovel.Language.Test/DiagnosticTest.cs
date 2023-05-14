@@ -177,7 +177,7 @@ public class DiagnosticTest
     public void WhenUnknownEndpointLabelInOtherScriptWarningIsDiagnosed ()
     {
         meta.SetupCommandWithEndpoint("goto");
-        docs.SetupScript("other", "");
+        docs.SetupScript("other.nani", "");
         var diags = Diagnose("@goto other.label");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 6), new(0, 17)), DiagnosticSeverity.Warning,
@@ -189,10 +189,10 @@ public class DiagnosticTest
     {
         meta.SetupCommandWithEndpoint("goto");
         Assert.Empty(Diagnose("@goto .label", "# label"));
-        Assert.Empty(Diagnose("@goto @.label", "# label"));
-        docs.SetupScript("other", "");
+        Assert.Empty(Diagnose("@goto this.label", "# label"));
+        docs.SetupScript("other.nani", "");
         Assert.Empty(Diagnose("@goto other"));
-        docs.SetupScript("other", "# label");
+        docs.SetupScript("other.nani", "# label");
         Assert.Empty(Diagnose("@goto other.label"));
     }
 
@@ -212,8 +212,8 @@ public class DiagnosticTest
     private IReadOnlyList<Diagnostic> Diagnose (params string[] lines)
     {
         var diagnostics = new List<Diagnostic[]>();
-        docs.SetupScript("@", lines);
-        publisher.Setup(p => p.PublishDiagnostics(It.Is<string>(uri => uri == "@"), Capture.In(diagnostics)));
+        docs.SetupScript("this.nani", lines);
+        publisher.Setup(p => p.PublishDiagnostics(It.Is<string>(uri => uri == "this.nani"), Capture.In(diagnostics)));
         diagnoser.HandleMetadataChanged(meta); // Diagnoses on meta change.
         return diagnostics.SelectMany(d => d).ToArray();
     }
