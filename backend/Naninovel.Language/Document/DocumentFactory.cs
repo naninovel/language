@@ -4,7 +4,7 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class DocumentFactory
+public class DocumentFactory
 {
     private readonly ScriptParser parser;
     private readonly ErrorCollector errors = new();

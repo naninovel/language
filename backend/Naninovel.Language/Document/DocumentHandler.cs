@@ -2,9 +2,7 @@ using System.Collections.Generic;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_synchronization
-
-public class DocumentHandler
+public class DocumentHandler : IDocumentHandler
 {
     private readonly IDocumentRegistry registry;
 
@@ -13,17 +11,17 @@ public class DocumentHandler
         this.registry = registry;
     }
 
-    public void Open (IReadOnlyList<DocumentInfo> docs)
+    public void OpenDocument (IReadOnlyList<DocumentInfo> docs)
     {
         registry.Upsert(docs);
     }
 
-    public void Close (string uri)
+    public void CloseDocument (string uri)
     {
         registry.Remove(uri);
     }
 
-    public void Change (string uri, IReadOnlyList<DocumentChange> changes)
+    public void ChangeDocument (string uri, IReadOnlyList<DocumentChange> changes)
     {
         registry.Change(uri, changes);
     }

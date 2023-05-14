@@ -3,9 +3,7 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens
-
-public class TokenHandler
+public class TokenHandler : ITokenHandler
 {
     private readonly IDocumentRegistry registry;
     private readonly TokenBuilder builder = new();

@@ -1,6 +1,6 @@
 ﻿using Naninovel.Metadata;
 
-namespace Naninovel.Language.Bindings;
+namespace Naninovel.Language;
 
 internal class EndpointResolver : Naninovel.Metadata.EndpointResolver, IEndpointResolver
 {

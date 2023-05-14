@@ -1,9 +1,9 @@
-﻿using DotNetJS;
+﻿using System.Diagnostics.CodeAnalysis;
 using static Naninovel.Common.Bindings.Utilities;
 
-[assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
+[assembly: ExcludeFromCodeCoverage]
 
-namespace Naninovel.Language.WASM;
+namespace Naninovel.Language;
 
 public static class Program
 {
@@ -12,6 +12,6 @@ public static class Program
     public static void Main ()
     {
         // https://github.com/Elringus/DotNetJS/issues/23
-        _ = typeof(Naninovel.Language.Bindings.Language.Language).Assembly;
+        _ = typeof(Language).Assembly;
     }
 }

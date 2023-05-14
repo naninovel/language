@@ -7,12 +7,10 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_publishDiagnostics
-
-public class Diagnoser : IDiagnoser
+public class Diagnoser : IDiagnoser, IMetadataObserver
 {
-    private readonly MetadataProvider meta;
-    private readonly PublishDiagnostics publish;
+    private readonly MetadataProvider metaProvider = new();
+    private readonly IDiagnosticPublisher publisher;
     private readonly EndpointDiagnoser endpoints;
     private readonly IDocumentRegistry docs;
     private readonly List<Diagnostic> diagnostics = new();
@@ -21,13 +19,14 @@ public class Diagnoser : IDiagnoser
     private int lineIndex;
     private DocumentLine line;
 
-    public Diagnoser (MetadataProvider meta, IDocumentRegistry docs, PublishDiagnostics publish)
+    public Diagnoser (IDocumentRegistry docs, IDiagnosticPublisher publisher)
     {
-        this.meta = meta;
-        this.publish = publish;
+        this.publisher = publisher;
         this.docs = docs;
-        endpoints = new(meta);
+        endpoints = new(metaProvider);
     }
+
+    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
 
     public void Diagnose (string documentUri)
     {
@@ -58,8 +57,8 @@ public class Diagnoser : IDiagnoser
     private void Publish (string documentUri)
     {
         if (diagnostics.Count == 0)
-            publish(documentUri, Array.Empty<Diagnostic>());
-        else publish(documentUri, diagnostics.ToArray());
+            publisher.PublishDiagnostics(documentUri, Array.Empty<Diagnostic>());
+        else publisher.PublishDiagnostics(documentUri, diagnostics.ToArray());
     }
 
     private void DiagnoseLine (in DocumentLine line)
@@ -88,7 +87,7 @@ public class Diagnoser : IDiagnoser
     private void DiagnoseCommand (Parsing.Command command)
     {
         if (string.IsNullOrEmpty(command.Identifier)) return;
-        var commandMeta = meta.FindCommand(command.Identifier);
+        var commandMeta = metaProvider.FindCommand(command.Identifier);
         if (commandMeta is null) AddUnknownCommand(command);
         else DiagnoseCommand(command, commandMeta);
     }
@@ -111,7 +110,7 @@ public class Diagnoser : IDiagnoser
 
     private void DiagnoseParameter (Parsing.Parameter param, Metadata.Command commandMeta)
     {
-        var paramMeta = meta.FindParameter(commandMeta.Id, param.Identifier);
+        var paramMeta = metaProvider.FindParameter(commandMeta.Id, param.Identifier);
         if (paramMeta is null) AddUnknownParameter(param, commandMeta);
         else if (param.Value.Count == 0 || param.Value.Dynamic || param.Value[0] is not PlainText value) return;
         else if (!IsValueValid(value, paramMeta)) AddInvalidValue(value, paramMeta);

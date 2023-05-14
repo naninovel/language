@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Moq;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
@@ -9,6 +11,14 @@ namespace Naninovel.Language.Test;
 public class DiagnosticTest
 {
     private readonly Project meta = new();
+    private readonly Mock<IDocumentRegistry> docs = new();
+    private readonly Mock<IDiagnosticPublisher> publisher = new();
+    private readonly Diagnoser diagnoser;
+
+    public DiagnosticTest ()
+    {
+        diagnoser = new(docs.Object, publisher.Object);
+    }
 
     [Fact]
     public void WhenEmptyDocumentResultIsEmpty ()
@@ -78,7 +88,7 @@ public class DiagnosticTest
         };
         meta.Commands = new[] { new Metadata.Command { Id = "c", Parameters = parameters } };
         var diags = Diagnose("@c sb:- nd:x.- il:,1.0 nbl:x.,x,.,.-");
-        Assert.Equal(4, diags.Length);
+        Assert.Equal(4, diags.Count);
         Assert.Equal(new(new(new(0, 6), new(0, 7)), DiagnosticSeverity.Error,
             "Invalid value: '-' is not a boolean."), diags[0]);
         Assert.Equal(new(new(new(0, 11), new(0, 14)), DiagnosticSeverity.Error,
@@ -140,7 +150,7 @@ public class DiagnosticTest
     public void WhenLabelIsUsedWarningIsNotDiagnosed ()
     {
         SetupCommandWithEndpointNamelessParameter("goto");
-        Assert.Empty(Diagnose("# label\n@goto .label"));
+        Assert.Empty(Diagnose("# label", "@goto .label"));
     }
 
     [Fact]
@@ -167,7 +177,8 @@ public class DiagnosticTest
     public void WhenUnknownEndpointLabelInOtherScriptWarningIsDiagnosed ()
     {
         SetupCommandWithEndpointNamelessParameter("goto");
-        var diags = Diagnose(("", "@goto other.label"), ("other", ""));
+        docs.SetupScript("other", "");
+        var diags = Diagnose("@goto other.label");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 12), new(0, 17)), DiagnosticSeverity.Warning,
             "Unknown label 'label' in script 'other'."), diags[0]);
@@ -177,21 +188,21 @@ public class DiagnosticTest
     public void WhenKnownEndpointWarningIsNotDiagnosed ()
     {
         SetupCommandWithEndpointNamelessParameter("goto");
-        Assert.Empty(Diagnose(("", "@goto other"), ("other", "")));
-        Assert.Empty(Diagnose(("", "@goto other.label"), ("other", "# label")));
-        Assert.Empty(Diagnose(("", "@goto .label\n# label")));
-        Assert.Empty(Diagnose(("this", "@goto this.label\n# label")));
+        Assert.Empty(Diagnose("@goto .label", "# label"));
+        Assert.Empty(Diagnose("@goto @.label", "# label"));
+        docs.SetupScript("other", "");
+        Assert.Empty(Diagnose("@goto other"));
+        docs.SetupScript("other", "# label");
+        Assert.Empty(Diagnose("@goto other.label"));
     }
 
     [Fact]
     public void WhenRangeSpecifiedDiagnosesOnlyAffectedLines ()
     {
-        var docs = new Mock<IDocumentRegistry>();
         var doc = new Mock<IDocument>();
-        docs.Setup(d => d.Get(It.IsAny<string>())).Returns(doc.Object);
-        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentLine("#", new LabelLine(""), Array.Empty<ParseError>(), new()));
-        var diagnoser = new Diagnoser(new Mock<MetadataProvider>().Object, docs.Object, new Mock<PublishDiagnostics>().Object);
-        diagnoser.Diagnose("", new Range(new(1, 0), new(2, 0)));
+        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory().CreateLine(""));
+        docs.Setup(d => d.Get("@")).Returns(doc.Object);
+        diagnoser.Diagnose("@", new Range(new(1, 0), new(2, 0)));
         doc.VerifyGet(l => l[0], Times.Never);
         doc.VerifyGet(l => l[1], Times.Once);
         doc.VerifyGet(l => l[2], Times.Once);
@@ -215,21 +226,13 @@ public class DiagnosticTest
         meta.Commands = new[] { new Metadata.Command { Id = commandId, Parameters = parameters } };
     }
 
-    private Diagnostic[] Diagnose (string scriptText)
+    private IReadOnlyList<Diagnostic> Diagnose (params string[] lines)
     {
-        return Diagnose(("@", scriptText));
-    }
-
-    private Diagnostic[] Diagnose (params (string name, string text)[] scripts)
-    {
-        var result = default(Diagnostic[]);
-        var docs = new DocumentRegistry(new());
-        var diagnoser = new Diagnoser(new(meta), docs, Publish);
-        var handler = new DocumentHandler(docs, diagnoser);
-        foreach (var (name, text) in scripts)
-            handler.Open(new(name, text));
-        return result;
-
-        void Publish (string _, Diagnostic[] diags) => result = diags;
+        var diagnostics = new List<Diagnostic[]>();
+        docs.SetupScript("@", lines);
+        publisher.Setup(p => p.PublishDiagnostics(It.Is<string>(uri => uri == "@"), Capture.In(diagnostics)));
+        diagnoser.HandleMetadataChanged(meta);
+        diagnoser.Diagnose("@");
+        return diagnostics.SelectMany(d => d).ToArray();
     }
 }

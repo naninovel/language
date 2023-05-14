@@ -8,37 +8,37 @@ namespace Naninovel.Language.Test;
 
 public class DocumentTest
 {
-    private readonly DocumentRegistry registry;
     private readonly Mock<IDiagnoser> diagnoser = new();
+    private readonly DocumentRegistry registry;
     private readonly DocumentHandler handler;
 
     public DocumentTest ()
     {
-        registry = new DocumentRegistry(new());
-        handler = new DocumentHandler(registry, diagnoser.Object);
+        registry = new(new(), diagnoser.Object);
+        handler = new DocumentHandler(registry);
     }
 
     [Fact]
-    public void WhenOpenedDocumentIsAddedToRegistry ()
+    public void WhenOpenedDocumentIsUpsertToRegistry ()
     {
-        handler.Open(new("foo", ""));
+        handler.OpenDocument(ToInfos("foo", ""));
         Assert.True(registry.Contains("foo"));
     }
 
     [Fact]
     public void WhenClosedDocumentIsRemovedFromRegistry ()
     {
-        handler.Open(new("foo", ""));
-        handler.Close("foo");
+        handler.OpenDocument(ToInfos("foo", ""));
+        handler.CloseDocument("foo");
         Assert.False(registry.Contains("foo"));
     }
 
     [Fact]
-    public void WhenDocumentWithExistingKeySetItsReplaced ()
+    public void WhenDocumentWithExistingKeyUpsertItsReplaced ()
     {
-        registry.Set("foo", new Document(new List<DocumentLine> { Capacity = 0 }));
-        registry.Set("foo", new Document(new List<DocumentLine> { Capacity = 1 }));
-        Assert.Equal(1, (((Document)registry.Get("foo")).Lines).Capacity);
+        registry.Upsert(ToInfos("foo", "1"));
+        registry.Upsert(ToInfos("foo", "2"));
+        Assert.Equal("2", registry.Get("foo")[0].Text);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class DocumentTest
     [Fact]
     public void OpenedDocumentWithEmptyContentHasSingleEmptyLine ()
     {
-        handler.Open(new("@", ""));
+        handler.OpenDocument(ToInfos("@", ""));
         Assert.Equal(1, registry.Get("@").LineCount);
         Assert.Empty(registry.Get("@")[0].Text);
     }
@@ -58,7 +58,7 @@ public class DocumentTest
     [Fact]
     public void OpenedDocumentTextLinesArePreserved ()
     {
-        handler.Open(new("@", "generic\n@command\n#label\n;comment"));
+        handler.OpenDocument(ToInfos("@", "generic\n@command\n#label\n;comment"));
         var document = registry.Get("@");
         Assert.Equal("generic", document[0].Text);
         Assert.Equal("@command", document[1].Text);
@@ -69,7 +69,7 @@ public class DocumentTest
     [Fact]
     public void OpenedDocumentTextIsParsed ()
     {
-        handler.Open(new("@", "generic\n@command\n#label\n;comment"));
+        handler.OpenDocument(ToInfos("@", "generic\n@command\n#label\n;comment"));
         var document = registry.Get("@");
         Assert.IsType<GenericLine>(document[0].Script);
         Assert.IsType<CommandLine>(document[1].Script);
@@ -80,40 +80,40 @@ public class DocumentTest
     [Fact]
     public void CanInsertNewCharacter ()
     {
-        handler.Open(new("@", "@ba"));
-        handler.Change("@", new[] { new DocumentChange(new(new(0, 3), new(0, 3)), "r") });
+        handler.OpenDocument(ToInfos("@", "@ba"));
+        handler.ChangeDocument("@", new[] { new DocumentChange(new(new(0, 3), new(0, 3)), "r") });
         Assert.Equal("@bar", registry.Get("@")[0].Text);
     }
 
     [Fact]
     public void CanInsertEmptyNewLines ()
     {
-        handler.Open(new("@", ""));
-        handler.Change("@", new[] { new DocumentChange(new(new(0, 0), new(0, 0)), "\n\n") });
+        handler.OpenDocument(ToInfos("@", ""));
+        handler.ChangeDocument("@", new[] { new DocumentChange(new(new(0, 0), new(0, 0)), "\n\n") });
         Assert.Equal(3, registry.Get("@").LineCount);
     }
 
     [Fact]
     public void CanModifyExistingCharacter ()
     {
-        handler.Open(new("@", "@bar"));
-        handler.Change("@", new[] { new DocumentChange(new(new(0, 1), new(0, 2)), "f") });
+        handler.OpenDocument(ToInfos("@", "@bar"));
+        handler.ChangeDocument("@", new[] { new DocumentChange(new(new(0, 1), new(0, 2)), "f") });
         Assert.Equal("@far", registry.Get("@")[0].Text);
     }
 
     [Fact]
     public void CanRemoveExistingCharacter ()
     {
-        handler.Open(new("@", "@cmd x {x}"));
-        handler.Change("@", new[] { new DocumentChange(new(new(0, 8), new(0, 9)), "") });
+        handler.OpenDocument(ToInfos("@", "@cmd x {x}"));
+        handler.ChangeDocument("@", new[] { new DocumentChange(new(new(0, 8), new(0, 9)), "") });
         Assert.Equal("@cmd x {}", registry.Get("@")[0].Text);
     }
 
     [Fact]
     public void CanRemoveEmptyNewLines ()
     {
-        handler.Open(new("@", "\n\n"));
-        handler.Change("@", new[] { new DocumentChange(new(new(0, 0), new(2, 0)), "") });
+        handler.OpenDocument(ToInfos("@", "\n\n"));
+        handler.ChangeDocument("@", new[] { new DocumentChange(new(new(0, 0), new(2, 0)), "") });
         Assert.Equal(1, registry.Get("@").LineCount);
         Assert.Empty(registry.Get("@")[0].Text);
     }
@@ -121,8 +121,8 @@ public class DocumentTest
     [Fact]
     public void CanRemoveLinesWithMixedLineBreaks ()
     {
-        handler.Open(new("@", "a\nb\r\nc"));
-        handler.Change("@", new[] { new DocumentChange(new(new(0, 0), new(2, 0)), "") });
+        handler.OpenDocument(ToInfos("@", "a\nb\r\nc"));
+        handler.ChangeDocument("@", new[] { new DocumentChange(new(new(0, 0), new(2, 0)), "") });
         Assert.Equal(1, registry.Get("@").LineCount);
         Assert.Equal("c", registry.Get("@")[0].Text);
     }
@@ -130,8 +130,8 @@ public class DocumentTest
     [Fact]
     public void ChangeAcrossMultipleLinesAppliedCorrectly ()
     {
-        handler.Open(new("@", "a\n\nbc\nd"));
-        handler.Change("@", new[] { new DocumentChange(new(new(0, 1), new(2, 1)), "e") });
+        handler.OpenDocument(ToInfos("@", "a\n\nbc\nd"));
+        handler.ChangeDocument("@", new[] { new DocumentChange(new(new(0, 1), new(2, 1)), "e") });
         Assert.Equal(2, registry.Get("@").LineCount);
         Assert.Equal("aec", registry.Get("@")[0].Text);
         Assert.Equal("d", registry.Get("@")[1].Text);
@@ -140,8 +140,8 @@ public class DocumentTest
     [Fact]
     public void MultipleChangesAreAppliedInOrder ()
     {
-        handler.Open(new("@", ""));
-        handler.Change("@", new[] {
+        handler.OpenDocument(ToInfos("@", ""));
+        handler.ChangeDocument("@", new[] {
             new DocumentChange(new(new(0, 0), new(0, 0)), "a"),
             new DocumentChange(new(new(0, 1), new(0, 1)), "b"),
             new DocumentChange(new(new(0, 2), new(0, 2)), "c")
@@ -152,16 +152,16 @@ public class DocumentTest
     [Fact]
     public void WhenChangedLinesAreReParsed ()
     {
-        handler.Open(new("@", "generic"));
-        handler.Change("@", new[] { new DocumentChange(new(new(0, 0), new(0, 7)), "@bar") });
+        handler.OpenDocument(ToInfos("@", "generic"));
+        handler.ChangeDocument("@", new[] { new DocumentChange(new(new(0, 0), new(0, 7)), "@bar") });
         Assert.Equal("bar", ((CommandLine)registry.Get("@")[0].Script).Command.Identifier);
     }
 
     [Fact]
     public void CanInsertMultipleLinesAndThenAppendOneMore ()
     {
-        handler.Open(new("@", ""));
-        handler.Change("@", new[] {
+        handler.OpenDocument(ToInfos("@", ""));
+        handler.ChangeDocument("@", new[] {
             new DocumentChange(new(new(0, 0), new(0, 0)), "a\nb\nc"),
             new DocumentChange(new(new(2, 1), new(2, 1)), "\n")
         });
@@ -175,8 +175,8 @@ public class DocumentTest
     [Fact]
     public void CanInsertLineBreakWithLeadingContent ()
     {
-        handler.Open(new("@", "foo\n"));
-        handler.Change("@", new[] { new DocumentChange(new(new(0, 3), new(0, 3)), "\nbar") });
+        handler.OpenDocument(ToInfos("@", "foo\n"));
+        handler.ChangeDocument("@", new[] { new DocumentChange(new(new(0, 3), new(0, 3)), "\nbar") });
         var document = registry.Get("@");
         Assert.Equal(3, document.LineCount);
         Assert.Equal("foo", document[0].Text);
@@ -187,14 +187,14 @@ public class DocumentTest
     [Fact]
     public void OpenedDocumentIsDiagnosed ()
     {
-        handler.Open(new("foo", ""));
+        handler.OpenDocument(ToInfos("foo", ""));
         diagnoser.Verify(d => d.Diagnose("foo"), Times.Once);
     }
 
     [Fact]
     public void OpenedDocumentsAreDiagnosed ()
     {
-        handler.OpenBatch(new DocumentInfo[] { new("foo", ""), new("bar", "") });
+        handler.OpenDocument(new DocumentInfo[] { new("foo", ""), new("bar", "") });
         diagnoser.Verify(d => d.Diagnose("foo"), Times.Once);
         diagnoser.Verify(d => d.Diagnose("bar"), Times.Once);
     }
@@ -202,8 +202,8 @@ public class DocumentTest
     [Fact]
     public void ChangedDocumentIsDiagnosed ()
     {
-        handler.Open(new("foo", "a"));
-        handler.Change("foo", new[] { new DocumentChange(new(new(0, 0), new(0, 1)), "b") });
+        handler.OpenDocument(ToInfos("foo", "a"));
+        handler.ChangeDocument("foo", new[] { new DocumentChange(new(new(0, 0), new(0, 1)), "b") });
         diagnoser.Verify(d => d.Diagnose("foo", new(new(0, 0), new(0, 1))), Times.Once);
     }
 
@@ -222,5 +222,10 @@ public class DocumentTest
         Assert.Empty(line.Extract(null));
         Assert.Empty(line.Extract(new PlainText("")));
         Assert.Empty(line.Extract(new LineRange(9, 1)));
+    }
+
+    private IReadOnlyList<DocumentInfo> ToInfos (string documentUri, string documentText)
+    {
+        return new[] { new DocumentInfo(documentUri, documentText) };
     }
 }

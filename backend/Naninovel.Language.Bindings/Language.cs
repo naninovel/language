@@ -1,51 +1,59 @@
-﻿using System.Collections.Generic;
+﻿using System.Diagnostics.CodeAnalysis;
 using DotNetJS;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
+using Naninovel.Common.Bindings;
+using Naninovel.Language;
 using Naninovel.Metadata;
 using static Naninovel.Common.Bindings.Utilities;
 
+[assembly: ExcludeFromCodeCoverage]
 [assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
+[assembly: JSImport(new[] { typeof(IDiagnosticPublisher) })]
+[assembly: JSExport(new[] {
+    typeof(ICompletionHandler),
+    typeof(IDefinitionHandler),
+    typeof(IDocumentHandler),
+    typeof(IFoldingHandler),
+    typeof(IHoverHandler),
+    typeof(ISymbolHandler),
+    typeof(ITokenHandler)
+}, invokePattern: "(.+)", invokeReplacement: "Naninovel.Common.Bindings.Utilities.Try(() => $1)")]
 
-namespace Naninovel.Language.Bindings.Language;
+namespace Naninovel.Language;
 
-public static partial class Language
+public class Language
 {
-    private static readonly EndpointRegistry endpoints = new();
-    private static readonly DocumentRegistry docs = new(endpoints);
-    private static Diagnoser diagnoser = null!;
-    private static DocumentHandler document = null!;
-    private static CompletionHandler completion = null!;
-    private static SymbolHandler symbol = null!;
-    private static TokenHandler token = null!;
-    private static HoverHandler hover = null!;
-    private static FoldingHandler folding = null!;
-    private static DefinitionHandler definition = null!;
+    private static IObserverNotifier<IMetadataObserver> notifier = null!;
 
-    [JSInvokable]
-    public static void CreateHandlers (Project metadata)
+    public Language (IObserverNotifier<IMetadataObserver> notifier)
     {
-        var provider = new MetadataProvider(metadata);
-        diagnoser = new Diagnoser(provider, docs, PublishDiagnostics);
-        document = new DocumentHandler(docs);
-        completion = new CompletionHandler(provider, docs);
-        symbol = new SymbolHandler(provider, docs);
-        token = new TokenHandler(docs);
-        hover = new HoverHandler(provider, docs);
-        folding = new FoldingHandler(docs);
-        definition = new DefinitionHandler(docs, new EndpointResolver(provider));
+        Language.notifier = notifier;
     }
 
-    [JSInvokable] public static void OpenDocuments (IReadOnlyList<DocumentInfo> infos) => Try(document.Open, infos);
-    [JSInvokable] public static void CloseDocument (string uri) => Try(document.Close, uri);
-    [JSInvokable] public static void ChangeDocument (string uri, IReadOnlyList<DocumentChange> changes) => Try(document.Change, uri, changes);
-    [JSInvokable] public static CompletionItem[] Complete (string uri, Position pos) => Try(completion.Complete, uri, pos);
-    [JSInvokable] public static Symbol[] GetSymbols (string uri) => Try(symbol.GetSymbols, uri);
-    [JSInvokable] public static TokenLegend GetTokenLegend () => Try(token.GetTokenLegend);
-    [JSInvokable] public static Tokens GetAllTokens (string uri) => Try(token.GetAllTokens, uri);
-    [JSInvokable] public static Tokens GetTokens (string uri, Range range) => Try(token.GetTokens, uri, range);
-    [JSInvokable] public static Hover? Hover (string uri, Position pos) => Try(hover.Hover, uri, pos);
-    [JSInvokable] public static FoldingRange[] GetFoldingRanges (string uri) => Try(folding.GetFoldingRanges, uri);
-    [JSInvokable] public static LocationLink[]? GotoDefinition (string uri, Position pos) => Try(definition.GotoDefinition, uri, pos);
+    [JSInvokable, RequiresUnreferencedCode("DI")]
+    public static void Boot () => new ServiceCollection()
+        // core services
+        .AddSingleton<ILogger, JSLogger>()
+        .AddSingleton<IEndpointResolver, EndpointResolver>()
+        // language services
+        .AddSingleton<ICompletionHandler, CompletionHandler>()
+        .AddSingleton<IDefinitionHandler, DefinitionHandler>()
+        .AddSingleton<IDocumentHandler, DocumentHandler>()
+        .AddSingleton<IFoldingHandler, FoldingHandler>()
+        .AddSingleton<IHoverHandler, HoverHandler>()
+        .AddSingleton<ISymbolHandler, SymbolHandler>()
+        .AddSingleton<ITokenHandler, TokenHandler>()
+        .AddSingleton<IDiagnosticPublisher, DiagnosticPublisher.JSDiagnosticPublisher>()
+        .AddSingleton<Language>()
+        .AddJS()
+        // observers
+        .AddObserving<IMetadataObserver>()
+        // initialization
+        .BuildServiceProvider()
+        .RegisterObservers()
+        .GetAll();
 
-    [JSFunction] public static partial void PublishDiagnostics (string uri, IReadOnlyList<Diagnostic> diagnostics);
+    [JSInvokable]
+    public static void UpdateMetadata (Project meta) => notifier.Notify(n => n.HandleMetadataChanged(meta));
 }

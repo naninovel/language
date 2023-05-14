@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Naninovel.Metadata;
@@ -7,29 +8,33 @@ using static Naninovel.Metadata.Constants;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_completion
-
-public class CompletionHandler
+public class CompletionHandler : ICompletionHandler, IMetadataObserver
 {
-    private readonly IDocumentRegistry registry;
-    private readonly CompletionProvider provider;
+    private readonly IDocumentRegistry docs;
+    private readonly CompletionProvider provider = new();
     private readonly CommandCompletionHandler commandHandler;
+    private readonly MetadataProvider metaProvider = new();
 
     private char charBehindCursor => line.GetCharBehindCursor(position);
     private Position position;
     private DocumentLine line;
     private string scriptName = string.Empty;
 
-    public CompletionHandler (MetadataProvider meta, IDocumentRegistry registry)
+    public CompletionHandler (IDocumentRegistry docs)
     {
-        this.registry = registry;
-        provider = new CompletionProvider(meta);
-        commandHandler = new CommandCompletionHandler(meta, provider);
+        this.docs = docs;
+        commandHandler = new CommandCompletionHandler(metaProvider, provider);
     }
 
-    public CompletionItem[] Complete (string documentUri, Position position)
+    public void HandleMetadataChanged (Project meta)
     {
-        var documentLine = registry.Get(documentUri)[position.Line];
+        metaProvider.Update(meta);
+        provider.Update(metaProvider);
+    }
+
+    public IReadOnlyList<CompletionItem> Complete (string documentUri, Position position)
+    {
+        var documentLine = docs.Get(documentUri)[position.Line];
         var scriptName = Path.GetFileNameWithoutExtension(documentUri);
         ResetState(documentLine, position, scriptName);
         return documentLine.Script switch {

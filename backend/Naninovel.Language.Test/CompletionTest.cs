@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using Naninovel.Metadata;
@@ -8,6 +9,13 @@ namespace Naninovel.Language.Test;
 public class CompletionTest
 {
     private readonly Project meta = new();
+    private readonly Mock<IDocumentRegistry> docs = new();
+    private readonly CompletionHandler handler;
+
+    public CompletionTest ()
+    {
+        handler = new(docs.Object);
+    }
 
     [Fact]
     public void WhenCommentOrLabelLineResultIsEmpty ()
@@ -340,7 +348,7 @@ public class CompletionTest
         var param = new Parameter { Id = "id", ValueType = ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         var items = Complete("@cmd id:x", 9);
-        Assert.Equal(2, items.Length);
+        Assert.Equal(2, items.Count);
         Assert.Equal("true", items[0].Label);
         Assert.Equal("false", items[1].Label);
     }
@@ -353,7 +361,7 @@ public class CompletionTest
         meta.Variables = new[] { "foo" };
         meta.Functions = new[] { "bar" };
         var items = Complete("@cmd ex:", 8);
-        Assert.Equal(2, items.Length);
+        Assert.Equal(2, items.Count);
         Assert.Equal("foo", items[0].Label);
         Assert.Equal("bar", items[1].Label);
     }
@@ -453,12 +461,10 @@ public class CompletionTest
         Assert.Equal("true", Complete("@command identifier:", 20)[0].Label);
     }
 
-    private CompletionItem[] Complete (string lineText, int charOffset, string scriptUri = null)
+    private IReadOnlyList<CompletionItem> Complete (string line, int charOffset, string uri = "@")
     {
-        scriptUri ??= "@";
-        var registry = new DocumentRegistry(new());
-        var handler = new CompletionHandler(new MetadataProvider(meta), registry);
-        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new(scriptUri, lineText));
-        return handler.Complete(scriptUri, new Position(0, charOffset));
+        handler.HandleMetadataChanged(meta);
+        docs.SetupScript(uri, line);
+        return handler.Complete(uri, new Position(0, charOffset));
     }
 }

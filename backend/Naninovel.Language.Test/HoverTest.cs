@@ -6,7 +6,14 @@ namespace Naninovel.Language.Test;
 
 public class HoverTest
 {
+    private readonly Mock<IDocumentRegistry> docs = new();
     private readonly Project meta = new();
+    private readonly HoverHandler handler;
+
+    public HoverTest ()
+    {
+        handler = new(docs.Object);
+    }
 
     [Fact]
     public void WhenCommandMetadataNotFoundNullIsReturned ()
@@ -125,16 +132,15 @@ public class HoverTest
         Assert.Contains("alias | string | \n", content);
     }
 
-    private Hover Hover (string lineText, int charOffset)
+    private Hover Hover (string line, int charOffset)
     {
-        return HoverNullable(lineText, charOffset) ?? default;
+        return HoverNullable(line, charOffset) ?? default;
     }
 
-    private Hover? HoverNullable (string lineText, int charOffset)
+    private Hover? HoverNullable (string line, int charOffset)
     {
-        var registry = new DocumentRegistry(new());
-        var handler = new HoverHandler(new MetadataProvider(meta), registry);
-        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new("@", lineText));
+        docs.SetupScript("@", line);
+        handler.HandleMetadataChanged(meta);
         return handler.Hover("@", new Position(0, charOffset));
     }
 }

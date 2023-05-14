@@ -3,9 +3,7 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_foldingRange
-
-public class FoldingHandler
+public class FoldingHandler : IFoldingHandler
 {
     private readonly IDocumentRegistry registry;
     private readonly List<FoldingRange> ranges = new();
@@ -18,7 +16,7 @@ public class FoldingHandler
         this.registry = registry;
     }
 
-    public FoldingRange[] GetFoldingRanges (string documentUri)
+    public IReadOnlyList<FoldingRange> GetFoldingRanges (string documentUri)
     {
         ResetState();
         var doc = registry.Get(documentUri);

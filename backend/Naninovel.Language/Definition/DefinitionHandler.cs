@@ -1,11 +1,10 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_definition
-
-public class DefinitionHandler
+public class DefinitionHandler : IDefinitionHandler
 {
     private readonly IDocumentRegistry registry;
     private readonly IEndpointResolver resolver;
@@ -19,7 +18,7 @@ public class DefinitionHandler
         this.resolver = resolver;
     }
 
-    public LocationLink[]? GotoDefinition (string documentUri, Position position)
+    public IReadOnlyList<LocationLink>? GotoDefinition (string documentUri, Position position)
     {
         var documentLine = registry.Get(documentUri)[position.Line];
         ResetState(documentLine, position, documentUri);

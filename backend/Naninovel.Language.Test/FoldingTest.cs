@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Moq;
 using Xunit;
 
@@ -5,6 +6,14 @@ namespace Naninovel.Language.Test;
 
 public class FoldingTest
 {
+    private readonly Mock<IDocumentRegistry> docs = new();
+    private readonly FoldingHandler handler;
+
+    public FoldingTest ()
+    {
+        handler = new(docs.Object);
+    }
+
     [Fact]
     public void WhenEmptyDocumentResultIsEmpty ()
     {
@@ -30,23 +39,21 @@ public class FoldingTest
     [Fact]
     public void OtherLinesAreNotFolded ()
     {
-        Assert.Empty(GetRanges("generic\n# label\n\n"));
+        Assert.Empty(GetRanges("generic", "# label", ""));
     }
 
     [Fact]
     public void FoldingRangesAreCorrect ()
     {
-        var ranges = GetRanges(";\n@c\n#l\n\n;");
-        Assert.Equal(2, ranges.Length);
+        var ranges = GetRanges(";", "@c", "#l", "", ";");
+        Assert.Equal(2, ranges.Count);
         Assert.Equal(new FoldingRange(0, 1), ranges[0]);
         Assert.Equal(new FoldingRange(4, 4), ranges[1]);
     }
 
-    private FoldingRange[] GetRanges (string documentText)
+    private IReadOnlyList<FoldingRange> GetRanges (params string[] lines)
     {
-        var registry = new DocumentRegistry(new());
-        var handler = new FoldingHandler(registry);
-        new DocumentHandler(registry, new Mock<IDiagnoser>().Object).Open(new("@", documentText));
+        docs.SetupScript("@", lines);
         return handler.GetFoldingRanges("@");
     }
 }
