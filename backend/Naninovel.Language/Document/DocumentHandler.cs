@@ -5,24 +5,32 @@ namespace Naninovel.Language;
 public class DocumentHandler : IDocumentHandler
 {
     private readonly IDocumentRegistry registry;
+    private readonly IDiagnoser diagnoser;
 
-    public DocumentHandler (IDocumentRegistry registry)
+    public DocumentHandler (IDocumentRegistry registry, IDiagnoser diagnoser)
     {
         this.registry = registry;
+        this.diagnoser = diagnoser;
     }
 
-    public void OpenDocument (IReadOnlyList<DocumentInfo> docs)
+    public void UpsertDocuments (IReadOnlyList<DocumentInfo> docs)
     {
-        registry.Upsert(docs);
+        foreach (var doc in docs)
+            registry.Upsert(doc);
+        foreach (var doc in docs)
+            diagnoser.Diagnose(doc.Uri);
     }
 
-    public void CloseDocument (string uri)
+    public void RemoveDocument (string uri)
     {
         registry.Remove(uri);
+        foreach (var otherUri in registry.GetAllUris())
+            diagnoser.Diagnose(otherUri);
     }
 
     public void ChangeDocument (string uri, IReadOnlyList<DocumentChange> changes)
     {
-        registry.Change(uri, changes);
+        var changedRange = registry.Change(uri, changes);
+        diagnoser.Diagnose(uri, changedRange);
     }
 }

@@ -59,7 +59,7 @@ internal class CommandCompletionHandler
         return command.Parameters.Any(p => p.Nameless && IsCursorOver(p)) ||
                commandMeta.Parameters.Any(p => p.Nameless) &&
                line.TryResolve(command.Identifier, out var idRange) &&
-               cursor == idRange.EndIndex + 2;
+               cursor == idRange.End + 2;
     }
 
     private bool ShouldCompleteNamedValue ()
@@ -105,7 +105,7 @@ internal class CommandCompletionHandler
         var value = command.Parameters.FirstOrDefault(IsCursorOver)?.Value;
         if (value is null || paramMeta.ValueContainerType != ValueContainerType.Named)
             return paramMeta.ValueContext?.ElementAtOrDefault(0);
-        var lastDotIndex = line.GetLineRange(value).StartIndex + line.Extract(value).LastIndexOf('.');
+        var lastDotIndex = line.GetLineRange(value).Start + line.Extract(value).LastIndexOf('.');
         if (lastDotIndex < 0 || cursor <= lastDotIndex) return paramMeta.ValueContext?.ElementAtOrDefault(0);
         return paramMeta.ValueContext?.ElementAtOrDefault(1);
     }

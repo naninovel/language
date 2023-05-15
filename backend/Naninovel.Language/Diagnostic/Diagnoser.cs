@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 using Naninovel.Utilities;
@@ -12,6 +10,7 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
 {
     private readonly MetadataProvider metaProvider = new();
     private readonly List<Diagnostic> diagnostics = new();
+    private readonly ValueValidator validator = new();
     private readonly EndpointResolver endpoint;
     private readonly IDocumentRegistry docs;
     private readonly IDiagnosticPublisher publisher;
@@ -34,22 +33,16 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
             Diagnose(uri);
     }
 
-    public void Diagnose (string documentUri)
+    public void Diagnose (string documentUri, LineRange? range = null)
     {
         ResetState(documentUri);
         var document = docs.Get(documentUri);
-        Diagnose(document, new(new(0, 0), new(document.LineCount - 1, 0)));
+        Diagnose(document, range ?? new(0, document.LineCount - 1));
     }
 
-    public void Diagnose (string documentUri, in Range range)
+    private void Diagnose (IDocument document, in LineRange range)
     {
-        ResetState(documentUri);
-        Diagnose(docs.Get(documentUri), range);
-    }
-
-    private void Diagnose (IDocument document, in Range range)
-    {
-        for (lineIndex = range.Start.Line; lineIndex <= range.End.Line; lineIndex++)
+        for (lineIndex = range.Start; lineIndex <= range.End; lineIndex++)
             DiagnoseLine(document[lineIndex]);
         Publish(documentUri);
     }
@@ -88,7 +81,11 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         diagnostics.Add(new(range, DiagnosticSeverity.Error, error.Message));
     }
 
-    private void DiagnoseLabelLine (LabelLine labelLine) { }
+    private void DiagnoseLabelLine (LabelLine labelLine)
+    {
+        if (!docs.IsUsed(documentUri, labelLine.Label))
+            AddUnusedLabel(labelLine.Label);
+    }
 
     private void DiagnoseGenericLine (GenericLine genericLine)
     {
@@ -121,7 +118,7 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         var paramMeta = metaProvider.FindParameter(commandMeta.Id, param.Identifier);
         if (paramMeta is null) AddUnknownParameter(param, commandMeta);
         else if (param.Value.Count == 0 || param.Value.Dynamic || param.Value[0] is not PlainText value) return;
-        else if (!IsValueValid(value, paramMeta)) AddInvalidValue(value, paramMeta);
+        else if (!validator.Validate(value, paramMeta.ValueContainerType, paramMeta.ValueType)) AddInvalidValue(value, paramMeta);
     }
 
     private bool IsEndpointUnknown (string? name, string? label)
@@ -151,6 +148,12 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         var range = line.GetRange(param.Value, lineIndex);
         var message = $"Unknown endpoint: {param.Value}.";
         diagnostics.Add(new(range, DiagnosticSeverity.Warning, message));
+    }
+
+    private void AddUnusedLabel (PlainText label)
+    {
+        var range = line.GetRange(label, lineIndex);
+        diagnostics.Add(new(range, DiagnosticSeverity.Warning, "Unused label."));
     }
 
     private void AddUnknownParameter (Parsing.Parameter param, Metadata.Command commandMeta)
@@ -183,30 +186,5 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
             else if (string.Equals(param.Identifier, paramMeta.Id, StringComparison.OrdinalIgnoreCase)) return true;
             else if (string.Equals(param.Identifier, paramMeta.Alias, StringComparison.OrdinalIgnoreCase)) return true;
         return false;
-    }
-
-    private static bool IsValueValid (PlainText value, Metadata.Parameter paramMeta)
-    {
-        if (paramMeta.ValueContainerType is ValueContainerType.List)
-            return value.Text.Split(',', StringSplitOptions.RemoveEmptyEntries).All(IsValid);
-        if (paramMeta.ValueContainerType is ValueContainerType.NamedList)
-            return value.Text.Split(',', StringSplitOptions.RemoveEmptyEntries).All(v => IsValid(GetNamedValue(v)));
-        if (paramMeta.ValueContainerType is ValueContainerType.Named)
-            return IsValid(GetNamedValue(value));
-        return IsValid(value);
-
-        bool IsValid (string value) => paramMeta.ValueType switch {
-            Metadata.ValueType.Integer => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _),
-            Metadata.ValueType.Decimal => float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out _),
-            Metadata.ValueType.Boolean => bool.TryParse(value, out _),
-            _ => true
-        };
-    }
-
-    private static string GetNamedValue (string value)
-    {
-        var dotIdx = value.LastIndexOf('.');
-        if (dotIdx < 0 || dotIdx + 1 >= value.Length) return "";
-        return value[(dotIdx + 1)..];
     }
 }

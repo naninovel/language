@@ -153,21 +153,21 @@ public class TokenHandler : ITokenHandler
     {
         if (content is null || !line.TryResolve(content, out var lineRange)) return;
         if (lineRange.Length <= 0 || !IsInRange(lineRange)) return;
-        builder.Append(lineIndex, lineRange.StartIndex, lineRange.Length, type);
+        builder.Append(lineIndex, lineRange.Start, lineRange.Length, type);
     }
 
-    private void AppendContent (in LineRange lineRange, TokenType type)
+    private void AppendContent (in InlineRange inlineRange, TokenType type)
     {
-        if (lineRange.Length <= 0 || !IsInRange(lineRange)) return;
-        builder.Append(lineIndex, lineRange.StartIndex, lineRange.Length, type);
+        if (inlineRange.Length <= 0 || !IsInRange(inlineRange)) return;
+        builder.Append(lineIndex, inlineRange.Start, inlineRange.Length, type);
     }
 
-    private bool IsInRange (in LineRange lineRange)
+    private bool IsInRange (in InlineRange inlineRange)
     {
         if (lineIndex == range.Start.Line)
-            return lineRange.StartIndex >= range.Start.Character;
+            return inlineRange.Start >= range.Start.Character;
         if (lineIndex == range.End.Line)
-            return lineRange.StartIndex < range.End.Character;
+            return inlineRange.Start < range.End.Character;
         return true;
     }
 }

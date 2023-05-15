@@ -71,8 +71,8 @@ public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
     {
         var startLineIndex = FindLabelLineIndex(document, label) ?? 0;
         var endLineIndex = (FindNextLabelLineIndex(document, startLineIndex + 1) ?? document.LineCount) - 1;
-        var range = new Range(new(startLineIndex, 0), new(endLineIndex, document[endLineIndex].Range.EndIndex + 1));
-        var selection = new Range(new(startLineIndex, 0), new(startLineIndex, document[startLineIndex].Range.EndIndex + 1));
+        var range = new Range(new(startLineIndex, 0), new(endLineIndex, document[endLineIndex].Range.End + 1));
+        var selection = new Range(new(startLineIndex, 0), new(startLineIndex, document[startLineIndex].Range.End + 1));
         return (range, selection);
     }
 

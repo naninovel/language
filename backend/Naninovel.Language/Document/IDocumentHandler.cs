@@ -6,7 +6,7 @@ namespace Naninovel.Language;
 
 public interface IDocumentHandler
 {
-    void OpenDocument (IReadOnlyList<DocumentInfo> docs);
-    void CloseDocument (string uri);
+    void UpsertDocuments (IReadOnlyList<DocumentInfo> docs);
+    void RemoveDocument (string uri);
     void ChangeDocument (string uri, IReadOnlyList<DocumentChange> changes);
 }

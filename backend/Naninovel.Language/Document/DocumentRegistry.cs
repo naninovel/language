@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
@@ -9,60 +8,54 @@ public class DocumentRegistry : IDocumentRegistry
     private readonly DocumentFactory factory = new();
     private readonly DocumentChanger changer = new();
     private readonly EndpointRegistry endpoints = new();
-    private readonly IDiagnoser diagnoser;
-
-    public DocumentRegistry (IDiagnoser diagnoser)
-    {
-        this.diagnoser = diagnoser;
-    }
 
     public IReadOnlyCollection<string> GetAllUris () => map.Keys;
 
     public bool Contains (string uri, string? label = null)
     {
-        if (!map.TryGetValue(uri, out var doc)) return false;
-        if (string.IsNullOrEmpty(label)) return true;
-        foreach (var line in doc.Lines)
-            if (line.Script is LabelLine labelLine && labelLine.Label == label)
-                return true;
-        return false;
+        if (label is null) return map.ContainsKey(uri);
+        return endpoints.Contains(uri, label);
+    }
+
+    public bool IsUsed (string uri, string? label = null)
+    {
+        return endpoints.IsUsed(uri, label);
     }
 
     public IDocument Get (string uri)
     {
-        return map.TryGetValue(uri, out var document) ? document :
-            throw new Error($"Failed to get '{uri}' document: not found.");
+        EnsureDocumentAvailable(uri);
+        return map[uri];
     }
 
-    public void Upsert (IReadOnlyList<DocumentInfo> infos)
+    public void Upsert (DocumentInfo doc)
     {
-        foreach (var info in infos)
-            map[info.Uri] = factory.CreateDocument(info.Text);
-        foreach (var info in infos)
-            RegisterChange(info.Text);
-        foreach (var info in infos)
-            diagnoser.Diagnose(info.Uri);
+        var document = factory.CreateDocument(doc.Text);
+        map[doc.Uri] = document;
+        endpoints.Remove(doc.Uri);
+        endpoints.Add(doc.Uri, document.Lines);
     }
 
     public void Remove (string uri)
     {
         map.Remove(uri);
-        RegisterChange(uri);
-        foreach (var otherUri in GetAllUris())
-            diagnoser.Diagnose(otherUri);
+        endpoints.Remove(uri);
     }
 
-    public void Change (string uri, IReadOnlyList<DocumentChange> changes)
+    public LineRange Change (string uri, IReadOnlyList<DocumentChange> changes)
     {
-        changer.ApplyChanges(((Document)Get(uri)).Lines, changes);
+        EnsureDocumentAvailable(uri);
+        var lines = map[uri].Lines;
+        var changedRange = changer.ApplyChanges(lines, changes);
         foreach (var change in changes)
-            RegisterChange(uri, change.Range);
-        foreach (var change in changes)
-            diagnoser.Diagnose(uri, change.Range);
+            endpoints.Remove(uri, change.Range);
+        endpoints.Add(uri, lines, changedRange);
+        return changedRange;
     }
 
-    private void RegisterChange (string uri, Range? range = null)
+    private void EnsureDocumentAvailable (string uri)
     {
-        endpoints.HandleChange(); // TODO: Update endpoint relations.
+        if (!map.ContainsKey(uri))
+            throw new Error($"Failed to get '{uri}' document: not found.");
     }
 }
