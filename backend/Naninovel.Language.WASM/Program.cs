@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using static Naninovel.Common.Bindings.Utilities;
+using static Naninovel.Bindings.Utilities;
 
 [assembly: ExcludeFromCodeCoverage]
 

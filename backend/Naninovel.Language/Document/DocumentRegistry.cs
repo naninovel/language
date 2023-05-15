@@ -1,13 +1,22 @@
 using System.Collections.Generic;
+using Naninovel.Metadata;
 
 namespace Naninovel.Language;
 
-public class DocumentRegistry : IDocumentRegistry
+public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
 {
     private readonly Dictionary<string, Document> map = new();
     private readonly DocumentFactory factory = new();
     private readonly DocumentChanger changer = new();
-    private readonly EndpointRegistry endpoints = new();
+    private readonly MetadataProvider metaProvider = new();
+    private readonly EndpointRegistry endpoints;
+
+    public DocumentRegistry ()
+    {
+        endpoints = new(metaProvider);
+    }
+
+    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
 
     public IReadOnlyCollection<string> GetAllUris () => map.Keys;
 
@@ -17,9 +26,9 @@ public class DocumentRegistry : IDocumentRegistry
         return endpoints.Contains(uri, label);
     }
 
-    public bool IsUsed (string uri, string? label = null)
+    public bool IsUsed (string name, string? label = null)
     {
-        return endpoints.IsUsed(uri, label);
+        return endpoints.IsUsed(name, label);
     }
 
     public IDocument Get (string uri)

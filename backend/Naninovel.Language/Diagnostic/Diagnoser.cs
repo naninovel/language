@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 using Naninovel.Utilities;
@@ -26,12 +27,7 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         endpoint = new(metaProvider);
     }
 
-    public void HandleMetadataChanged (Project meta)
-    {
-        metaProvider.Update(meta);
-        foreach (var uri in docs.GetAllUris())
-            Diagnose(uri);
-    }
+    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
 
     public void Diagnose (string documentUri, LineRange? range = null)
     {
@@ -83,7 +79,7 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
 
     private void DiagnoseLabelLine (LabelLine labelLine)
     {
-        if (!docs.IsUsed(documentUri, labelLine.Label))
+        if (!docs.IsUsed(Path.GetFileNameWithoutExtension(documentUri), labelLine.Label))
             AddUnusedLabel(labelLine.Label);
     }
 

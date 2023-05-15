@@ -2,10 +2,9 @@
 using DotNetJS;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
-using Naninovel.Common.Bindings;
+using Naninovel.Bindings;
 using Naninovel.Language;
-using Naninovel.Metadata;
-using static Naninovel.Common.Bindings.Utilities;
+using static Naninovel.Bindings.Utilities;
 
 [assembly: ExcludeFromCodeCoverage]
 [assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
@@ -18,22 +17,16 @@ using static Naninovel.Common.Bindings.Utilities;
     typeof(IHoverHandler),
     typeof(ISymbolHandler),
     typeof(ITokenHandler)
-}, invokePattern: "(.+)", invokeReplacement: "Naninovel.Common.Bindings.Utilities.Try(() => $1)")]
+}, invokePattern: "(.+)", invokeReplacement: "Naninovel.Bindings.Utilities.Try(() => $1)")]
 
 namespace Naninovel.Language;
 
-public class Language
+public static class Language
 {
-    private static IObserverNotifier<IMetadataObserver> notifier = null!;
-
-    public Language (IObserverNotifier<IMetadataObserver> notifier)
-    {
-        Language.notifier = notifier;
-    }
-
     [JSInvokable, RequiresUnreferencedCode("DI")]
     public static void Boot () => new ServiceCollection()
         // handlers
+        .AddSingleton<IMetadataHandler, MetadataHandler>()
         .AddSingleton<ICompletionHandler, CompletionHandler>()
         .AddSingleton<IDefinitionHandler, DefinitionHandler>()
         .AddSingleton<IDocumentHandler, DocumentHandler>()
@@ -42,7 +35,6 @@ public class Language
         .AddSingleton<ISymbolHandler, SymbolHandler>()
         .AddSingleton<ITokenHandler, TokenHandler>()
         .AddSingleton<IDiagnosticPublisher, DiagnosticPublisher.JSDiagnosticPublisher>()
-        .AddSingleton<Language>()
         .AddJS()
         // observers
         .AddObserving<IMetadataObserver>()
@@ -50,7 +42,4 @@ public class Language
         .BuildServiceProvider()
         .RegisterObservers()
         .GetAll();
-
-    [JSInvokable]
-    public static void UpdateMetadata (Project meta) => notifier.Notify(n => n.HandleMetadataChanged(meta));
 }

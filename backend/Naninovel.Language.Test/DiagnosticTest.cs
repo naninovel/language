@@ -140,23 +140,25 @@ public class DiagnosticTest
     [Fact]
     public void WhenUnusedLabelWarningIsDiagnosed ()
     {
+        docs.Setup(d => d.IsUsed("this", "label")).Returns(false);
         var diags = Diagnose("# label");
         Assert.Single(diags);
-        Assert.Equal(new(new(new(0, 0), new(0, 7)), DiagnosticSeverity.Warning,
+        Assert.Equal(new(new(new(0, 2), new(0, 7)), DiagnosticSeverity.Warning,
             "Unused label."), diags[0]);
     }
 
     [Fact]
     public void WhenLabelIsUsedWarningIsNotDiagnosed ()
     {
-        meta.SetupCommandWithEndpoint("goto");
-        Assert.Empty(Diagnose("# label", "@goto .label"));
+        docs.Setup(d => d.IsUsed("this", "label")).Returns(true);
+        Assert.Empty(Diagnose("# label"));
     }
 
     [Fact]
     public void WhenUnknownEndpointScriptWarningIsDiagnosed ()
     {
         meta.SetupCommandWithEndpoint("goto");
+        docs.Setup(d => d.Contains("other.nani", It.IsAny<string>())).Returns(false);
         var diags = Diagnose("@goto other");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 6), new(0, 11)), DiagnosticSeverity.Warning,
@@ -167,6 +169,8 @@ public class DiagnosticTest
     public void WhenUnknownEndpointLabelInCurrentScriptWarningIsDiagnosed ()
     {
         meta.SetupCommandWithEndpoint("goto");
+        docs.Setup(d => d.Contains("this.nani", It.IsAny<string>())).Returns(true);
+        docs.Setup(d => d.Contains("this.nani", "label")).Returns(false);
         var diags = Diagnose("@goto .label");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 6), new(0, 12)), DiagnosticSeverity.Warning,
@@ -177,7 +181,8 @@ public class DiagnosticTest
     public void WhenUnknownEndpointLabelInOtherScriptWarningIsDiagnosed ()
     {
         meta.SetupCommandWithEndpoint("goto");
-        docs.SetupScript("other.nani", "");
+        docs.Setup(d => d.Contains("other.nani", It.IsAny<string>())).Returns(true);
+        docs.Setup(d => d.Contains("other.nani", "label")).Returns(false);
         var diags = Diagnose("@goto other.label");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 6), new(0, 17)), DiagnosticSeverity.Warning,
@@ -188,11 +193,15 @@ public class DiagnosticTest
     public void WhenKnownEndpointWarningIsNotDiagnosed ()
     {
         meta.SetupCommandWithEndpoint("goto");
-        Assert.Empty(Diagnose("@goto .label", "# label"));
-        Assert.Empty(Diagnose("@goto this.label", "# label"));
-        docs.SetupScript("other.nani", "");
+        docs.Setup(d => d.GetAllUris()).Returns(new[] { "this.nani", "other.nani" });
+        docs.Setup(d => d.Contains("this.nani", null)).Returns(true);
+        docs.Setup(d => d.Contains("this.nani", "label")).Returns(true);
+        docs.Setup(d => d.Contains("other.nani", null)).Returns(true);
+        docs.Setup(d => d.Contains("other.nani", "label")).Returns(true);
+        Assert.Empty(Diagnose("@goto this"));
+        Assert.Empty(Diagnose("@goto .label"));
+        Assert.Empty(Diagnose("@goto this.label"));
         Assert.Empty(Diagnose("@goto other"));
-        docs.SetupScript("other.nani", "# label");
         Assert.Empty(Diagnose("@goto other.label"));
     }
 
@@ -209,12 +218,13 @@ public class DiagnosticTest
         doc.VerifyGet(l => l[3], Times.Never);
     }
 
-    private IReadOnlyList<Diagnostic> Diagnose (params string[] lines)
+    private IReadOnlyList<Diagnostic> Diagnose (string line)
     {
         var diagnostics = new List<Diagnostic[]>();
-        docs.SetupScript("this.nani", lines);
+        docs.SetupScript("this.nani", line);
         publisher.Setup(p => p.PublishDiagnostics(It.Is<string>(uri => uri == "this.nani"), Capture.In(diagnostics)));
-        diagnoser.HandleMetadataChanged(meta); // Diagnoses on meta change.
+        diagnoser.HandleMetadataChanged(meta);
+        diagnoser.Diagnose("this.nani");
         return diagnostics.SelectMany(d => d).ToArray();
     }
 }
