@@ -79,7 +79,7 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
 
     private void DiagnoseLabelLine (LabelLine labelLine)
     {
-        if (!docs.IsUsed(Path.GetFileNameWithoutExtension(documentUri), labelLine.Label))
+        if (!docs.IsEndpointUsed(Path.GetFileNameWithoutExtension(documentUri), labelLine.Label))
             AddUnusedLabel(labelLine.Label);
     }
 
@@ -109,7 +109,7 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
 
     private void DiagnoseParameter (Parsing.Parameter param, Metadata.Command commandMeta)
     {
-        if (endpoint.TryResolve(param, commandMeta.Id, out var name, out var label) && IsEndpointUnknown(name, label))
+        if (endpoint.TryResolve(param, commandMeta.Id, out var point) && IsEndpointUnknown(point))
             AddUnknownEndpoint(param);
         var paramMeta = metaProvider.FindParameter(commandMeta.Id, param.Identifier);
         if (paramMeta is null) AddUnknownParameter(param, commandMeta);
@@ -117,10 +117,10 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
         else if (!validator.Validate(value, paramMeta.ValueContainerType, paramMeta.ValueType)) AddInvalidValue(value, paramMeta);
     }
 
-    private bool IsEndpointUnknown (string? name, string? label)
+    private bool IsEndpointUnknown (Endpoint point)
     {
-        var uri = string.IsNullOrEmpty(name) ? documentUri : ResolveUriByScriptName(name);
-        return uri is null || !docs.Contains(uri, label);
+        var uri = string.IsNullOrEmpty(point.Script) ? documentUri : ResolveUriByScriptName(point.Script);
+        return uri is null || !docs.Contains(uri, point.Label);
     }
 
     private string? ResolveUriByScriptName (string name)

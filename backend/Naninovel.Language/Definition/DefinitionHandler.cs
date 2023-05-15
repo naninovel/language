@@ -51,11 +51,11 @@ public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
 
     private LocationLink[]? FromCommand (Parsing.Command command)
     {
-        if (!resolver.TryResolve(command, out var script, out var label)) return null;
-        var uri = script != null ? FindDocumentUriByName(script) : documentUri;
+        if (!resolver.TryResolve(command, out var point)) return null;
+        var uri = point.Script != null ? FindDocumentUriByName(point.Script) : documentUri;
         if (uri is null) return null;
         var document = registry.Get(uri);
-        var (range, selection) = GetRanges(document, label);
+        var (range, selection) = GetRanges(document, point.Label);
         return new[] { new LocationLink(null, uri, range, selection) };
     }
 

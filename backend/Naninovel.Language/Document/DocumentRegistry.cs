@@ -26,7 +26,7 @@ public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
         return endpoints.Contains(uri, label);
     }
 
-    public bool IsUsed (string name, string? label = null)
+    public bool IsEndpointUsed (string name, string? label = null)
     {
         return endpoints.IsUsed(name, label);
     }

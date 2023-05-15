@@ -140,7 +140,7 @@ public class DiagnosticTest
     [Fact]
     public void WhenUnusedLabelWarningIsDiagnosed ()
     {
-        docs.Setup(d => d.IsUsed("this", "label")).Returns(false);
+        docs.Setup(d => d.IsEndpointUsed("this", "label")).Returns(false);
         var diags = Diagnose("# label");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 2), new(0, 7)), DiagnosticSeverity.Warning,
@@ -150,7 +150,7 @@ public class DiagnosticTest
     [Fact]
     public void WhenLabelIsUsedWarningIsNotDiagnosed ()
     {
-        docs.Setup(d => d.IsUsed("this", "label")).Returns(true);
+        docs.Setup(d => d.IsEndpointUsed("this", "label")).Returns(true);
         Assert.Empty(Diagnose("# label"));
     }
 

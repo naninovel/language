@@ -74,7 +74,7 @@ internal class EndpointRegistry
 
     private void ProcessAddedCommand (Parsing.Command command, string uri, int lineIndex)
     {
-        if (resolver.TryResolve(command, out var script, out var label))
-            GetUsed(script ?? Path.GetFileNameWithoutExtension(uri)).Add(new(label ?? "", lineIndex));
+        if (resolver.TryResolve(command, out var point))
+            GetUsed(point.Script ?? Path.GetFileNameWithoutExtension(uri)).Add(new(point.Label ?? "", lineIndex));
     }
 }
