@@ -4,6 +4,7 @@ namespace Naninovel.Language;
 
 public class DocumentHandler : IDocumentHandler
 {
+    private readonly DocumentFactory factory = new();
     private readonly IDocumentRegistry registry;
     private readonly IDiagnoser diagnoser;
 
@@ -16,7 +17,7 @@ public class DocumentHandler : IDocumentHandler
     public void UpsertDocuments (IReadOnlyList<DocumentInfo> docs)
     {
         foreach (var doc in docs)
-            registry.Upsert(doc.Uri, doc.Text);
+            registry.Upsert(doc.Uri, factory.CreateDocument(doc.Text));
         foreach (var doc in docs)
             diagnoser.Diagnose(doc.Uri);
     }

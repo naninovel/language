@@ -6,7 +6,6 @@ namespace Naninovel.Language;
 public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
 {
     private readonly Dictionary<string, Document> map = new();
-    private readonly DocumentFactory factory = new();
     private readonly DocumentChanger changer = new();
     private readonly MetadataProvider metaProvider = new();
     private readonly EndpointRegistry endpoints;
@@ -37,9 +36,8 @@ public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
         return map[uri];
     }
 
-    public void Upsert (string uri, string text)
+    public void Upsert (string uri, Document document)
     {
-        var document = factory.CreateDocument(text);
         map[uri] = document;
         endpoints.Remove(uri);
         endpoints.Add(uri, document.Lines);
