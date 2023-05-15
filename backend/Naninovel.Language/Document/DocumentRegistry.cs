@@ -37,12 +37,12 @@ public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
         return map[uri];
     }
 
-    public void Upsert (DocumentInfo doc)
+    public void Upsert (string uri, string text)
     {
-        var document = factory.CreateDocument(doc.Text);
-        map[doc.Uri] = document;
-        endpoints.Remove(doc.Uri);
-        endpoints.Add(doc.Uri, document.Lines);
+        var document = factory.CreateDocument(text);
+        map[uri] = document;
+        endpoints.Remove(uri);
+        endpoints.Add(uri, document.Lines);
     }
 
     public void Remove (string uri)

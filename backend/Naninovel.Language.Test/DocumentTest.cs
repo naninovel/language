@@ -35,8 +35,8 @@ public class DocumentTest
     [Fact]
     public void WhenDocumentWithExistingKeyUpsertItsReplaced ()
     {
-        registry.Upsert(new("foo", "1"));
-        registry.Upsert(new("foo", "2"));
+        registry.Upsert("foo", "1");
+        registry.Upsert("foo", "2");
         Assert.Equal("2", registry.Get("foo")[0].Text);
     }
 

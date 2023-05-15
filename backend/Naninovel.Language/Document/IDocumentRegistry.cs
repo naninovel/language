@@ -8,7 +8,7 @@ public interface IDocumentRegistry
     IDocument Get (string uri);
     bool Contains (string uri, string? label = null);
     bool IsEndpointUsed (string name, string? label = null);
-    void Upsert (DocumentInfo doc);
+    void Upsert (string uri, string text);
     void Remove (string uri);
     LineRange Change (string uri, IReadOnlyList<DocumentChange> changes);
 }

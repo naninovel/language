@@ -16,7 +16,7 @@ public class DocumentHandler : IDocumentHandler
     public void UpsertDocuments (IReadOnlyList<DocumentInfo> docs)
     {
         foreach (var doc in docs)
-            registry.Upsert(doc);
+            registry.Upsert(doc.Uri, doc.Text);
         foreach (var doc in docs)
             diagnoser.Diagnose(doc.Uri);
     }
