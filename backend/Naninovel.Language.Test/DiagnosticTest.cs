@@ -13,11 +13,11 @@ public class DiagnosticTest
     private readonly Project meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();
     private readonly Mock<IDiagnosticPublisher> publisher = new();
-    private readonly Diagnoser diagnoser;
+    private readonly DiagnosticHandler handler;
 
     public DiagnosticTest ()
     {
-        diagnoser = new(docs.Object, publisher.Object);
+        handler = new(docs.Object, publisher.Object);
     }
 
     [Fact]
@@ -213,7 +213,7 @@ public class DiagnosticTest
         var doc = new Mock<IDocument>();
         doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory().CreateLine(""));
         docs.Setup(d => d.Get("@")).Returns(doc.Object);
-        diagnoser.Diagnose("@", new Range(new(1, 0), new(2, 0)));
+        handler.HandleDocumentChanged("@", new Range(new(1, 0), new(2, 0)));
         doc.VerifyGet(l => l[0], Times.Never);
         doc.VerifyGet(l => l[1], Times.Once);
         doc.VerifyGet(l => l[2], Times.Once);
@@ -225,8 +225,8 @@ public class DiagnosticTest
         var diagnostics = new List<Diagnostic[]>();
         docs.SetupScript("this.nani", line);
         publisher.Setup(p => p.PublishDiagnostics(It.Is<string>(uri => uri == "this.nani"), Capture.In(diagnostics)));
-        diagnoser.HandleMetadataChanged(meta);
-        diagnoser.Diagnose("this.nani");
+        handler.HandleMetadataChanged(meta);
+        handler.HandleDocumentAdded("this.nani");
         return diagnostics.SelectMany(d => d).ToArray();
     }
 }

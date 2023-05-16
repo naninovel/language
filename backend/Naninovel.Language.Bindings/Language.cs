@@ -38,6 +38,7 @@ public static class Language
         .AddJS()
         // observers
         .AddObserving<IMetadataObserver>()
+        .AddObserving<IDocumentObserver>()
         // initialization
         .BuildServiceProvider()
         .RegisterObservers()

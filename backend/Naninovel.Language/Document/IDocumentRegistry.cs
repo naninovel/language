@@ -10,5 +10,5 @@ public interface IDocumentRegistry
     bool IsEndpointUsed (string name, string? label = null);
     void Upsert (string uri, Document document);
     void Remove (string uri);
-    LineRange Change (string uri, IReadOnlyList<DocumentChange> changes);
+    void Change (string uri, IReadOnlyList<DocumentChange> changes);
 }

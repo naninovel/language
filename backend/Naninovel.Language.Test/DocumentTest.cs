@@ -2,19 +2,21 @@ using System;
 using System.Collections.Generic;
 using Moq;
 using Naninovel.Parsing;
+using Naninovel.TestUtilities;
 using Xunit;
 
 namespace Naninovel.Language.Test;
 
 public class DocumentTest
 {
-    private readonly Mock<IDiagnoser> diagnoser = new();
-    private readonly DocumentRegistry registry = new();
+    private readonly NotifierMock<IDocumentObserver> notifier = new();
+    private readonly DocumentRegistry registry;
     private readonly DocumentHandler handler;
 
     public DocumentTest ()
     {
-        handler = new DocumentHandler(registry, diagnoser.Object);
+        registry = new(notifier);
+        handler = new DocumentHandler(registry);
     }
 
     [Fact]
@@ -185,26 +187,34 @@ public class DocumentTest
     }
 
     [Fact]
-    public void UpsertDocumentIsDiagnosed ()
-    {
-        handler.UpsertDocuments(ToInfos("foo", ""));
-        diagnoser.Verify(d => d.Diagnose("foo", null), Times.Once);
-    }
-
-    [Fact]
-    public void UpsertDocumentsAreDiagnosed ()
+    public void NotifiesAboutAddedDocuments ()
     {
         handler.UpsertDocuments(new DocumentInfo[] { new("foo", ""), new("bar", "") });
-        diagnoser.Verify(d => d.Diagnose("foo", null), Times.Once);
-        diagnoser.Verify(d => d.Diagnose("bar", null), Times.Once);
+        notifier.Verify(d => d.HandleDocumentAdded("foo"), Times.Once);
+        notifier.Verify(d => d.HandleDocumentAdded("bar"), Times.Once);
+        notifier.VerifyNoOtherCalls();
     }
 
     [Fact]
-    public void ChangedDocumentIsDiagnosed ()
+    public void WhenInsertingExistingDocumentNotifiesAboutFullChange ()
+    {
+        handler.UpsertDocuments(ToInfos("foo", "a"));
+        handler.UpsertDocuments(ToInfos("foo", "a\nb\nc"));
+        handler.UpsertDocuments(ToInfos("foo", ""));
+        notifier.Verify(d => d.HandleDocumentAdded("foo"), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(0, 2)), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(0, 0)), Times.Once);
+        notifier.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void NotifiesAboutChangedDocument ()
     {
         handler.UpsertDocuments(ToInfos("foo", "a"));
         handler.ChangeDocument("foo", new[] { new DocumentChange(new(new(0, 0), new(0, 1)), "b") });
-        diagnoser.Verify(d => d.Diagnose("foo", new(0, 0)), Times.Once);
+        notifier.Verify(d => d.HandleDocumentAdded("foo"), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(0, 0)), Times.Once);
+        notifier.VerifyNoOtherCalls();
     }
 
     [Fact]
