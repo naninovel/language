@@ -149,7 +149,7 @@ public class Diagnoser : IDiagnoser, IMetadataObserver
     private void AddUnusedLabel (PlainText label)
     {
         var range = line.GetRange(label, lineIndex);
-        diagnostics.Add(new(range, DiagnosticSeverity.Warning, "Unused label."));
+        diagnostics.Add(new(range, DiagnosticSeverity.Warning, "Unused label.", new[] { DiagnosticTag.Unnecessary }));
     }
 
     private void AddUnknownParameter (Parsing.Parameter param, Metadata.Command commandMeta)
