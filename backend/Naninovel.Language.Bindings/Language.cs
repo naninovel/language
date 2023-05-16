@@ -34,7 +34,6 @@ public static class Language
         .AddSingleton<IHoverHandler, HoverHandler>()
         .AddSingleton<ISymbolHandler, SymbolHandler>()
         .AddSingleton<ITokenHandler, TokenHandler>()
-        .AddSingleton<IDiagnosticPublisher, DiagnosticPublisher.JSDiagnosticPublisher>()
         .AddJS()
         // observers
         .AddObserving<IMetadataObserver>()
