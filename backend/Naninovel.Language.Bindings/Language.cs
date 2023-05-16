@@ -10,6 +10,7 @@ using static Naninovel.Bindings.Utilities;
 [assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
 [assembly: JSImport(new[] { typeof(IDiagnosticPublisher) })]
 [assembly: JSExport(new[] {
+    typeof(IMetadataHandler),
     typeof(ICompletionHandler),
     typeof(IDefinitionHandler),
     typeof(IDocumentHandler),
