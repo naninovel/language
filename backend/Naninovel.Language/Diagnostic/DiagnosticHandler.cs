@@ -33,21 +33,21 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
     {
         foreach (var diagnoser in diagnosers)
             diagnoser.HandleDocumentAdded(uri);
-        registry.Publish(publisher);
+        Publish();
     }
 
     public void HandleDocumentRemoved (string uri)
     {
         foreach (var diagnoser in diagnosers)
             diagnoser.HandleDocumentRemoved(uri);
-        registry.Publish(publisher);
+        Publish();
     }
 
     public void HandleDocumentChanged (string uri, in LineRange range)
     {
         foreach (var diagnoser in diagnosers)
             diagnoser.HandleDocumentChanged(uri, range);
-        registry.Publish(publisher);
+        Publish();
     }
 
     public void HandleMetadataChanged (Project meta)
@@ -62,6 +62,12 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
         foreach (var uri in docs.GetAllUris())
         foreach (var diagnoser in diagnosers)
             diagnoser.HandleDocumentChanged(uri, new(0, docs.Get(uri).LineCount - 1));
-        registry.Publish(publisher);
+        Publish();
+    }
+
+    private void Publish ()
+    {
+        foreach (var uri in registry.GetAllUris())
+            publisher.PublishDiagnostics(uri, registry.GetDiagnostics(uri));
     }
 }

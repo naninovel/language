@@ -7,17 +7,23 @@ internal class DiagnosticRegistry
 {
     private readonly Dictionary<string, List<DiagnosticRegistryItem>> uriToItems = new();
     private readonly List<Diagnostic> diagnostics = new();
-    private readonly List<DiagnosticRegistryItem> items = new();
 
-    public void Publish (IDiagnosticPublisher publisher)
+    public IReadOnlyCollection<string> GetAllUris ()
     {
-        foreach (var (uri, items) in uriToItems)
-        {
-            diagnostics.Clear();
-            foreach (var item in items)
-                diagnostics.Add(item.Diagnostic);
-            publisher.PublishDiagnostics(uri, diagnostics);
-        }
+        return uriToItems.Keys;
+    }
+
+    public IReadOnlyList<DiagnosticRegistryItem> GetItems (string uri)
+    {
+        return uriToItems[uri];
+    }
+
+    public IReadOnlyList<Diagnostic> GetDiagnostics (string uri)
+    {
+        diagnostics.Clear();
+        foreach (var item in GetOrAddItems(uri))
+            diagnostics.Add(item.Diagnostic);
+        return diagnostics.Count > 0 ? diagnostics.ToArray() : Array.Empty<Diagnostic>();
     }
 
     public void Clear ()
@@ -28,25 +34,16 @@ internal class DiagnosticRegistry
 
     public void Add (string uri, DiagnosticRegistryItem item)
     {
-        GetItems(uri).Add(item);
+        GetOrAddItems(uri).Add(item);
     }
 
     public void Remove (string uri, Predicate<DiagnosticRegistryItem>? predicate = null)
     {
-        if (predicate is null) GetItems(uri).Clear();
-        else GetItems(uri).RemoveAll(predicate);
+        if (predicate is null) GetOrAddItems(uri).Clear();
+        else GetOrAddItems(uri).RemoveAll(predicate);
     }
 
-    public IReadOnlyList<DiagnosticRegistryItem> Find (string uri, Predicate<DiagnosticRegistryItem> predicate)
-    {
-        items.Clear();
-        foreach (var item in GetItems(uri))
-            if (predicate(item))
-                items.Add(item);
-        return items.Count > 0 ? items.ToArray() : Array.Empty<DiagnosticRegistryItem>();
-    }
-
-    private List<DiagnosticRegistryItem> GetItems (string uri)
+    private List<DiagnosticRegistryItem> GetOrAddItems (string uri)
     {
         return uriToItems.TryGetValue(uri, out var items) ? items : uriToItems[uri] = new();
     }
