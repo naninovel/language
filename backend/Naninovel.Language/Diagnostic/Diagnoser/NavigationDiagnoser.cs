@@ -17,23 +17,54 @@ internal class NavigationDiagnoser : Diagnoser
         endpoint = new(meta);
     }
 
-    public override void HandleDocumentAdded (string uri) { }
-
-    public override void HandleDocumentRemoved (string uri) { }
-
-    public override void HandleDocumentChanged (string uri, in LineRange range) { }
-
-    protected override void DiagnoseLine (in DocumentLine line) { }
-
-    private void DiagnoseLabelLine (LabelLine labelLine)
+    public override void HandleDocumentAdded (string uri)
     {
-        if (!Docs.IsEndpointUsed(Path.GetFileNameWithoutExtension(Uri), labelLine.Label))
-            AddUnusedLabel(labelLine.Label);
+        Diagnose(uri);
     }
 
-    private void DiagnoseParameter (Parsing.Parameter param, Metadata.Command commandMeta)
+    public override void HandleDocumentRemoved (string uri)
     {
-        if (endpoint.TryResolve(param, commandMeta.Id, out var point) && IsEndpointUnknown(point))
+        Registry.Remove(uri, i => i.Context == Context);
+    }
+
+    public override void HandleDocumentChanged (string uri, LineRange range)
+    {
+        Registry.Remove(uri, i => i.Context == Context && range.Contains(i.Line));
+        Diagnose(uri, range);
+    }
+
+    protected override void DiagnoseLine (in DocumentLine line)
+    {
+        if (line.Script is LabelLine labelLine)
+            DiagnoseLabelLine(labelLine);
+        else if (line.Script is CommandLine commandLine)
+            DiagnoseCommand(commandLine.Command);
+        else if (line.Script is GenericLine genericLine)
+            DiagnoseGenericLine(genericLine);
+    }
+
+    private void DiagnoseLabelLine (LabelLine line)
+    {
+        if (!Docs.IsEndpointUsed(Path.GetFileNameWithoutExtension(Uri), line.Label))
+            AddUnusedLabel(line.Label);
+    }
+
+    private void DiagnoseGenericLine (GenericLine line)
+    {
+        foreach (var content in line.Content)
+            if (content is InlinedCommand inlined)
+                DiagnoseCommand(inlined.Command);
+    }
+
+    private void DiagnoseCommand (Parsing.Command command)
+    {
+        foreach (var parameter in command.Parameters)
+            DiagnoseParameter(parameter, command.Identifier);
+    }
+
+    private void DiagnoseParameter (Parsing.Parameter param, string commandId)
+    {
+        if (endpoint.TryResolve(param, commandId, out var point) && IsEndpointUnknown(point))
             AddUnknownEndpoint(param);
     }
 

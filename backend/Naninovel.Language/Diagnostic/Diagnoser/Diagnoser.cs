@@ -5,9 +5,6 @@ namespace Naninovel.Language;
 internal abstract class Diagnoser
 {
     public abstract DiagnosticContext Context { get; }
-    public abstract void HandleDocumentAdded (string uri);
-    public abstract void HandleDocumentRemoved (string uri);
-    public abstract void HandleDocumentChanged (string uri, in LineRange range);
 
     protected IDocumentRegistry Docs { get; }
     protected DiagnosticRegistry Registry { get; }
@@ -23,14 +20,18 @@ internal abstract class Diagnoser
         Registry = registry;
     }
 
-    protected void AddError (Range range, string message) =>
-        AddDiagnostic(range, DiagnosticSeverity.Error, message);
+    public abstract void HandleDocumentAdded (string uri);
+    public abstract void HandleDocumentRemoved (string uri);
+    public abstract void HandleDocumentChanged (string uri, LineRange range);
 
-    protected void AddWarning (Range range, string message) =>
-        AddDiagnostic(range, DiagnosticSeverity.Warning, message);
+    protected void AddError (in Range range, string message) =>
+        AddDiagnostic(new(range, DiagnosticSeverity.Error, message));
 
-    protected void AddUnnecessary (Range range, string message) =>
-        AddDiagnostic(range, DiagnosticSeverity.Warning, message, unnecessary);
+    protected void AddWarning (in Range range, string message) =>
+        AddDiagnostic(new(range, DiagnosticSeverity.Warning, message));
+
+    protected void AddUnnecessary (in Range range, string message) =>
+        AddDiagnostic(new(range, DiagnosticSeverity.Warning, message, unnecessary));
 
     protected void Diagnose (string uri, LineRange? range = null)
     {
@@ -47,9 +48,8 @@ internal abstract class Diagnoser
             DiagnoseLine(Line = document[LineIndex]);
     }
 
-    private void AddDiagnostic (Range range, DiagnosticSeverity severity,
-        string message, IReadOnlyList<DiagnosticTag>? tags = null)
+    private void AddDiagnostic (in Diagnostic diagnostic)
     {
-        Registry.Add(Uri, new(LineIndex, Context, new(range, severity, message, tags)));
+        Registry.Add(Uri, new(LineIndex, Context, diagnostic));
     }
 }

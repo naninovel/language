@@ -3,7 +3,7 @@ using Naninovel.Metadata;
 
 namespace Naninovel.Language;
 
-public class DiagnosticHandler : IDiagnosticHandler, IDocumentObserver, IMetadataObserver
+public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumentObserver, IMetadataObserver
 {
     private readonly List<Diagnoser> diagnosers = new();
     private readonly DiagnosticRegistry registry = new();
@@ -15,6 +15,18 @@ public class DiagnosticHandler : IDiagnosticHandler, IDocumentObserver, IMetadat
     {
         this.publisher = publisher;
         this.docs = docs;
+    }
+
+    public void HandleSettingsChanged (Settings settings)
+    {
+        diagnosers.Clear();
+        if (settings.DiagnoseSyntax)
+            diagnosers.Add(new SyntaxDiagnoser(docs, registry));
+        if (settings.DiagnoseSemantics)
+            diagnosers.Add(new SemanticDiagnoser(metaProvider, docs, registry));
+        if (settings.DiagnoseNavigation)
+            diagnosers.Add(new NavigationDiagnoser(metaProvider, docs, registry));
+        RediagnoseAll();
     }
 
     public void HandleDocumentAdded (string uri)

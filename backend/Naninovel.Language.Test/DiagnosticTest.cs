@@ -10,14 +10,19 @@ namespace Naninovel.Language.Test;
 
 public class DiagnosticTest
 {
+    private const string defaultUri = "this.nani";
     private readonly Project meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();
     private readonly Mock<IDiagnosticPublisher> publisher = new();
+    private readonly Dictionary<string, IReadOnlyList<Diagnostic>> diagnostics = new();
     private readonly DiagnosticHandler handler;
 
     public DiagnosticTest ()
     {
         handler = new(docs.Object, publisher.Object);
+        docs.Setup(d => d.GetAllUris()).Returns(Array.Empty<string>());
+        publisher.Setup(p => p.PublishDiagnostics(It.IsAny<string>(), It.IsAny<IReadOnlyList<Diagnostic>>()))
+            .Callback((string uri, IReadOnlyList<Diagnostic> diags) => diagnostics[uri] = diags);
     }
 
     [Fact]
@@ -195,7 +200,7 @@ public class DiagnosticTest
     public void WhenKnownEndpointWarningIsNotDiagnosed ()
     {
         meta.SetupCommandWithEndpoint("goto");
-        docs.Setup(d => d.GetAllUris()).Returns(new[] { "this.nani", "other.nani" });
+        docs.SetupScript("other.nani", "");
         docs.Setup(d => d.Contains("this.nani", null)).Returns(true);
         docs.Setup(d => d.Contains("this.nani", "label")).Returns(true);
         docs.Setup(d => d.Contains("other.nani", null)).Returns(true);
@@ -212,6 +217,8 @@ public class DiagnosticTest
     {
         var doc = new Mock<IDocument>();
         doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory().CreateLine(""));
+        docs.Setup(d => d.GetAllUris()).Returns(Array.Empty<string>());
+        handler.HandleSettingsChanged(new(true, false, false));
         docs.Setup(d => d.Get("@")).Returns(doc.Object);
         handler.HandleDocumentChanged("@", new Range(new(1, 0), new(2, 0)));
         doc.VerifyGet(l => l[0], Times.Never);
@@ -220,13 +227,43 @@ public class DiagnosticTest
         doc.VerifyGet(l => l[3], Times.Never);
     }
 
-    private IReadOnlyList<Diagnostic> Diagnose (string line)
+    [Fact]
+    public void SyntaxDiagnosticsAreCleared ()
     {
-        var diagnostics = new List<Diagnostic[]>();
-        docs.SetupScript("this.nani", line);
-        publisher.Setup(p => p.PublishDiagnostics(It.Is<string>(uri => uri == "this.nani"), Capture.In(diagnostics)));
+        Assert.NotEmpty(Diagnose("#", true, false, false));
+        Assert.Empty(Diagnose("# foo", true, false, false));
+    }
+
+    [Fact]
+    public void SemanticDiagnosticsAreCleared ()
+    {
+        meta.Commands = new[] { new Metadata.Command { Id = "bar" } };
+        Assert.NotEmpty(Diagnose("@foo", false, true, false));
+        Assert.Empty(Diagnose("@bar", false, true, false));
+    }
+
+    [Fact]
+    public void NavigationDiagnosticsAreCleared ()
+    {
+        meta.SetupCommandWithEndpoint("goto");
+        docs.Setup(d => d.Contains("this.nani", "bar")).Returns(true);
+        Assert.NotEmpty(Diagnose("@goto .foo", false, false));
+        Assert.Empty(Diagnose("@goto .bar", false, false));
+    }
+
+    private IReadOnlyList<Diagnostic> Diagnose (string line, bool syntax = true, bool semantics = true, bool navigation = true)
+    {
         handler.HandleMetadataChanged(meta);
-        handler.HandleDocumentAdded("this.nani");
-        return diagnostics.SelectMany(d => d).ToArray();
+        handler.HandleSettingsChanged(new(syntax, semantics, navigation));
+        var changing = docs.Object.GetAllUris().Contains(defaultUri);
+        docs.SetupScript(defaultUri, line);
+        if (changing) handler.HandleDocumentChanged(defaultUri, new(0, 0));
+        else handler.HandleDocumentAdded(defaultUri);
+        return GetDiagnostics(defaultUri);
+    }
+
+    private IReadOnlyList<Diagnostic> GetDiagnostics (string uri)
+    {
+        return diagnostics.TryGetValue(uri, out var diags) ? diags : Array.Empty<Diagnostic>();
     }
 }

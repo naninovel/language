@@ -19,8 +19,9 @@ internal class SyntaxDiagnoser : Diagnoser
         Registry.Remove(uri, i => i.Context == Context);
     }
 
-    public override void HandleDocumentChanged (string uri, in LineRange range)
+    public override void HandleDocumentChanged (string uri, LineRange range)
     {
+        Registry.Remove(uri, i => i.Context == Context && range.Contains(i.Line));
         Diagnose(uri, range);
     }
 
