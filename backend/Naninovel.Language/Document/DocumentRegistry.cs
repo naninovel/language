@@ -9,7 +9,7 @@ public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
     private readonly DocumentChanger changer = new();
     private readonly MetadataProvider metaProvider = new();
     private readonly IObserverNotifier<IDocumentObserver> notifier;
-    private readonly EndpointRegistry endpoints;
+    private readonly WipEndpointRegistry endpoints;
 
     public DocumentRegistry (IObserverNotifier<IDocumentObserver> notifier)
     {
