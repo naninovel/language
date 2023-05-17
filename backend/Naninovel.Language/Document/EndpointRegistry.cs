@@ -58,7 +58,7 @@ internal class EndpointRegistry
 
     private List<EndpointRegistryItem> GetUsed (string uriOrName)
     {
-        var name = ToEndpointName(uriOrName);
+        var name = ToScriptName(uriOrName);
         return nameToUsed.TryGetValue(name, out var items) ? items : nameToUsed[name] = new();
     }
 

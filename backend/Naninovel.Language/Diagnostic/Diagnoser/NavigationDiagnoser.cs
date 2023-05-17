@@ -49,7 +49,7 @@ internal class NavigationDiagnoser : Diagnoser
 
     private void DiagnoseLabelLine (LabelLine line)
     {
-        if (!Docs.IsEndpointUsed(ToEndpointName(Uri), line.Label))
+        if (!Docs.IsEndpointUsed(ToScriptName(Uri), line.Label))
             AddUnusedLabel(line.Label);
     }
 

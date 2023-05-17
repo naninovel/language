@@ -35,7 +35,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     public IReadOnlyList<CompletionItem> Complete (string documentUri, Position position)
     {
         var documentLine = docs.Get(documentUri)[position.Line];
-        var scriptName = ToEndpointName(documentUri);
+        var scriptName = ToScriptName(documentUri);
         ResetState(documentLine, position, scriptName);
         return documentLine.Script switch {
             GenericLine line => GetForGenericLine(line),

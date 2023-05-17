@@ -4,7 +4,7 @@ namespace Naninovel.Language;
 
 internal static class Common
 {
-    public static string ToEndpointName (string uriOrName)
+    public static string ToScriptName (string uriOrName)
     {
         return Path.GetFileNameWithoutExtension(uriOrName);
     }
