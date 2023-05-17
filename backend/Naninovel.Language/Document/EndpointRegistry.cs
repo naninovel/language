@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
+using static Naninovel.Language.Common;
 
 namespace Naninovel.Language;
 
 internal class EndpointRegistry
 {
-    private readonly Dictionary<string, List<EndpointRegistryItem>> existing = new();
-    private readonly Dictionary<string, List<EndpointRegistryItem>> used = new();
+    private readonly Dictionary<string, List<EndpointRegistryItem>> uriToExisting = new();
+    private readonly Dictionary<string, List<EndpointRegistryItem>> nameToUsed = new();
     private readonly EndpointResolver resolver;
 
     public EndpointRegistry (MetadataProvider metaProvider)
@@ -28,13 +28,14 @@ internal class EndpointRegistry
     {
         var match = label ?? "";
         foreach (var item in GetUsed(name))
-            if (item.Label == match)
+            if (string.IsNullOrEmpty(label) || item.Label == match)
                 return true;
         return false;
     }
 
     public void Add (string uri, IReadOnlyList<DocumentLine> lines, LineRange? range = null)
     {
+        EnsureScriptExist(uri);
         var (start, end) = range.HasValue ? (range.Value.Start, range.Value.End) : (0, lines.Count - 1);
         for (var i = start; i <= end; i++)
             ProcessAddedLine(uri, lines[i].Script, i);
@@ -42,22 +43,23 @@ internal class EndpointRegistry
 
     public void Remove (string uri, LineRange? range = null)
     {
-        var items = GetExisting(uri);
-        if (!range.HasValue) items.Clear();
+        var existing = GetExisting(uri);
+        if (!range.HasValue) existing.Clear();
         else
-            for (var i = items.Count - 1; i >= 0; i--)
-                if (items[i].LineIndex >= range.Value.Start && items[i].LineIndex <= range.Value.End)
-                    items.RemoveAt(i);
+            for (var i = existing.Count - 1; i >= 0; i--)
+                if (existing[i].LineIndex >= range.Value.Start && existing[i].LineIndex <= range.Value.End)
+                    existing.RemoveAt(i);
     }
 
     private List<EndpointRegistryItem> GetExisting (string uri)
     {
-        return existing.TryGetValue(uri, out var items) ? items : existing[uri] = new();
+        return uriToExisting.TryGetValue(uri, out var items) ? items : uriToExisting[uri] = new();
     }
 
-    private List<EndpointRegistryItem> GetUsed (string uri)
+    private List<EndpointRegistryItem> GetUsed (string uriOrName)
     {
-        return used.TryGetValue(uri, out var items) ? items : used[uri] = new();
+        var name = ToEndpointName(uriOrName);
+        return nameToUsed.TryGetValue(name, out var items) ? items : nameToUsed[name] = new();
     }
 
     private void ProcessAddedLine (string uri, IScriptLine line, int index)
@@ -75,6 +77,12 @@ internal class EndpointRegistry
     private void ProcessAddedCommand (Parsing.Command command, string uri, int lineIndex)
     {
         if (resolver.TryResolve(command, out var point))
-            GetUsed(point.Script ?? Path.GetFileNameWithoutExtension(uri)).Add(new(point.Label ?? "", lineIndex));
+            GetUsed(point.Script ?? uri).Add(new(point.Label ?? "", lineIndex));
+    }
+
+    private void EnsureScriptExist (string uri)
+    {
+        var items = GetExisting(uri);
+        if (items.Count == 0) items.Add(new("", -1));
     }
 }

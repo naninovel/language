@@ -1,0 +1,69 @@
+﻿using System;
+using System.Collections.Generic;
+using Moq;
+using Xunit;
+using static Naninovel.Language.DiagnosticContext;
+
+namespace Naninovel.Language.Test;
+
+public class DiagnosticHandlerTest
+{
+    private readonly Mock<IDocumentRegistry> docs = new();
+    private readonly Mock<IDiagnosticPublisher> publisher = new();
+    private readonly Mock<IDiagnoserFactory> factory = new();
+    private readonly Dictionary<DiagnosticContext, Mock<IDiagnoser>> diagnosers = new();
+    private readonly DiagnosticHandler handler;
+
+    public DiagnosticHandlerTest ()
+    {
+        docs.Setup(d => d.GetAllUris()).Returns(Array.Empty<string>());
+        factory.Setup(f => f.Create(It.IsAny<DiagnosticContext>()))
+            .Callback((DiagnosticContext c) => diagnosers[c] = new Mock<IDiagnoser>())
+            .Returns((DiagnosticContext c) => diagnosers[c].Object);
+        handler = new(docs.Object, publisher.Object, factory.Object);
+    }
+
+    [Fact]
+    public void WhenSettingsChangedAddsDiagnosersOfEnabledContexts ()
+    {
+        handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
+        factory.Verify(f => f.Create(Syntax));
+        factory.VerifyNoOtherCalls();
+        handler.HandleSettingsChanged(new() { DiagnoseSemantics = true });
+        factory.Verify(f => f.Create(Semantic));
+        factory.VerifyNoOtherCalls();
+        handler.HandleSettingsChanged(new() { DiagnoseNavigation = true });
+        factory.Verify(f => f.Create(Navigation));
+        factory.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void WhenSettingsChangedAllDocumentsAreReDiagnosed ()
+    {
+        docs.SetupScript("this.nani", "#", "");
+        handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
+        diagnosers[Syntax].Verify(d => d.HandleDocumentChanged("this.nani", new(0, 1)));
+    }
+
+    [Fact]
+    public void WhenSettingsChangedClearsPreviouslyEnabledDiagnosers ()
+    {
+        docs.SetupScript("this.nani", "#");
+        handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
+        diagnosers[Syntax].Invocations.Clear();
+        handler.HandleSettingsChanged(new());
+        diagnosers[Syntax].VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void DiagnosticsArePublishedOnEachChange ()
+    {
+        docs.SetupScript("this.nani", "#");
+        handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
+        handler.HandleMetadataChanged(new());
+        handler.HandleDocumentAdded("this.nani");
+        handler.HandleDocumentRemoved("this.nani");
+        handler.HandleDocumentChanged("this.nani", new());
+        publisher.Verify(p => p.PublishDiagnostics("this.nani", It.IsAny<IReadOnlyList<Diagnostic>>()), Times.Exactly(5));
+    }
+}

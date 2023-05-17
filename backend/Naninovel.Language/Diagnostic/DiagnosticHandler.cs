@@ -1,31 +1,31 @@
 using System.Collections.Generic;
 using Naninovel.Metadata;
+using static Naninovel.Language.DiagnosticContext;
 
 namespace Naninovel.Language;
 
 public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumentObserver, IMetadataObserver
 {
-    private readonly List<Diagnoser> diagnosers = new();
+    private readonly List<IDiagnoser> diagnosers = new();
     private readonly DiagnosticRegistry registry = new();
     private readonly MetadataProvider metaProvider = new();
     private readonly IDocumentRegistry docs;
     private readonly IDiagnosticPublisher publisher;
+    private readonly IDiagnoserFactory factory;
 
-    public DiagnosticHandler (IDocumentRegistry docs, IDiagnosticPublisher publisher)
+    public DiagnosticHandler (IDocumentRegistry docs, IDiagnosticPublisher publisher, IDiagnoserFactory? factory = null)
     {
         this.publisher = publisher;
         this.docs = docs;
+        this.factory = factory ?? new DiagnoserFactory(docs, registry, metaProvider);
     }
 
     public void HandleSettingsChanged (Settings settings)
     {
         diagnosers.Clear();
-        if (settings.DiagnoseSyntax)
-            diagnosers.Add(new SyntaxDiagnoser(docs, registry));
-        if (settings.DiagnoseSemantics)
-            diagnosers.Add(new SemanticDiagnoser(metaProvider, docs, registry));
-        if (settings.DiagnoseNavigation)
-            diagnosers.Add(new NavigationDiagnoser(metaProvider, docs, registry));
+        if (settings.DiagnoseSyntax) diagnosers.Add(factory.Create(Syntax));
+        if (settings.DiagnoseSemantics) diagnosers.Add(factory.Create(Semantic));
+        if (settings.DiagnoseNavigation) diagnosers.Add(factory.Create(Navigation));
         RediagnoseAll();
     }
 
@@ -43,7 +43,7 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
         Publish();
     }
 
-    public void HandleDocumentChanged (string uri, in LineRange range)
+    public void HandleDocumentChanged (string uri, LineRange range)
     {
         foreach (var diagnoser in diagnosers)
             diagnoser.HandleDocumentChanged(uri, range);
@@ -67,7 +67,7 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
 
     private void Publish ()
     {
-        foreach (var uri in registry.GetAllUris())
+        foreach (var uri in docs.GetAllUris())
             publisher.PublishDiagnostics(uri, registry.GetDiagnostics(uri));
     }
 }

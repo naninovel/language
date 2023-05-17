@@ -7,16 +7,20 @@ namespace Naninovel.Language.Test;
 
 internal static class Common
 {
+    public static Document CreateDocument (params string[] lines)
+    {
+        return new DocumentFactory().CreateDocument(string.Join('\n', lines));
+    }
+
     public static void SetupScript (this Mock<IDocumentRegistry> docs, string uri, params string[] lines)
     {
-        var document = new DocumentFactory().CreateDocument(string.Join('\n', lines));
-        docs.Setup(d => d.Get(uri)).Returns(document);
+        docs.Setup(d => d.Get(uri)).Returns(CreateDocument(lines));
         // ReSharper disable once ConstantNullCoalescingCondition
         var uris = (docs.Object.GetAllUris() ?? Array.Empty<string>()).Append(uri).ToArray();
         docs.Setup(d => d.GetAllUris()).Returns(uris);
     }
 
-    public static void SetupCommandWithEndpoint (this Project meta, string commandId)
+    public static Project SetupCommandWithEndpoint (this Project meta, string commandId)
     {
         var context = new[] {
             new ValueContext(),
@@ -31,5 +35,6 @@ internal static class Common
         };
         var command = new Command { Id = commandId, Parameters = new[] { parameter } };
         meta.Commands = meta.Commands.Append(command).ToArray();
+        return meta;
     }
 }

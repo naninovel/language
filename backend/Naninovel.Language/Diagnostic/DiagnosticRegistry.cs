@@ -6,17 +6,8 @@ namespace Naninovel.Language;
 internal class DiagnosticRegistry
 {
     private readonly Dictionary<string, List<DiagnosticRegistryItem>> uriToItems = new();
+    private readonly List<DiagnosticRegistryItem> items = new();
     private readonly List<Diagnostic> diagnostics = new();
-
-    public IReadOnlyCollection<string> GetAllUris ()
-    {
-        return uriToItems.Keys;
-    }
-
-    public IReadOnlyList<DiagnosticRegistryItem> GetItems (string uri)
-    {
-        return uriToItems[uri];
-    }
 
     public IReadOnlyList<Diagnostic> GetDiagnostics (string uri)
     {
@@ -41,6 +32,15 @@ internal class DiagnosticRegistry
     {
         if (predicate is null) GetOrAddItems(uri).Clear();
         else GetOrAddItems(uri).RemoveAll(predicate);
+    }
+
+    public IReadOnlyList<DiagnosticRegistryItem> Find (string uri, Predicate<DiagnosticRegistryItem> predicate)
+    {
+        items.Clear();
+        foreach (var item in GetOrAddItems(uri))
+            if (predicate(item))
+                items.Add(item);
+        return items.Count > 0 ? items.ToArray() : Array.Empty<DiagnosticRegistryItem>();
     }
 
     private List<DiagnosticRegistryItem> GetOrAddItems (string uri)

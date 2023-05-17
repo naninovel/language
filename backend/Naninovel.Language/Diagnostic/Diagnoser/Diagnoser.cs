@@ -2,7 +2,7 @@
 
 namespace Naninovel.Language;
 
-internal abstract class Diagnoser
+internal abstract class Diagnoser : IDiagnoser
 {
     public abstract DiagnosticContext Context { get; }
 
@@ -37,16 +37,23 @@ internal abstract class Diagnoser
     {
         Uri = uri;
         var document = Docs.Get(uri);
-        Diagnose(document, range ?? new(0, document.LineCount - 1));
+        var specRange = range ?? new(0, document.LineCount - 1);
+        for (LineIndex = specRange.Start; LineIndex <= specRange.End; LineIndex++)
+            DiagnoseLine(Line = document[LineIndex]);
+    }
+
+    protected void Remove (string uri, LineRange? range = null)
+    {
+        Registry.Remove(uri, i => i.Context == Context && (!range.HasValue || range.Value.Contains(i.Line)));
+    }
+
+    protected void Rediagnose (string uri, LineRange? range = null)
+    {
+        Remove(uri, range);
+        Diagnose(uri, range);
     }
 
     protected abstract void DiagnoseLine (in DocumentLine line);
-
-    private void Diagnose (IDocument document, in LineRange range)
-    {
-        for (LineIndex = range.Start; LineIndex <= range.End; LineIndex++)
-            DiagnoseLine(Line = document[LineIndex]);
-    }
 
     private void AddDiagnostic (in Diagnostic diagnostic)
     {

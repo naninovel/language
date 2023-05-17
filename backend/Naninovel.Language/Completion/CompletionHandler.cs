@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
+using static Naninovel.Language.Common;
 using static Naninovel.Metadata.Constants;
 
 namespace Naninovel.Language;
@@ -35,7 +35,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     public IReadOnlyList<CompletionItem> Complete (string documentUri, Position position)
     {
         var documentLine = docs.Get(documentUri)[position.Line];
-        var scriptName = Path.GetFileNameWithoutExtension(documentUri);
+        var scriptName = ToEndpointName(documentUri);
         ResetState(documentLine, position, scriptName);
         return documentLine.Script switch {
             GenericLine line => GetForGenericLine(line),

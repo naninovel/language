@@ -1,7 +1,7 @@
-﻿using System.IO;
-using Naninovel.Metadata;
+﻿using Naninovel.Metadata;
 using Naninovel.Parsing;
 using Naninovel.Utilities;
+using static Naninovel.Language.Common;
 
 namespace Naninovel.Language;
 
@@ -19,18 +19,22 @@ internal class NavigationDiagnoser : Diagnoser
 
     public override void HandleDocumentAdded (string uri)
     {
+        foreach (var otherUri in Docs.GetAllUris())
+            if (otherUri != uri)
+                Rediagnose(otherUri);
         Diagnose(uri);
     }
 
     public override void HandleDocumentRemoved (string uri)
     {
-        Registry.Remove(uri, i => i.Context == Context);
+        Remove(uri);
+        foreach (var otherUri in Docs.GetAllUris())
+            Rediagnose(otherUri);
     }
 
     public override void HandleDocumentChanged (string uri, LineRange range)
     {
-        Registry.Remove(uri, i => i.Context == Context && range.Contains(i.Line));
-        Diagnose(uri, range);
+        Rediagnose(uri, range);
     }
 
     protected override void DiagnoseLine (in DocumentLine line)
@@ -45,7 +49,7 @@ internal class NavigationDiagnoser : Diagnoser
 
     private void DiagnoseLabelLine (LabelLine line)
     {
-        if (!Docs.IsEndpointUsed(Path.GetFileNameWithoutExtension(Uri), line.Label))
+        if (!Docs.IsEndpointUsed(ToEndpointName(Uri), line.Label))
             AddUnusedLabel(line.Label);
     }
 

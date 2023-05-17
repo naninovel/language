@@ -17,7 +17,7 @@ public class SettingsTest
     [Fact]
     public void NotifiesOnConfigure ()
     {
-        var settings = new Settings(true, true, true);
+        var settings = new Settings();
         handler.Configure(settings);
         notifier.Verify(n => n.HandleSettingsChanged(settings), Times.Once);
         notifier.VerifyNoOtherCalls();
