@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Naninovel.Metadata;
 
 namespace Naninovel.Language;
@@ -9,7 +9,7 @@ public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
     private readonly DocumentChanger changer = new();
     private readonly MetadataProvider metaProvider = new();
     private readonly IObserverNotifier<IDocumentObserver> notifier;
-    private readonly WipEndpointRegistry endpoints;
+    private readonly EndpointRegistry endpoints;
 
     public DocumentRegistry (IObserverNotifier<IDocumentObserver> notifier)
     {
@@ -40,19 +40,23 @@ public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
 
     public void Upsert (string uri, Document document)
     {
-        var changing = map.ContainsKey(uri);
+        var adding = !map.ContainsKey(uri);
+        var range = new LineRange(0, document.LineCount - 1);
         map[uri] = document;
-        endpoints.Remove(uri);
-        endpoints.Add(uri, document.Lines);
-        if (changing) notifier.Notify(n => n.HandleDocumentChanged(uri, new(0, document.LineCount - 1)));
-        else notifier.Notify(n => n.HandleDocumentAdded(uri));
+        if (adding) endpoints.HandleDocumentAdded(uri);
+        else endpoints.HandleLinesRemoved(uri, range);
+        endpoints.HandleLinesAdded(uri, document.Lines, range);
+        if (adding) notifier.Notify(n => n.HandleDocumentAdded(uri));
+        else notifier.Notify(n => n.HandleDocumentChanged(uri, range));
     }
 
     public void Remove (string uri)
     {
-        map.Remove(uri);
-        endpoints.Remove(uri);
+        EnsureDocumentAvailable(uri);
+        endpoints.HandleLinesRemoved(uri, new(0, map[uri].LineCount - 1));
+        endpoints.HandleDocumentRemoved(uri);
         notifier.Notify(n => n.HandleDocumentRemoved(uri));
+        map.Remove(uri);
     }
 
     public void Change (string uri, IReadOnlyList<DocumentChange> changes)
@@ -61,8 +65,8 @@ public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
         var lines = map[uri].Lines;
         var changedRange = changer.ApplyChanges(lines, changes);
         foreach (var change in changes)
-            endpoints.Remove(uri, change.Range);
-        endpoints.Add(uri, lines, changedRange);
+            endpoints.HandleLinesRemoved(uri, change.Range);
+        endpoints.HandleLinesAdded(uri, lines, changedRange);
         notifier.Notify(n => n.HandleDocumentChanged(uri, changedRange));
     }
 

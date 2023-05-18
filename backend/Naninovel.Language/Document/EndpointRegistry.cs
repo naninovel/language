@@ -7,8 +7,11 @@ namespace Naninovel.Language;
 
 internal class EndpointRegistry
 {
-    private readonly Dictionary<string, List<EndpointRegistryItem>> uriToExisting = new();
-    private readonly Dictionary<string, List<EndpointRegistryItem>> nameToUsed = new();
+    private const string? noLabel = null;
+    private readonly Dictionary<(string name, int line), string> labels = new();
+    private readonly Dictionary<(string name, int line), (string name, string? label)> endpoints = new();
+    private readonly Dictionary<(string name, string? label), int> labelCount = new();
+    private readonly Dictionary<(string name, string? label), int> endpointCount = new();
     private readonly EndpointResolver resolver;
 
     public EndpointRegistry (MetadataProvider metaProvider)
@@ -16,73 +19,86 @@ internal class EndpointRegistry
         resolver = new(metaProvider);
     }
 
-    public bool Contains (string uri, string label)
+    public bool Contains (string uriOrName, string? label = noLabel)
     {
-        foreach (var item in GetExisting(uri))
-            if (item.Label == label)
-                return true;
-        return false;
+        return labelCount.ContainsKey((ToScriptName(uriOrName), label));
     }
 
-    public bool IsUsed (string name, string? label = null)
+    public bool IsUsed (string uriOrName, string? label = noLabel)
     {
-        var match = label ?? "";
-        foreach (var item in GetUsed(name))
-            if (string.IsNullOrEmpty(label) || item.Label == match)
-                return true;
-        return false;
+        return endpointCount.ContainsKey((ToScriptName(uriOrName), label));
     }
 
-    public void Add (string uri, IReadOnlyList<DocumentLine> lines, LineRange? range = null)
+    public void HandleDocumentAdded (string uriOrName)
     {
-        EnsureScriptExist(uri);
-        var (start, end) = range.HasValue ? (range.Value.Start, range.Value.End) : (0, lines.Count - 1);
-        for (var i = start; i <= end; i++)
-            ProcessAddedLine(uri, lines[i].Script, i);
+        labelCount.TryAdd((ToScriptName(uriOrName), noLabel), 0);
     }
 
-    public void Remove (string uri, LineRange? range = null)
-    {
-        var existing = GetExisting(uri);
-        if (!range.HasValue) existing.Clear();
-        else
-            for (var i = existing.Count - 1; i >= 0; i--)
-                if (existing[i].LineIndex >= range.Value.Start && existing[i].LineIndex <= range.Value.End)
-                    existing.RemoveAt(i);
-    }
-
-    private List<EndpointRegistryItem> GetExisting (string uri)
-    {
-        return uriToExisting.TryGetValue(uri, out var items) ? items : uriToExisting[uri] = new();
-    }
-
-    private List<EndpointRegistryItem> GetUsed (string uriOrName)
+    public void HandleDocumentRemoved (string uriOrName)
     {
         var name = ToScriptName(uriOrName);
-        return nameToUsed.TryGetValue(name, out var items) ? items : nameToUsed[name] = new();
+        labelCount.Remove((name, noLabel));
     }
 
-    private void ProcessAddedLine (string uri, IScriptLine line, int index)
+    public void HandleLinesAdded (string uriOrName, IReadOnlyList<DocumentLine> lines, in LineRange range)
     {
-        if (line is LabelLine labelLine)
-            GetExisting(uri).Add(new(labelLine.Label, index));
-        else if (line is CommandLine commandLine)
-            ProcessAddedCommand(commandLine.Command, uri, index);
-        else if (line is GenericLine genericLine)
-            foreach (var content in genericLine.Content)
-                if (content is InlinedCommand inlined)
-                    ProcessAddedCommand(inlined.Command, uri, index);
+        var name = ToScriptName(uriOrName);
+        for (var i = range.Start; i <= range.End; i++)
+            if (lines[i].Script is LabelLine labelLine)
+                HandleLabelAdded(i, labelLine.Label);
+            else if (lines[i].Script is CommandLine commandLine)
+                HandleCommandAdded(commandLine.Command, i);
+            else if (lines[i].Script is GenericLine genericLine)
+                foreach (var content in genericLine.Content)
+                    if (content is InlinedCommand inlined)
+                        HandleCommandAdded(inlined.Command, i);
+
+        void HandleLabelAdded (int line, string label)
+        {
+            labels[(name, line)] = label;
+            if (!labelCount.TryAdd((name, label), 1))
+                labelCount[(name, label)] += 1;
+        }
+
+        void HandleCommandAdded (Parsing.Command command, int line)
+        {
+            if (resolver.TryResolve(command, out var point))
+                HandleEndpointAdded(line, (point.Script ?? name, point.Label));
+        }
+
+        void HandleEndpointAdded (int line, (string name, string? label) endpoint)
+        {
+            endpoints[(name, line)] = endpoint;
+            if (!endpointCount.TryAdd(endpoint, 1))
+                endpointCount[endpoint] += 1;
+            if (!endpointCount.TryAdd((endpoint.name, noLabel), 1))
+                endpointCount[(endpoint.name, noLabel)] += 1;
+        }
     }
 
-    private void ProcessAddedCommand (Parsing.Command command, string uri, int lineIndex)
+    public void HandleLinesRemoved (string uriOrName, in LineRange range)
     {
-        if (resolver.TryResolve(command, out var point))
-            GetUsed(point.Script ?? uri).Add(new(point.Label ?? "", lineIndex));
-    }
+        var name = ToScriptName(uriOrName);
+        for (int i = range.Start; i <= range.End; i++)
+            if (labels.ContainsKey((name, i))) HandleLabelRemoved(i);
+            else if (endpoints.ContainsKey((name, i))) HandleEndpointRemoved(i);
 
-    private void EnsureScriptExist (string uri)
-    {
-        var items = GetExisting(uri);
-        if (items.Count == 0) items.Add(new("", -1));
+        void HandleLabelRemoved (int line)
+        {
+            var label = labels[(name, line)];
+            if ((labelCount[(name, label)] -= 1) > 0) return;
+            labelCount.Remove((name, label));
+            labels.Remove((name, line));
+        }
+
+        void HandleEndpointRemoved (int line)
+        {
+            var endpoint = endpoints[(name, line)];
+            if ((endpointCount[endpoint] -= 1) > 0) return;
+            endpointCount.Remove(endpoint);
+            endpoints.Remove((name, line));
+            if ((endpointCount[(endpoint.name, noLabel)] -= 1) == 0)
+                endpointCount.Remove((endpoint.name, noLabel));
+        }
     }
 }

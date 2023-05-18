@@ -28,10 +28,32 @@ public class DocumentRegistryTest
     }
 
     [Fact]
+    public void ErrsWhenRemovingUnknownDocument ()
+    {
+        Assert.Contains("not found", Assert.Throws<Error>(() => registry.Remove("foo")).Message);
+    }
+
+    [Fact]
     public void CanGetUpsertDocument ()
     {
         registry.Upsert("foo", CreateDocument(""));
         Assert.Equal(1, registry.Get("foo").LineCount);
+    }
+
+    [Fact]
+    public void WhenExistingDocumentUpsertItsReplaced ()
+    {
+        registry.Upsert("foo", CreateDocument("1"));
+        registry.Upsert("foo", CreateDocument("2"));
+        Assert.Equal("2", registry.Get("foo")[0].Text);
+    }
+
+    [Fact]
+    public void CanRemoveDocument ()
+    {
+        registry.Upsert("foo", CreateDocument(""));
+        registry.Remove("foo");
+        Assert.False(registry.Contains("foo"));
     }
 
     [Fact]
@@ -62,26 +84,11 @@ public class DocumentRegistryTest
     }
 
     [Fact]
-    public void CanRemoveDocument ()
+    public void ContainsTrueAfterRemovingDuplicateLabel ()
     {
-        registry.Upsert("foo", CreateDocument(""));
-        registry.Remove("foo");
-        Assert.False(registry.Contains("foo"));
-    }
-
-    [Fact]
-    public void WhenRemovingUnknownDocumentNothingHappens ()
-    {
-        registry.Remove("foo");
-        Assert.False(registry.Contains("foo"));
-    }
-
-    [Fact]
-    public void WhenExistingDocumentUpsertItsReplaced ()
-    {
-        registry.Upsert("foo", CreateDocument("1"));
-        registry.Upsert("foo", CreateDocument("2"));
-        Assert.Equal("2", registry.Get("foo")[0].Text);
+        registry.Upsert("foo", CreateDocument("# bar", "# bar"));
+        registry.Change("foo", new[] { new DocumentChange(new(new(0, 5), new(1, 5)), "") });
+        Assert.True(registry.Contains("foo", "bar"));
     }
 
     [Fact]
@@ -100,15 +107,49 @@ public class DocumentRegistryTest
     {
         registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
         registry.Upsert("script1.nani", CreateDocument("# label", "@goto script2.label"));
+        Assert.False(registry.IsEndpointUsed("script1"));
+        Assert.False(registry.IsEndpointUsed("script1", "label"));
+        Assert.True(registry.IsEndpointUsed("script2"));
+        Assert.True(registry.IsEndpointUsed("script2", "label"));
         registry.Upsert("script2.nani", CreateDocument("# label", "@goto script1.label"));
         Assert.True(registry.IsEndpointUsed("script1"));
-        Assert.True(registry.IsEndpointUsed("script2"));
         Assert.True(registry.IsEndpointUsed("script1", "label"));
+        Assert.True(registry.IsEndpointUsed("script2"));
         Assert.True(registry.IsEndpointUsed("script2", "label"));
         registry.Remove("script2.nani");
         Assert.False(registry.IsEndpointUsed("script1"));
-        Assert.False(registry.IsEndpointUsed("script2"));
         Assert.False(registry.IsEndpointUsed("script1", "label"));
+        Assert.True(registry.IsEndpointUsed("script2"));
+        Assert.True(registry.IsEndpointUsed("script2", "label"));
+        registry.Remove("script1.nani");
+        Assert.False(registry.IsEndpointUsed("script1"));
+        Assert.False(registry.IsEndpointUsed("script1", "label"));
+        Assert.False(registry.IsEndpointUsed("script2"));
         Assert.False(registry.IsEndpointUsed("script2", "label"));
+    }
+
+    [Fact]
+    public void UsedEndpointsUpdatedWhenDocumentChanged ()
+    {
+        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        registry.Upsert("script1.nani", CreateDocument("# label", "[goto script2.label]"));
+        registry.Upsert("script2.nani", CreateDocument("# label", "[goto script1.label]"));
+        Assert.True(registry.IsEndpointUsed("script2"));
+        Assert.True(registry.IsEndpointUsed("script2", "label"));
+        registry.Change("script1.nani", new[] { new DocumentChange(new(new(1, 6), new(1, 13)), "") });
+        Assert.False(registry.IsEndpointUsed("script2"));
+        Assert.False(registry.IsEndpointUsed("script2", "label"));
+        registry.Change("script2.nani", new[] { new DocumentChange(new(new(1, 6), new(1, 13)), "") });
+        Assert.True(registry.IsEndpointUsed("script2"));
+        Assert.True(registry.IsEndpointUsed("script2", "label"));
+    }
+
+    [Fact]
+    public void UsedEndpointsTrueAfterRemovingDuplicateEndpoint ()
+    {
+        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        registry.Upsert("foo", CreateDocument("@goto foo", "@goto foo"));
+        registry.Change("foo", new[] { new DocumentChange(new(new(0, 9), new(1, 9)), "") });
+        Assert.True(registry.IsEndpointUsed("foo"));
     }
 }
