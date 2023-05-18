@@ -19,6 +19,7 @@ internal class NavigationDiagnoser : Diagnoser
 
     public override void HandleDocumentAdded (string uri)
     {
+        // TODO: Don't do this. Instead get endpoint registry and find which lines should be re-diagnosed.
         foreach (var otherUri in Docs.GetAllUris())
             if (otherUri != uri)
                 Rediagnose(otherUri);
@@ -28,12 +29,14 @@ internal class NavigationDiagnoser : Diagnoser
     public override void HandleDocumentRemoved (string uri)
     {
         Remove(uri);
+        // TODO: Don't do this. Instead get endpoint registry and find which lines should be re-diagnosed.
         foreach (var otherUri in Docs.GetAllUris())
             Rediagnose(otherUri);
     }
 
     public override void HandleDocumentChanged (string uri, LineRange range)
     {
+        // TODO: Get endpoint registry and find which lines should be re-diagnosed.
         Rediagnose(uri, range);
     }
 

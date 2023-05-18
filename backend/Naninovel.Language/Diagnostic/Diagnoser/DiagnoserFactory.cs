@@ -18,7 +18,6 @@ internal class DiagnoserFactory : IDiagnoserFactory
     public IDiagnoser Create (DiagnosticContext context) => context switch {
         DiagnosticContext.Syntax => new SyntaxDiagnoser(docs, registry),
         DiagnosticContext.Semantic => new SemanticDiagnoser(metaProvider, docs, registry),
-        DiagnosticContext.Navigation => new NavigationDiagnoser(metaProvider, docs, registry),
-        _ => throw new Error($"Unknown diagnoser context: {context}")
+        _ => new NavigationDiagnoser(metaProvider, docs, registry),
     };
 }
