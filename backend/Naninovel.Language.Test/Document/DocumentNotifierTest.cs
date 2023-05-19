@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using System.Collections.Generic;
+using Moq;
 using Naninovel.TestUtilities;
 using Xunit;
 using static Naninovel.Language.Test.Common;
@@ -46,5 +47,13 @@ public class DocumentNotifierTest
         notifier.Verify(d => d.HandleDocumentAdded("foo"), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(0, 0)), Times.Once);
         notifier.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void EndpointsAreNotifiedBeforeOthers ()
+    {
+        var endpoints = new Mock<IEndpointRegistry>().As<IDocumentObserver>().Object;
+        var other = new Mock<IDocumentObserver>().Object;
+        observers.Verify(o => o.Order(It.Is<IComparer<IDocumentObserver>>(c => c.Compare(endpoints, other) == -1)));
     }
 }

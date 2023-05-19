@@ -1,13 +1,11 @@
 ﻿using System.Collections.Generic;
-using Naninovel.Metadata;
 
 namespace Naninovel.Language;
 
-public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
+public class DocumentRegistry : IDocumentRegistry
 {
     private readonly Dictionary<string, Document> map = new();
     private readonly DocumentChanger changer = new();
-    private readonly MetadataProvider metaProvider = new();
     private readonly IObserverNotifier<IDocumentObserver> notifier;
 
     public DocumentRegistry (IObserverRegistry<IDocumentObserver> observers, IObserverNotifier<IDocumentObserver> notifier)
@@ -15,8 +13,6 @@ public class DocumentRegistry : IDocumentRegistry, IMetadataObserver
         observers.Order(Comparer<IDocumentObserver>.Create((x, y) => x is IEndpointRegistry ? -1 : 1));
         this.notifier = notifier;
     }
-
-    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
 
     public IReadOnlyCollection<string> GetAllUris () => map.Keys;
 
