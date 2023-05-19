@@ -13,13 +13,14 @@ public abstract class DiagnoserTest
     protected DiagnosticHandler Handler { get; }
     protected Project Meta { get; } = new();
     protected Mock<IDocumentRegistry> Docs { get; } = new();
+    protected Mock<IEndpointRegistry> Endpoints { get; } = new();
     protected Mock<IDiagnosticPublisher> Publisher { get; } = new();
 
     private readonly Dictionary<string, IReadOnlyList<Diagnostic>> published = new();
 
     protected DiagnoserTest ()
     {
-        Handler = new(Docs.Object, Publisher.Object);
+        Handler = new(Docs.Object, Endpoints.Object, Publisher.Object);
         Docs.Setup(d => d.GetAllUris()).Returns(Array.Empty<string>());
         Publisher.Setup(p => p.PublishDiagnostics(It.IsAny<string>(), It.IsAny<IReadOnlyList<Diagnostic>>()))
             .Callback((string uri, IReadOnlyList<Diagnostic> diags) => published[uri] = diags);
@@ -30,10 +31,15 @@ public abstract class DiagnoserTest
         return published.TryGetValue(uri, out var diags) ? diags : Array.Empty<Diagnostic>();
     }
 
+    protected void SetupHandler (Project meta)
+    {
+        Handler.HandleSettingsChanged(Settings);
+        Handler.HandleMetadataChanged(meta);
+    }
+
     protected IReadOnlyList<Diagnostic> Diagnose (string line)
     {
-        Handler.HandleMetadataChanged(Meta);
-        Handler.HandleSettingsChanged(Settings);
+        SetupHandler(Meta);
         var changing = Docs.Object.GetAllUris().Contains(DefaultUri);
         Docs.SetupScript(DefaultUri, line);
         if (changing) Handler.HandleDocumentChanged(DefaultUri, new(0, 0));

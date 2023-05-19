@@ -7,12 +7,13 @@ namespace Naninovel.Language.Test;
 
 public class DocumentNotifierTest
 {
+    private readonly Mock<IObserverRegistry<IDocumentObserver>> observers = new();
     private readonly NotifierMock<IDocumentObserver> notifier = new();
     private readonly DocumentRegistry registry;
 
     public DocumentNotifierTest ()
     {
-        registry = new(notifier);
+        registry = new(observers.Object, notifier);
     }
 
     [Fact]

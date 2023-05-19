@@ -16,7 +16,7 @@ internal static class Common
     {
         docs.Setup(d => d.Get(uri)).Returns(CreateDocument(lines));
         // ReSharper disable once ConstantNullCoalescingCondition
-        var uris = (docs.Object.GetAllUris() ?? Array.Empty<string>()).Append(uri).ToArray();
+        var uris = (docs.Object.GetAllUris() ?? Array.Empty<string>()).Append(uri).ToHashSet();
         docs.Setup(d => d.GetAllUris()).Returns(uris);
     }
 

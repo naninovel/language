@@ -13,11 +13,12 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
     private readonly IDiagnosticPublisher publisher;
     private readonly IDiagnoserFactory factory;
 
-    public DiagnosticHandler (IDocumentRegistry docs, IDiagnosticPublisher publisher, IDiagnoserFactory? factory = null)
+    public DiagnosticHandler (IDocumentRegistry docs, IEndpointRegistry endpoints,
+        IDiagnosticPublisher publisher, IDiagnoserFactory? factory = null)
     {
         this.publisher = publisher;
         this.docs = docs;
-        this.factory = factory ?? new DiagnoserFactory(docs, registry, metaProvider);
+        this.factory = factory ?? new DiagnoserFactory(docs, endpoints, registry, metaProvider);
     }
 
     public void HandleSettingsChanged (Settings settings)
@@ -68,6 +69,6 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
     private void Publish ()
     {
         foreach (var uri in docs.GetAllUris())
-            publisher.PublishDiagnostics(uri, registry.GetDiagnostics(uri));
+            publisher.PublishDiagnostics(uri, registry.CollectDiagnostics(uri));
     }
 }

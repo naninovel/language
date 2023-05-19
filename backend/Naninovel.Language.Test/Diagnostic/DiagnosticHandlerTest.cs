@@ -9,6 +9,7 @@ namespace Naninovel.Language.Test;
 public class DiagnosticHandlerTest
 {
     private readonly Mock<IDocumentRegistry> docs = new();
+    private readonly Mock<IEndpointRegistry> endpoints = new();
     private readonly Mock<IDiagnosticPublisher> publisher = new();
     private readonly Mock<IDiagnoserFactory> factory = new();
     private readonly Dictionary<DiagnosticContext, Mock<IDiagnoser>> diagnosers = new();
@@ -20,7 +21,7 @@ public class DiagnosticHandlerTest
         factory.Setup(f => f.Create(It.IsAny<DiagnosticContext>()))
             .Callback((DiagnosticContext c) => diagnosers[c] = new Mock<IDiagnoser>())
             .Returns((DiagnosticContext c) => diagnosers[c].Object);
-        handler = new(docs.Object, publisher.Object, factory.Object);
+        handler = new(docs.Object, endpoints.Object, publisher.Object, factory.Object);
     }
 
     [Fact]

@@ -1,5 +1,4 @@
-﻿using Moq;
-using Xunit;
+﻿using Xunit;
 
 namespace Naninovel.Language.Test;
 
@@ -16,7 +15,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenUnusedLabelWarningIsDiagnosed ()
     {
-        Docs.Setup(d => d.IsEndpointUsed("this", "label")).Returns(false);
+        Endpoints.Setup(d => d.LabelUsed("this", "label")).Returns(false);
         var diags = Diagnose("# label");
         Assert.Single(diags);
         Assert.Equal(new(new(0, 2), new(0, 7)), diags[0].Range);
@@ -28,7 +27,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenLabelIsUsedWarningIsNotDiagnosed ()
     {
-        Docs.Setup(d => d.IsEndpointUsed("this", "label")).Returns(true);
+        Endpoints.Setup(d => d.LabelUsed("this", "label")).Returns(true);
         Assert.Empty(Diagnose("# label"));
     }
 
@@ -36,7 +35,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     public void WhenUnknownEndpointScriptWarningIsDiagnosed ()
     {
         Meta.SetupCommandWithEndpoint("goto");
-        Docs.Setup(d => d.Contains("other.nani", It.IsAny<string>())).Returns(false);
+        Endpoints.Setup(d => d.ScriptExist("other")).Returns(false);
         var diags = Diagnose("@goto other");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 6), new(0, 11)), DiagnosticSeverity.Warning,
@@ -47,8 +46,8 @@ public class NavigationDiagnoserTest : DiagnoserTest
     public void WhenUnknownEndpointLabelInCurrentScriptWarningIsDiagnosed ()
     {
         Meta.SetupCommandWithEndpoint("goto");
-        Docs.Setup(d => d.Contains("this.nani", It.IsAny<string>())).Returns(true);
-        Docs.Setup(d => d.Contains("this.nani", "label")).Returns(false);
+        Endpoints.Setup(d => d.ScriptExist("this")).Returns(true);
+        Endpoints.Setup(d => d.LabelExist("this", "label")).Returns(false);
         var diags = Diagnose("@goto .label");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 6), new(0, 12)), DiagnosticSeverity.Warning,
@@ -59,8 +58,8 @@ public class NavigationDiagnoserTest : DiagnoserTest
     public void WhenUnknownEndpointLabelInOtherScriptWarningIsDiagnosed ()
     {
         Meta.SetupCommandWithEndpoint("goto");
-        Docs.Setup(d => d.Contains("other.nani", It.IsAny<string>())).Returns(true);
-        Docs.Setup(d => d.Contains("other.nani", "label")).Returns(false);
+        Endpoints.Setup(d => d.ScriptExist("other")).Returns(true);
+        Endpoints.Setup(d => d.LabelExist("other", "label")).Returns(false);
         var diags = Diagnose("@goto other.label");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 6), new(0, 17)), DiagnosticSeverity.Warning,
@@ -72,10 +71,10 @@ public class NavigationDiagnoserTest : DiagnoserTest
     {
         Meta.SetupCommandWithEndpoint("goto");
         Docs.SetupScript("other.nani", "");
-        Docs.Setup(d => d.Contains("this.nani", null)).Returns(true);
-        Docs.Setup(d => d.Contains("this.nani", "label")).Returns(true);
-        Docs.Setup(d => d.Contains("other.nani", null)).Returns(true);
-        Docs.Setup(d => d.Contains("other.nani", "label")).Returns(true);
+        Endpoints.Setup(d => d.ScriptExist("this")).Returns(true);
+        Endpoints.Setup(d => d.LabelExist("this", "label")).Returns(true);
+        Endpoints.Setup(d => d.ScriptExist("other")).Returns(true);
+        Endpoints.Setup(d => d.LabelExist("other", "label")).Returns(true);
         Assert.Empty(Diagnose("@goto this"));
         Assert.Empty(Diagnose("@goto .label"));
         Assert.Empty(Diagnose("@goto this.label"));
@@ -87,7 +86,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     public void DiagnosticsAreClearedWhenCorrected ()
     {
         Meta.SetupCommandWithEndpoint("goto");
-        Docs.Setup(d => d.Contains("this.nani", "bar")).Returns(true);
+        Endpoints.Setup(d => d.LabelExist("this", "bar")).Returns(true);
         Assert.NotEmpty(Diagnose("@goto .foo"));
         Assert.Empty(Diagnose("@goto .bar"));
     }
@@ -96,10 +95,10 @@ public class NavigationDiagnoserTest : DiagnoserTest
     public void DiagnosticsAreClearedWhenDocumentAdded ()
     {
         Meta.SetupCommandWithEndpoint("goto");
-        Docs.Setup(d => d.Contains("other.nani", "foo")).Returns(false);
+        Endpoints.Setup(d => d.LabelExist("other", "foo")).Returns(false);
         Assert.NotEmpty(Diagnose("@goto other.foo"));
         Docs.SetupScript("other.nani", "");
-        Docs.Setup(d => d.Contains("other.nani", "foo")).Returns(true);
+        Endpoints.Setup(d => d.LabelExist("other", "foo")).Returns(true);
         Handler.HandleDocumentAdded("other.nani");
         Assert.Empty(GetDiagnostics());
     }
@@ -109,12 +108,44 @@ public class NavigationDiagnoserTest : DiagnoserTest
     {
         Meta.SetupCommandWithEndpoint("goto");
         Docs.SetupScript("other.nani", "");
-        Docs.Setup(d => d.Contains("other.nani", "foo")).Returns(true);
+        Endpoints.Setup(d => d.LabelExist("other", "foo")).Returns(true);
         Assert.Empty(Diagnose("@goto other.foo"));
-        Docs.Setup(d => d.Contains("other.nani", "foo")).Returns(false);
+        Endpoints.Setup(d => d.LabelExist("other", "foo")).Returns(false);
         Handler.HandleDocumentRemoved("other.nani");
         Assert.Single(GetDiagnostics());
         Assert.Equal(new(new(new(0, 6), new(0, 15)), DiagnosticSeverity.Warning,
             "Unknown endpoint: other.foo."), GetDiagnostics()[0]);
+    }
+
+    [Fact]
+    public void UnusedLabelIsDetectedAfterChange ()
+    {
+        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Docs.SetupScript("foo.nani", "@goto bar.label");
+        Docs.SetupScript("bar.nani", "# label");
+        Endpoints.Setup(d => d.LabelUsed("bar", "label")).Returns(true);
+        Handler.HandleDocumentAdded("foo.nani");
+        Handler.HandleDocumentAdded("bar.nani");
+        Assert.Empty(GetDiagnostics("bar.nani"));
+        Docs.SetupScript("foo.nani", "@goto bar.baz");
+        Endpoints.Setup(d => d.LabelUsed("bar", "label")).Returns(false);
+        Handler.HandleDocumentChanged("foo.nani", new(0, 0));
+        Assert.Contains(GetDiagnostics("bar.nani"), d => d.Message == "Unused label.");
+    }
+
+    [Fact]
+    public void UnknownEndpointIsDetectedAfterChange ()
+    {
+        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Docs.SetupScript("foo.nani", "@goto bar.label");
+        Docs.SetupScript("bar.nani", "# label");
+        Endpoints.Setup(d => d.LabelExist("bar", "label")).Returns(true);
+        Handler.HandleDocumentAdded("foo.nani");
+        Handler.HandleDocumentAdded("bar.nani");
+        Assert.Empty(GetDiagnostics("foo.nani"));
+        Docs.SetupScript("bar.nani", "# baz");
+        Endpoints.Setup(d => d.LabelExist("bar", "label")).Returns(false);
+        Handler.HandleDocumentChanged("bar.nani", new(0, 0));
+        Assert.Contains(GetDiagnostics("foo.nani"), d => d.Message == "Unknown endpoint: bar.label.");
     }
 }

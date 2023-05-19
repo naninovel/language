@@ -1,54 +1,81 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 using static Naninovel.Language.Common;
 
 namespace Naninovel.Language;
 
-internal class EndpointRegistry
+public class EndpointRegistry : IEndpointRegistry, IDocumentObserver, IMetadataObserver
 {
     private const string? noLabel = null;
     private readonly Dictionary<(string name, int line), string> labels = new();
     private readonly Dictionary<(string name, int line), (string name, string? label)> endpoints = new();
     private readonly Dictionary<(string name, string? label), int> labelCount = new();
     private readonly Dictionary<(string name, string? label), int> endpointCount = new();
+    private readonly MetadataProvider metaProvider = new();
+    private readonly IDocumentRegistry docs;
     private readonly EndpointResolver resolver;
 
-    public EndpointRegistry (MetadataProvider metaProvider)
+    public EndpointRegistry (IDocumentRegistry docs)
     {
+        this.docs = docs;
         resolver = new(metaProvider);
     }
 
-    public bool Contains (string uriOrName, string? label = noLabel)
+    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
+
+    public void HandleDocumentAdded (string uri)
     {
-        return labelCount.ContainsKey((ToScriptName(uriOrName), label));
+        var name = ToScriptName(uri);
+        var doc = docs.Get(uri);
+        labelCount.TryAdd((name, noLabel), 0);
+        HandleLinesAdded(name, doc, new(0, doc.LineCount - 1));
     }
 
-    public bool IsUsed (string uriOrName, string? label = noLabel)
+    public void HandleDocumentRemoved (string uri)
     {
-        return endpointCount.ContainsKey((ToScriptName(uriOrName), label));
-    }
-
-    public void HandleDocumentAdded (string uriOrName)
-    {
-        labelCount.TryAdd((ToScriptName(uriOrName), noLabel), 0);
-    }
-
-    public void HandleDocumentRemoved (string uriOrName)
-    {
-        var name = ToScriptName(uriOrName);
+        var name = ToScriptName(uri);
         labelCount.Remove((name, noLabel));
+        HandleLinesRemoved(name, new(0, docs.Get(uri).LineCount - 1));
     }
 
-    public void HandleLinesAdded (string uriOrName, IReadOnlyList<DocumentLine> lines, in LineRange range)
+    public void HandleDocumentChanged (string uri, LineRange range)
     {
-        var name = ToScriptName(uriOrName);
+        var name = ToScriptName(uri);
+        var doc = docs.Get(uri);
+        HandleLinesRemoved(name, range);
+        HandleLinesAdded(name, doc, new(range.Start, Math.Min(range.End, doc.LineCount - 1)));
+    }
+
+    public bool ScriptExist (string scriptName)
+    {
+        return labelCount.ContainsKey((scriptName, noLabel));
+    }
+
+    public bool LabelExist (string scriptName, string label)
+    {
+        return labelCount.ContainsKey((scriptName, label));
+    }
+
+    public bool ScriptUsed (string scriptName)
+    {
+        return endpointCount.ContainsKey((scriptName, noLabel));
+    }
+
+    public bool LabelUsed (string scriptName, string label)
+    {
+        return endpointCount.ContainsKey((scriptName, label));
+    }
+
+    private void HandleLinesAdded (string name, IDocument doc, in LineRange range)
+    {
         for (var i = range.Start; i <= range.End; i++)
-            if (lines[i].Script is LabelLine labelLine)
+            if (doc[i].Script is LabelLine labelLine)
                 HandleLabelAdded(i, labelLine.Label);
-            else if (lines[i].Script is CommandLine commandLine)
+            else if (doc[i].Script is CommandLine commandLine)
                 HandleCommandAdded(commandLine.Command, i);
-            else if (lines[i].Script is GenericLine genericLine)
+            else if (doc[i].Script is GenericLine genericLine)
                 foreach (var content in genericLine.Content)
                     if (content is InlinedCommand inlined)
                         HandleCommandAdded(inlined.Command, i);
@@ -76,9 +103,8 @@ internal class EndpointRegistry
         }
     }
 
-    public void HandleLinesRemoved (string uriOrName, in LineRange range)
+    private void HandleLinesRemoved (string name, in LineRange range)
     {
-        var name = ToScriptName(uriOrName);
         for (int i = range.Start; i <= range.End; i++)
             if (labels.ContainsKey((name, i))) HandleLabelRemoved(i);
             else if (endpoints.ContainsKey((name, i))) HandleEndpointRemoved(i);

@@ -1,6 +1,5 @@
 ﻿using Naninovel.Metadata;
 using Naninovel.Parsing;
-using Naninovel.Utilities;
 using static Naninovel.Language.Common;
 
 namespace Naninovel.Language;
@@ -9,20 +8,22 @@ internal class NavigationDiagnoser : Diagnoser
 {
     public override DiagnosticContext Context => DiagnosticContext.Navigation;
 
-    private readonly EndpointResolver endpoint;
+    private readonly IEndpointRegistry endpoints;
+    private readonly EndpointResolver resolver;
 
-    public NavigationDiagnoser (MetadataProvider meta, IDocumentRegistry docs, DiagnosticRegistry registry)
-        : base(docs, registry)
+    public NavigationDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
+        IEndpointRegistry endpoints, DiagnosticRegistry registry) : base(docs, registry)
     {
-        endpoint = new(meta);
+        this.endpoints = endpoints;
+        resolver = new(meta);
     }
 
     public override void HandleDocumentAdded (string uri)
     {
-        // TODO: Don't do this. Instead get endpoint registry and find which lines should be re-diagnosed.
         foreach (var otherUri in Docs.GetAllUris())
-            if (otherUri != uri)
-                Rediagnose(otherUri);
+        foreach (var item in Registry.Get(otherUri))
+            if (item.Context == Context)
+                Rediagnose(otherUri, new(item.Line, item.Line));
         Diagnose(uri);
     }
 
@@ -52,7 +53,7 @@ internal class NavigationDiagnoser : Diagnoser
 
     private void DiagnoseLabelLine (LabelLine line)
     {
-        if (!Docs.IsEndpointUsed(ToScriptName(Uri), line.Label))
+        if (!endpoints.LabelUsed(ToScriptName(Uri), line.Label))
             AddUnusedLabel(line.Label);
     }
 
@@ -71,23 +72,15 @@ internal class NavigationDiagnoser : Diagnoser
 
     private void DiagnoseParameter (Parsing.Parameter param, string commandId)
     {
-        if (endpoint.TryResolve(param, commandId, out var point) && IsEndpointUnknown(point))
+        if (resolver.TryResolve(param, commandId, out var point) && IsEndpointUnknown(point))
             AddUnknownEndpoint(param);
     }
 
     private bool IsEndpointUnknown (Endpoint point)
     {
-        var uri = string.IsNullOrEmpty(point.Script) ? Uri : ResolveUriByScriptName(point.Script);
-        return uri is null || !Docs.Contains(uri, point.Label);
-    }
-
-    private string? ResolveUriByScriptName (string name)
-    {
-        var nameWithExtensions = name + ".nani";
-        foreach (var uri in Docs.GetAllUris())
-            if (uri.EndsWithOrdinal(nameWithExtensions))
-                return uri;
-        return null;
+        var name = point.Script ?? ToScriptName(Uri);
+        if (point.Label is null) return !endpoints.ScriptExist(name);
+        return !endpoints.LabelExist(name, point.Label);
     }
 
     private void AddUnknownEndpoint (Parsing.Parameter param)

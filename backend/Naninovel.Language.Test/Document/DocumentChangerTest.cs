@@ -1,4 +1,5 @@
-﻿using Naninovel.Parsing;
+﻿using Moq;
+using Naninovel.Parsing;
 using Naninovel.TestUtilities;
 using Xunit;
 using static Naninovel.Language.Test.Common;
@@ -11,7 +12,7 @@ public class DocumentChangerTest
 
     public DocumentChangerTest ()
     {
-        registry = new(new NotifierMock<IDocumentObserver>());
+        registry = new(new Mock<IObserverRegistry<IDocumentObserver>>().Object, new NotifierMock<IDocumentObserver>());
     }
 
     [Fact]
