@@ -13,6 +13,8 @@ public class EndpointRegistry : IEndpointRegistry, IDocumentObserver, IMetadataO
     private readonly Dictionary<(string name, int line), (string name, string? label)> endpoints = new();
     private readonly Dictionary<(string name, string? label), int> labelCount = new();
     private readonly Dictionary<(string name, string? label), int> endpointCount = new();
+    // TODO: Dictionary<(string name, string? label), HashSet<(name, line)>> labelsToEndpointLocationsWhichUseThem
+    // TODO: Dictionary<(string name, string? label), HashSet<(name, line)>> endpointsToLabelLocationsWhichUsedByThem
     private readonly MetadataProvider metaProvider = new();
     private readonly IDocumentRegistry docs;
     private readonly EndpointResolver resolver;

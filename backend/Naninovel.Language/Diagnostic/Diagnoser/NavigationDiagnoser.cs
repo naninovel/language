@@ -30,14 +30,17 @@ internal class NavigationDiagnoser : Diagnoser
     public override void HandleDocumentRemoved (string uri)
     {
         Remove(uri);
-        // TODO: Don't do this. Instead get endpoint registry and find which lines should be re-diagnosed.
+        // TODO: Check if removed script (uri, noLabel) was used by any endpoints and re-diagnose them.
+        // TODO: Iterate removed lines to:
+        //  -- find which labels were removed, then get endpoints that are using those labels and re-diagnose them.
+        //  -- find which endpoints were removed, then get labels referenced by the removed points and re-diagnose.
+        //  (see EndpointRegistry for proposals)
         foreach (var otherUri in Docs.GetAllUris())
             Rediagnose(otherUri);
     }
 
     public override void HandleDocumentChanged (string uri, LineRange range)
     {
-        // TODO: Get endpoint registry and find which lines should be re-diagnosed.
         Rediagnose(uri, range);
     }
 
