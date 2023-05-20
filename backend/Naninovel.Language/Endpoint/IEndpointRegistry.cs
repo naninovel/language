@@ -1,9 +1,12 @@
-﻿namespace Naninovel.Language;
+﻿using System.Collections.Generic;
+
+namespace Naninovel.Language;
 
 public interface IEndpointRegistry
 {
     bool ScriptExist (string scriptName);
-    bool LabelExist (string scriptName, string label);
-    bool ScriptUsed (string scriptName);
-    bool LabelUsed (string scriptName, string label);
+    bool LabelExist (in QualifiedLabel label);
+    bool NavigatorExist (in QualifiedEndpoint endpoint);
+    IReadOnlySet<LineLocation> GetLabelLocations (in QualifiedLabel label);
+    IReadOnlySet<LineLocation> GetNavigatorLocations (in QualifiedEndpoint endpoint);
 }

@@ -22,6 +22,11 @@ public class DocumentRegistry : IDocumentRegistry
         return map[uri];
     }
 
+    public bool Contains (string uri)
+    {
+        return map.ContainsKey(uri);
+    }
+
     public void Upsert (string uri, Document document)
     {
         var adding = !map.ContainsKey(uri);
@@ -48,7 +53,6 @@ public class DocumentRegistry : IDocumentRegistry
 
     private void EnsureDocumentAvailable (string uri)
     {
-        if (!map.ContainsKey(uri))
-            throw new Error($"Failed to get '{uri}' document: not found.");
+        if (!Contains(uri)) throw new Error($"Failed to get '{uri}' document: not found.");
     }
 }

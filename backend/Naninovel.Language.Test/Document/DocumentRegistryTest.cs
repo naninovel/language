@@ -49,10 +49,18 @@ public class DocumentRegistryTest
     }
 
     [Fact]
+    public void CanCheckExistenceByUri ()
+    {
+        Assert.False(registry.Contains("foo"));
+        registry.Upsert("foo", CreateDocument(""));
+        Assert.True(registry.Contains("foo"));
+    }
+
+    [Fact]
     public void CanRemoveDocument ()
     {
         registry.Upsert("foo", CreateDocument(""));
         registry.Remove("foo");
-        Assert.Contains("not found", Assert.Throws<Error>(() => registry.Get("foo")).Message);
+        Assert.False(registry.Contains("foo"));
     }
 }

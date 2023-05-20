@@ -33,24 +33,44 @@ internal abstract class Diagnoser : IDiagnoser
     protected void AddUnnecessary (in Range range, string message) =>
         AddDiagnostic(new(range, DiagnosticSeverity.Warning, message, unnecessary));
 
-    protected void Diagnose (string uri, LineRange? range = null)
+    protected void Diagnose (string uri)
     {
         Uri = uri;
         var document = Docs.Get(uri);
-        var specRange = range ?? new(0, document.LineCount - 1);
-        for (LineIndex = specRange.Start; LineIndex <= specRange.End; LineIndex++)
+        for (LineIndex = 0; LineIndex < document.LineCount; LineIndex++)
             DiagnoseLine(Line = document[LineIndex]);
     }
 
-    protected void Remove (string uri, LineRange? range = null)
+    protected void Diagnose (in LineLocation location)
     {
-        Registry.Remove(uri, i => i.Context == Context && (!range.HasValue || range.Value.Contains(i.Line)));
+        Uri = location.DocumentUri;
+        LineIndex = location.LineIndex;
+        DiagnoseLine(Line = Docs.Get(location.DocumentUri)[location.LineIndex]);
     }
 
-    protected void Rediagnose (string uri, LineRange? range = null)
+    protected void Remove (string uri)
     {
-        Remove(uri, range);
-        Diagnose(uri, range);
+        Registry.Remove(uri, i => i.Context == Context);
+    }
+
+    protected void Remove (LineLocation location)
+    {
+        Registry.Remove(location.DocumentUri, i => i.Context == Context && i.Line == location.LineIndex);
+    }
+
+    protected void Rediagnose (string uri, LineRange range)
+    {
+        Registry.Remove(uri, i => i.Context == Context && range.Contains(i.Line));
+        Uri = uri;
+        var document = Docs.Get(uri);
+        for (LineIndex = range.Start; LineIndex <= range.End; LineIndex++)
+            DiagnoseLine(Line = document[LineIndex]);
+    }
+
+    protected void Rediagnose (in LineLocation location)
+    {
+        Remove(location);
+        Diagnose(location);
     }
 
     protected abstract void DiagnoseLine (in DocumentLine line);

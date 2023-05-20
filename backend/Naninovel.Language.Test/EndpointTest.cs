@@ -15,115 +15,95 @@ public class EndpointTest
     }
 
     [Fact]
-    public void ExistChecksBothUriAndLabel ()
+    public void NothingExistByDefault ()
     {
-        docs.SetupScript("foo.nani", "# bar");
-        registry.HandleDocumentAdded("foo.nani");
-        Assert.False(registry.ScriptExist("baz"));
-        Assert.False(registry.LabelExist("foo", "baz"));
-        Assert.True(registry.ScriptExist("foo"));
-        Assert.True(registry.LabelExist("foo", "bar"));
-    }
-
-    [Fact]
-    public void ExistUpdatedWhenDocumentRemoved ()
-    {
-        docs.SetupScript("foo.nani", "# bar");
-        registry.HandleDocumentAdded("foo.nani");
-        registry.HandleDocumentRemoved("foo.nani");
         Assert.False(registry.ScriptExist("foo"));
-        Assert.False(registry.LabelExist("foo", "bar"));
+        Assert.False(registry.LabelExist(new("foo", "bar")));
+        Assert.False(registry.NavigatorExist(new("foo")));
+        Assert.False(registry.NavigatorExist(new("foo", "bar")));
+        Assert.Empty(registry.GetLabelLocations(new("foo", "bar")));
+        Assert.Empty(registry.GetNavigatorLocations(new("foo")));
+        Assert.Empty(registry.GetNavigatorLocations(new("foo", "bar")));
     }
 
     [Fact]
-    public void ExistUpdatedWhenDocumentChanged ()
-    {
-        docs.SetupScript("foo.nani", "# bar");
-        registry.HandleDocumentAdded("foo.nani");
-        docs.SetupScript("foo.nani", "# baz");
-        registry.HandleDocumentChanged("foo.nani", new(0, 0));
-        Assert.False(registry.LabelExist("foo", "bar"));
-        Assert.True(registry.LabelExist("foo", "baz"));
-    }
-
-    [Fact]
-    public void ExistLabelTrueAfterRemovingDuplicateLabel ()
-    {
-        docs.SetupScript("foo.nani", "# bar", "# bar");
-        registry.HandleDocumentAdded("foo.nani");
-        docs.SetupScript("foo.nani", "# bar");
-        registry.HandleDocumentChanged("foo.nani", new(0, 1));
-        Assert.True(registry.LabelExist("foo", "bar"));
-    }
-
-    [Fact]
-    public void UsedEndpointsAreDetectedCorrectly ()
+    public void ResolvesAfterDocumentAdded ()
     {
         registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
-        docs.SetupScript("foo.nani", "# label1", "# label2", "@goto .label1");
-        registry.HandleDocumentAdded("foo.nani");
-        Assert.False(registry.ScriptUsed("bar"));
-        Assert.False(registry.LabelUsed("foo", "label2"));
-        Assert.True(registry.ScriptUsed("foo"));
-        Assert.True(registry.LabelUsed("foo", "label1"));
-    }
-
-    [Fact]
-    public void UsedEndpointsUpdatedWhenDocumentRemoved ()
-    {
-        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
-        docs.SetupScript("script1.nani", "# label", "@goto script2.label");
+        docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
+        docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentAdded("script1.nani");
-        Assert.False(registry.ScriptUsed("script1"));
-        Assert.False(registry.LabelUsed("script1", "label"));
-        Assert.True(registry.ScriptUsed("script2"));
-        Assert.True(registry.LabelUsed("script2", "label"));
-        docs.SetupScript("script2.nani", "# label", "@goto script1.label");
         registry.HandleDocumentAdded("script2.nani");
-        Assert.True(registry.ScriptUsed("script1"));
-        Assert.True(registry.LabelUsed("script1", "label"));
-        Assert.True(registry.ScriptUsed("script2"));
-        Assert.True(registry.LabelUsed("script2", "label"));
-        registry.HandleDocumentRemoved("script2.nani");
-        Assert.False(registry.ScriptUsed("script1"));
-        Assert.False(registry.LabelUsed("script1", "label"));
-        Assert.True(registry.ScriptUsed("script2"));
-        Assert.True(registry.LabelUsed("script2", "label"));
+        AssertLabelLocations("script1", "label1", new LineLocation("script1.nani", 0));
+        AssertLabelLocations("script1", "label2", new LineLocation("script1.nani", 1));
+        AssertLabelLocations("script2", "label1", new LineLocation("script2.nani", 0), new("script2.nani", 1));
+        AssertNavigatorLocations(new("script1"), new LineLocation("script2.nani", 2), new("script2.nani", 3));
+        AssertNavigatorLocations(new("script1", "label1"), new LineLocation("script1.nani", 2), new("script1.nani", 3));
+        AssertNavigatorLocations(new("script2"), new LineLocation("script1.nani", 4));
+        AssertNavigatorLocations(new("script2", "label1"), new LineLocation("script2.nani", 4));
+    }
+
+    [Fact]
+    public void ResolvesAfterDocumentRemoved ()
+    {
+        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
+        docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
+        registry.HandleDocumentAdded("script1.nani");
+        registry.HandleDocumentAdded("script2.nani");
         registry.HandleDocumentRemoved("script1.nani");
-        Assert.False(registry.ScriptUsed("script1"));
-        Assert.False(registry.LabelUsed("script1", "label"));
-        Assert.False(registry.ScriptUsed("script2"));
-        Assert.False(registry.LabelUsed("script2", "label"));
+        Assert.False(registry.ScriptExist("script1"));
+        AssertLabelDoesntExist("script1", "label1");
+        AssertLabelDoesntExist("script1", "label2");
+        AssertLabelLocations("script2", "label1", new LineLocation("script2.nani", 0), new("script2.nani", 1));
+        AssertNavigatorLocations(new("script1"), new LineLocation("script2.nani", 2), new("script2.nani", 3));
+        AssertNavigatorDoesntExist(new("script1", "label1"));
+        AssertNavigatorDoesntExist(new("script2"));
+        AssertNavigatorLocations(new("script2", "label1"), new LineLocation("script2.nani", 4));
     }
 
     [Fact]
-    public void UsedEndpointsUpdatedWhenDocumentChanged ()
+    public void ResolvesAfterDocumentChanged ()
     {
         registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
-        docs.SetupScript("script1.nani", "# label", "[goto script2.label]");
-        registry.HandleDocumentAdded("script1.nani");
-        docs.SetupScript("script2.nani", "# label", "[goto script1.label]");
+        docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
+        docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentAdded("script2.nani");
-        Assert.True(registry.ScriptUsed("script2"));
-        Assert.True(registry.LabelUsed("script2", "label"));
-        docs.SetupScript("script1.nani", "# label");
-        registry.HandleDocumentChanged("script1.nani", new(1, 1));
-        Assert.False(registry.ScriptUsed("script2"));
-        Assert.False(registry.LabelUsed("script2", "label"));
-        docs.SetupScript("script2.nani", "# label");
-        registry.HandleDocumentChanged("script2.nani", new(1, 1));
-        Assert.False(registry.ScriptUsed("script1"));
-        Assert.False(registry.LabelUsed("script1", "label"));
+        docs.SetupScript("script1.nani", "@goto script2", "@goto .label1", "@goto script2");
+        docs.SetupScript("script2.nani", "# label1", "[goto script1]", "[goto script2.label1]");
+        registry.HandleDocumentChanged("script1.nani", new(0, 2));
+        registry.HandleDocumentChanged("script2.nani", new(1, 4));
+        AssertLabelDoesntExist("script1", "label1");
+        AssertLabelDoesntExist("script1", "label2");
+        AssertLabelLocations("script2", "label1", new LineLocation("script2.nani", 0));
+        AssertNavigatorLocations(new("script1"), new LineLocation("script2.nani", 1));
+        AssertNavigatorLocations(new("script1", "label1"), new LineLocation("script1.nani", 1));
+        AssertNavigatorLocations(new("script2"), new LineLocation("script1.nani", 0), new("script1.nani", 2));
+        AssertNavigatorLocations(new("script2", "label1"), new LineLocation("script2.nani", 2));
     }
 
-    [Fact]
-    public void UsedEndpointsTrueAfterRemovingDuplicateEndpoint ()
+    private void AssertLabelLocations (string scriptName, string label, params LineLocation[] locations)
     {
-        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
-        docs.SetupScript("foo.nani", "@goto foo", "@goto foo");
-        registry.HandleDocumentAdded("foo.nani");
-        docs.SetupScript("foo.nani", "@goto foo");
-        registry.HandleDocumentChanged("foo.nani", new(1, 1));
-        Assert.True(registry.ScriptUsed("foo"));
+        Assert.True(registry.ScriptExist(scriptName));
+        Assert.True(registry.LabelExist(new(scriptName, label)));
+        Assert.Equal(locations, registry.GetLabelLocations(new(scriptName, label)));
+    }
+
+    private void AssertLabelDoesntExist (string scriptName, string label)
+    {
+        Assert.False(registry.LabelExist(new(scriptName, label)));
+        Assert.Empty(registry.GetLabelLocations(new(scriptName, label)));
+    }
+
+    private void AssertNavigatorLocations (QualifiedEndpoint endpoint, params LineLocation[] locations)
+    {
+        Assert.True(registry.NavigatorExist(endpoint));
+        Assert.Equal(locations, registry.GetNavigatorLocations(endpoint));
+    }
+
+    private void AssertNavigatorDoesntExist (QualifiedEndpoint endpoint)
+    {
+        Assert.False(registry.NavigatorExist(endpoint));
+        Assert.Empty(registry.GetNavigatorLocations(endpoint));
     }
 }
