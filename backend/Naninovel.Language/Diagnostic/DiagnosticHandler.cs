@@ -44,6 +44,12 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
         Publish();
     }
 
+    public void HandleDocumentChanging (string uri, LineRange range)
+    {
+        foreach (var diagnoser in diagnosers)
+            diagnoser.HandleDocumentChanging(uri, range);
+    }
+
     public void HandleDocumentChanged (string uri, LineRange range)
     {
         foreach (var diagnoser in diagnosers)

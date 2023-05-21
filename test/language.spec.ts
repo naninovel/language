@@ -1,9 +1,9 @@
-﻿import { Language, Metadata } from "backend";
+﻿import * as Backend from "backend";
+import * as vscode from "vscode-languageserver/browser";
 import { Emitter, Message } from "vscode-languageserver";
-import { bootLanguageServer, applyCustomMetadata, openDocuments, LanguageMessageReader, LanguageMessageWriter } from "../src";
+import { bootLanguageServer, applyCustomMetadata, upsertDocuments, configure, LanguageMessageReader, LanguageMessageWriter } from "../src";
 import { createConfiguration } from "../src/configuration";
 import { mergeMetadata, getDefaultMetadata } from "@naninovel/common";
-import * as vscode from "vscode-languageserver/browser";
 
 class MockMessage implements Message {
     constructor(public jsonrpc: string) {}
@@ -29,22 +29,25 @@ jest.spyOn(vscode, "createConnection").mockImplementation((reader, writer) => {
 });
 
 beforeEach(() => {
-    Language.createHandlers = jest.fn();
-    Language.hover = jest.fn();
-    Language.complete = jest.fn();
-    Language.getTokens = jest.fn();
-    Language.getAllTokens = jest.fn();
-    Language.getSymbols = jest.fn();
-    Language.openDocument = jest.fn();
-    Language.openDocuments = jest.fn();
-    Language.changeDocument = jest.fn();
-    Language.closeDocument = jest.fn();
-    Language.getFoldingRanges = jest.fn();
-    Language.getTokenLegend = jest.fn();
+    Backend.Language.bootServer = jest.fn();
+    Backend.SettingsHandler.configure = jest.fn();
+    Backend.MetadataHandler.updateMetadata = jest.fn();
+    Backend.HoverHandler.hover = jest.fn();
+    Backend.CompletionHandler.complete = jest.fn();
+    Backend.TokenHandler.getTokens = jest.fn();
+    Backend.TokenHandler.getAllTokens = jest.fn();
+    Backend.SymbolHandler.getSymbols = jest.fn();
+    Backend.DocumentHandler.upsertDocuments = jest.fn();
+    Backend.DocumentHandler.changeDocument = jest.fn();
+    Backend.DocumentHandler.removeDocument = jest.fn();
+    Backend.FoldingHandler.getFoldingRanges = jest.fn();
+    Backend.TokenHandler.getTokenLegend = jest.fn();
 });
 
-test("language server can boot", () => {
+test("after booting server metadata is updated with default values", () => {
     expect(() => bootLanguageServer(reader, writer)).not.toThrow();
+    expect(Backend.Language.bootServer).toBeCalled();
+    expect(Backend.MetadataHandler.updateMetadata).toBeCalledWith(getDefaultMetadata());
 });
 
 test("reader can read messages", async () => {
@@ -69,20 +72,26 @@ test("can create configuration", () => {
     expect(createConfiguration()).not.toBeNull();
 });
 
-test("when opening multiple script documents open documents handler is invoked", () => {
-    openDocuments([{ uri: "foo", text: "bar" }]);
-    expect(Language.openDocuments).toBeCalledWith([{ uri: "foo", text: "bar" }]);
+test("when configured settings handler is invoked", () => {
+    const settings = { diagnoseSyntax: true, diagnoseSemantics: true, diagnoseNavigation: false };
+    configure(settings);
+    expect(Backend.SettingsHandler.configure).toBeCalledWith(settings);
 });
 
-test("when applying custom metadata handlers are re-created with merged meta", () => {
-    const custom = { variables: ["foo"] } as Metadata.Project;
+test("when upsert document handler is invoked", () => {
+    upsertDocuments([{ uri: "foo", text: "bar" }]);
+    expect(Backend.DocumentHandler.upsertDocuments).toBeCalledWith([{ uri: "foo", text: "bar" }]);
+});
+
+test("when applying custom metadata update metadata is invoked", () => {
+    const custom = { variables: ["foo"] } as Backend.Metadata.Project;
     const expectedMerged = mergeMetadata(getDefaultMetadata(), custom);
     applyCustomMetadata(custom);
-    expect(Language.createHandlers).toBeCalledWith(expectedMerged);
+    expect(Backend.MetadataHandler.updateMetadata).toBeCalledWith(expectedMerged);
 });
 
 test("publish diagnostics on backend routes to send diagnostics", () => {
-    Language.publishDiagnostics("foo", []);
+    Backend.DiagnosticPublisher.publishDiagnostics("foo", []);
     expect(connection.sendDiagnostics).toBeCalledWith({ diagnostics: [], uri: "foo" });
 });
 
@@ -90,7 +99,7 @@ test("open document handler is routed", () => {
     jest.mocked(connection.onDidOpenTextDocument).mock.calls[0][0]({
         textDocument: { uri: "foo", text: "bar", version: 0, languageId: "" }
     });
-    expect(Language.openDocument).toBeCalledWith({ uri: "foo", text: "bar" });
+    expect(Backend.DocumentHandler.upsertDocuments).toBeCalledWith([{ uri: "foo", text: "bar" }]);
 });
 
 test("change document handler is routed", () => {
@@ -98,7 +107,7 @@ test("change document handler is routed", () => {
         textDocument: { uri: "foo", version: 0 },
         contentChanges: []
     });
-    expect(Language.changeDocument).toBeCalledWith("foo", []);
+    expect(Backend.DocumentHandler.changeDocument).toBeCalledWith("foo", []);
 });
 
 test("completion handler is routed", () => {
@@ -106,24 +115,24 @@ test("completion handler is routed", () => {
         textDocument: { uri: "foo" },
         position: { line: 1, character: 2 }
     }, {} as never, {} as never);
-    expect(Language.complete).toBeCalledWith("foo", { line: 1, character: 2 });
+    expect(Backend.CompletionHandler.complete).toBeCalledWith("foo", { line: 1, character: 2 });
 });
 
 test("symbol handler is routed", () => {
     jest.mocked(connection.onDocumentSymbol).mock.calls[0][0]({
         textDocument: { uri: "foo" }
     }, {} as never, {} as never);
-    expect(Language.getSymbols).toBeCalledWith("foo");
+    expect(Backend.SymbolHandler.getSymbols).toBeCalledWith("foo");
 });
 
 test("semantic full handler is routed", () => {
     simulateCustomRequest(0, { textDocument: { uri: "foo" } });
-    expect(Language.getAllTokens).toBeCalledWith("foo");
+    expect(Backend.TokenHandler.getAllTokens).toBeCalledWith("foo");
 });
 
 test("semantic range handler is routed", () => {
     simulateCustomRequest(1, { textDocument: { uri: "foo" }, range: {} });
-    expect(Language.getTokens).toBeCalledWith("foo", {});
+    expect(Backend.TokenHandler.getTokens).toBeCalledWith("foo", {});
 });
 
 test("hover handler is routed", () => {
@@ -131,14 +140,14 @@ test("hover handler is routed", () => {
         textDocument: { uri: "foo" },
         position: { line: 1, character: 2 }
     }, {} as never, {} as never);
-    expect(Language.hover).toBeCalledWith("foo", { line: 1, character: 2 });
+    expect(Backend.HoverHandler.hover).toBeCalledWith("foo", { line: 1, character: 2 });
 });
 
 test("folding handler is routed", () => {
     jest.mocked(connection.onFoldingRanges).mock.calls[0][0]({
         textDocument: { uri: "foo" }
     }, {} as never, {} as never);
-    expect(Language.getFoldingRanges).toBeCalledWith("foo");
+    expect(Backend.FoldingHandler.getFoldingRanges).toBeCalledWith("foo");
 });
 
 function simulateCustomRequest(callId: number, params: object) {

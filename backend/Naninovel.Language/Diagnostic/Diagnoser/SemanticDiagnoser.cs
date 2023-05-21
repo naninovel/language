@@ -17,10 +17,6 @@ internal class SemanticDiagnoser : Diagnoser
         this.meta = meta;
     }
 
-    public override void HandleDocumentAdded (string uri) => Diagnose(uri);
-    public override void HandleDocumentRemoved (string uri) => Remove(uri);
-    public override void HandleDocumentChanged (string uri, LineRange range) => Rediagnose(uri, range);
-
     protected override void DiagnoseLine (in DocumentLine line)
     {
         if (line.Script is CommandLine commandLine)

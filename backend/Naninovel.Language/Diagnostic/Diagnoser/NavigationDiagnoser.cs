@@ -38,11 +38,17 @@ internal class NavigationDiagnoser : Diagnoser
             HandleLineRemoved(doc[i].Script, name);
     }
 
+    public override void HandleDocumentChanging (string uri, LineRange range)
+    {
+        var name = ToScriptName(uri);
+        var doc = Docs.Get(uri);
+        for (int i = range.Start; i <= range.End; i++)
+            HandleLineRemoved(doc[i].Script, name);
+    }
+
     public override void HandleDocumentChanged (string uri, LineRange range)
     {
-        // TODO: Same as when removing.
-        for (int i = range.Start; i <= range.End; i++)
-            Rediagnose(new(uri, i));
+        Rediagnose(uri, range);
     }
 
     protected override void DiagnoseLine (in DocumentLine line)
@@ -112,7 +118,7 @@ internal class NavigationDiagnoser : Diagnoser
 
         void HandleLabelRemoved (LabelLine labelLine)
         {
-            foreach (var location in endpoints.GetLabelLocations(new(scriptName, labelLine.Label)))
+            foreach (var location in endpoints.GetNavigatorLocations(new(scriptName, labelLine.Label)))
                 Rediagnose(location);
         }
 
@@ -124,7 +130,8 @@ internal class NavigationDiagnoser : Diagnoser
 
         void HandleNavigatorRemoved (in QualifiedEndpoint endpoint)
         {
-            foreach (var location in endpoints.GetNavigatorLocations(endpoint))
+            if (endpoint.Label is null) return;
+            foreach (var location in endpoints.GetLabelLocations(new(endpoint.ScriptName, endpoint.Label)))
                 Rediagnose(location);
         }
     }

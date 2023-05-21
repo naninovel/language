@@ -69,6 +69,8 @@ public class EndpointTest
         docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
         docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentAdded("script2.nani");
+        registry.HandleDocumentChanging("script1.nani", new(0, 2));
+        registry.HandleDocumentChanging("script2.nani", new(1, 4));
         docs.SetupScript("script1.nani", "@goto script2", "@goto .label1", "@goto script2");
         docs.SetupScript("script2.nani", "# label1", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentChanged("script1.nani", new(0, 2));

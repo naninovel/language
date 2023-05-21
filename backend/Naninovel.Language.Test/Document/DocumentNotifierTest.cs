@@ -34,7 +34,9 @@ public class DocumentNotifierTest
         registry.Upsert("foo", CreateDocument("a", "b", "c"));
         registry.Upsert("foo", CreateDocument(""));
         notifier.Verify(d => d.HandleDocumentAdded("foo"), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(0, 2)), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(0, 2)), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(0, 0)), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(0, 0)), Times.Once);
         notifier.VerifyNoOtherCalls();
     }
@@ -45,6 +47,7 @@ public class DocumentNotifierTest
         registry.Upsert("foo", CreateDocument("a"));
         registry.Change("foo", new[] { new DocumentChange(new(new(0, 0), new(0, 1)), "b") });
         notifier.Verify(d => d.HandleDocumentAdded("foo"), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(0, 0)), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(0, 0)), Times.Once);
         notifier.VerifyNoOtherCalls();
     }

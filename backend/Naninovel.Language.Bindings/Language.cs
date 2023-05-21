@@ -26,7 +26,7 @@ namespace Naninovel.Language;
 public static class Language
 {
     [JSInvokable, RequiresUnreferencedCode("DI")]
-    public static void Boot () => new ServiceCollection()
+    public static void BootServer () => new ServiceCollection()
         // handlers
         .AddSingleton<ISettingsHandler, SettingsHandler>()
         .AddSingleton<IMetadataHandler, MetadataHandler>()

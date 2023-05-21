@@ -1,4 +1,4 @@
-﻿import { Language } from "backend";
+﻿import * as Backend from "backend";
 import { ServerCapabilities, TextDocumentSyncKind, InitializeResult } from "vscode-languageserver";
 
 export function createConfiguration(): InitializeResult {
@@ -12,7 +12,7 @@ function createCapabilities(): ServerCapabilities {
     return {
         textDocumentSync: TextDocumentSyncKind.Incremental,
         completionProvider: { triggerCharacters: ["@", ":", "[", " ", ".", ",", "{"] },
-        semanticTokensProvider: { legend: Language.getTokenLegend(), full: { delta: false }, range: true },
+        semanticTokensProvider: { legend: Backend.TokenHandler.getTokenLegend(), full: { delta: false }, range: true },
         documentSymbolProvider: {},
         foldingRangeProvider: {},
         hoverProvider: {},

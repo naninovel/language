@@ -75,4 +75,28 @@ public class SyntaxDiagnoserTest : DiagnoserTest
         Assert.NotEmpty(Diagnose("#"));
         Assert.Empty(Diagnose("# foo"));
     }
+
+    [Fact]
+    public void DiagnosesWhenRemovingLines ()
+    {
+        SetupHandler();
+        Docs.SetupScript("foo.nani", "# bar", "# baz");
+        Handler.HandleDocumentAdded("foo.nani");
+        Assert.Empty(GetDiagnostics("foo.nani"));
+
+        Docs.SetupScript("foo.nani", "#");
+        Handler.HandleDocumentChanged("foo.nani", new(0, 1));
+        Assert.NotEmpty(GetDiagnostics("foo.nani"));
+    }
+
+    [Fact]
+    public void DiagnosesWhenRemovingDocument ()
+    {
+        SetupHandler();
+        Docs.SetupScript("foo.nani", "#");
+        Handler.HandleDocumentAdded("foo.nani");
+        Assert.NotEmpty(GetDiagnostics("foo.nani"));
+        Handler.HandleDocumentRemoved("foo.nani");
+        Assert.Empty(GetDiagnostics("foo.nani"));
+    }
 }

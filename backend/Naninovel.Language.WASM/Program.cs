@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using DotNetJS;
 using static Naninovel.Bindings.Utilities;
 
 [assembly: ExcludeFromCodeCoverage]
+[assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
 
 namespace Naninovel.Language;
 

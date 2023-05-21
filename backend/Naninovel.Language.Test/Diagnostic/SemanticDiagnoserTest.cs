@@ -25,6 +25,12 @@ public class SemanticDiagnoserTest : DiagnoserTest
     }
 
     [Fact]
+    public void WhenCommandMissingIdentifierNothingDiagnosed ()
+    {
+        Assert.Empty(Diagnose("@"));
+    }
+
+    [Fact]
     public void WhenParameterMetaNotFoundErrorIsDiagnosed ()
     {
         Meta.Commands = new[] { new Command { Id = "c" } };

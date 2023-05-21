@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Naninovel.Language;
 
@@ -20,9 +21,10 @@ internal abstract class Diagnoser : IDiagnoser
         Registry = registry;
     }
 
-    public abstract void HandleDocumentAdded (string uri);
-    public abstract void HandleDocumentRemoved (string uri);
-    public abstract void HandleDocumentChanged (string uri, LineRange range);
+    public virtual void HandleDocumentAdded (string uri) => Diagnose(uri);
+    public virtual void HandleDocumentRemoved (string uri) => Remove(uri);
+    public virtual void HandleDocumentChanging (string uri, LineRange range) { }
+    public virtual void HandleDocumentChanged (string uri, LineRange range) => Rediagnose(uri, range);
 
     protected void AddError (in Range range, string message) =>
         AddDiagnostic(new(range, DiagnosticSeverity.Error, message));
@@ -41,36 +43,26 @@ internal abstract class Diagnoser : IDiagnoser
             DiagnoseLine(Line = document[LineIndex]);
     }
 
-    protected void Diagnose (in LineLocation location)
-    {
-        Uri = location.DocumentUri;
-        LineIndex = location.LineIndex;
-        DiagnoseLine(Line = Docs.Get(location.DocumentUri)[location.LineIndex]);
-    }
-
     protected void Remove (string uri)
     {
         Registry.Remove(uri, i => i.Context == Context);
     }
 
-    protected void Remove (LineLocation location)
-    {
-        Registry.Remove(location.DocumentUri, i => i.Context == Context && i.Line == location.LineIndex);
-    }
-
     protected void Rediagnose (string uri, LineRange range)
     {
-        Registry.Remove(uri, i => i.Context == Context && range.Contains(i.Line));
         Uri = uri;
+        Registry.Remove(uri, i => i.Context == Context && range.Contains(i.Line));
         var document = Docs.Get(uri);
-        for (LineIndex = range.Start; LineIndex <= range.End; LineIndex++)
+        for (LineIndex = range.Start; LineIndex <= Math.Min(document.LineCount - 1, range.End); LineIndex++)
             DiagnoseLine(Line = document[LineIndex]);
     }
 
-    protected void Rediagnose (in LineLocation location)
+    protected void Rediagnose (LineLocation location)
     {
-        Remove(location);
-        Diagnose(location);
+        Uri = location.DocumentUri;
+        LineIndex = location.LineIndex;
+        Registry.Remove(location.DocumentUri, i => i.Context == Context && i.Line == location.LineIndex);
+        DiagnoseLine(Line = Docs.Get(location.DocumentUri)[location.LineIndex]);
     }
 
     protected abstract void DiagnoseLine (in DocumentLine line);

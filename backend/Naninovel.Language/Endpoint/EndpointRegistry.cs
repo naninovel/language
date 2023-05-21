@@ -41,6 +41,8 @@ public class EndpointRegistry : IEndpointRegistry, IDocumentObserver, IMetadataO
         HandleLinesRemoved(uri, name, new(0, docs.Get(uri).LineCount - 1));
     }
 
+    public void HandleDocumentChanging (string uri, LineRange range) { }
+
     public void HandleDocumentChanged (string uri, LineRange range)
     {
         var name = ToScriptName(uri);

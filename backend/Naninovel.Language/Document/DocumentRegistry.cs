@@ -31,6 +31,7 @@ public class DocumentRegistry : IDocumentRegistry
     {
         var adding = !map.ContainsKey(uri);
         var range = new LineRange(0, document.LineCount - 1);
+        if (!adding) notifier.Notify(n => n.HandleDocumentChanging(uri, range));
         map[uri] = document;
         if (adding) notifier.Notify(n => n.HandleDocumentAdded(uri));
         else notifier.Notify(n => n.HandleDocumentChanged(uri, range));
@@ -46,13 +47,26 @@ public class DocumentRegistry : IDocumentRegistry
     public void Change (string uri, IReadOnlyList<DocumentChange> changes)
     {
         EnsureDocumentAvailable(uri);
-        var lines = map[uri].Lines;
-        var changedRange = changer.ApplyChanges(lines, changes);
-        notifier.Notify(n => n.HandleDocumentChanged(uri, changedRange));
+        var range = GetChangedRange(changes);
+        notifier.Notify(n => n.HandleDocumentChanging(uri, range));
+        changer.ApplyChanges(map[uri].Lines, changes);
+        notifier.Notify(n => n.HandleDocumentChanged(uri, range));
     }
 
     private void EnsureDocumentAvailable (string uri)
     {
         if (!Contains(uri)) throw new Error($"Failed to get '{uri}' document: not found.");
+    }
+
+    private LineRange GetChangedRange (IReadOnlyList<DocumentChange> changes)
+    {
+        var start = int.MaxValue;
+        var end = int.MinValue;
+        foreach (var change in changes)
+        {
+            if (change.Range.Start.Line < start) start = change.Range.Start.Line;
+            if (change.Range.End.Line > end) end = change.Range.End.Line;
+        }
+        return new LineRange(start, end);
     }
 }
