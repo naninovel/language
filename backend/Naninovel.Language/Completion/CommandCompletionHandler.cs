@@ -156,7 +156,7 @@ internal class CommandCompletionHandler
         string? GetParamValue (string id, int? index)
         {
             foreach (var param in command.Parameters)
-                if (meta.FindParameter(commandMeta.Id, param.Identifier) is { } paramMeta && paramMeta.Id == id)
+                if (meta.FindParameter(commandMeta.Id, param.Identifier)?.Id == id)
                     return index.HasValue ? GetNamedValue(param.Value, index == 0) : line.Extract(param.Value);
             return null;
         }
