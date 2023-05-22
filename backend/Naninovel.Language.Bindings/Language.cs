@@ -34,6 +34,7 @@ public static class Language
         .AddSingleton<IEndpointRegistry, EndpointRegistry>()
         // language services
         .AddSingleton<IDocumentHandler, DocumentHandler>()
+        .AddSingleton<IDiagnosticHandler, DiagnosticHandler>()
         .AddSingleton<ICompletionHandler, CompletionHandler>()
         .AddSingleton<IDefinitionHandler, DefinitionHandler>()
         .AddSingleton<IFoldingHandler, FoldingHandler>()
