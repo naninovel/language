@@ -33,7 +33,7 @@ internal abstract class Diagnoser : IDiagnoser
         AddDiagnostic(new(range, DiagnosticSeverity.Warning, message));
 
     protected void AddUnnecessary (in Range range, string message) =>
-        AddDiagnostic(new(range, DiagnosticSeverity.Warning, message, unnecessary));
+        AddDiagnostic(new(range, DiagnosticSeverity.Information, message, unnecessary));
 
     protected void Diagnose (string uri)
     {
