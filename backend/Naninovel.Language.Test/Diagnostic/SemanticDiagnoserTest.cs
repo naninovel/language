@@ -10,12 +10,6 @@ public class SemanticDiagnoserTest : DiagnoserTest
     protected override Settings Settings { get; } = new() { DiagnoseSemantics = true };
 
     [Fact]
-    public void WhenEmptyDocumentResultIsEmpty ()
-    {
-        Assert.Empty(Diagnose(""));
-    }
-
-    [Fact]
     public void WhenCommandMetaNotFoundErrorIsDiagnosed ()
     {
         var diags = Diagnose("@c");

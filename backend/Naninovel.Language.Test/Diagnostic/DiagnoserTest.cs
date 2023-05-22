@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Moq;
 using Naninovel.Metadata;
+using Xunit;
 
 namespace Naninovel.Language.Test;
 
@@ -27,6 +28,30 @@ public abstract class DiagnoserTest
         Endpoints.Setup(e => e.GetNavigatorLocations(It.Ref<QualifiedEndpoint>.IsAny)).Returns(ImmutableHashSet<LineLocation>.Empty);
         Publisher.Setup(p => p.PublishDiagnostics(It.IsAny<string>(), It.IsAny<IReadOnlyList<Diagnostic>>()))
             .Callback((string uri, IReadOnlyList<Diagnostic> diags) => published[uri] = diags);
+    }
+
+    [Fact]
+    public void WhenEmptyDocumentResultIsEmpty ()
+    {
+        Assert.Empty(Diagnose(""));
+    }
+
+    [Fact]
+    public void WhenChangingDocumentDiagnosesOnlyChangedLines ()
+    {
+        var doc = new Mock<IDocument>();
+        doc.Setup(d => d.LineCount).Returns(4);
+        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory().CreateLine("@"));
+        Docs.Setup(d => d.GetAllUris()).Returns(new[] { "foo.nani" });
+        Docs.Setup(d => d.Get("foo.nani")).Returns(doc.Object);
+        Handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
+        Handler.HandleDocumentAdded("foo.nani");
+        doc.Invocations.Clear();
+        Handler.HandleDocumentChanged("foo.nani", new Range(new(1, 0), new(2, 0)));
+        doc.VerifyGet(l => l[0], Times.Never);
+        doc.VerifyGet(l => l[1], Times.Once);
+        doc.VerifyGet(l => l[2], Times.Once);
+        doc.VerifyGet(l => l[3], Times.Never);
     }
 
     protected IReadOnlyList<Diagnostic> GetDiagnostics (string uri = DefaultUri)

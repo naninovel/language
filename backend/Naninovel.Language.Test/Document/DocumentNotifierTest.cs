@@ -58,5 +58,6 @@ public class DocumentNotifierTest
         var endpoints = new Mock<IEndpointRegistry>().As<IDocumentObserver>().Object;
         var other = new Mock<IDocumentObserver>().Object;
         observers.Verify(o => o.Order(It.Is<IComparer<IDocumentObserver>>(c => c.Compare(endpoints, other) == -1)));
+        observers.Verify(o => o.Order(It.Is<IComparer<IDocumentObserver>>(c => c.Compare(other, endpoints) == 1)));
     }
 }

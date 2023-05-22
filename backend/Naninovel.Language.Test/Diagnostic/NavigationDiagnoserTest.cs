@@ -10,12 +10,6 @@ public class NavigationDiagnoserTest : DiagnoserTest
     protected override Settings Settings { get; } = new() { DiagnoseNavigation = true };
 
     [Fact]
-    public void WhenEmptyDocumentResultIsEmpty ()
-    {
-        Assert.Empty(Diagnose(""));
-    }
-
-    [Fact]
     public void WhenUnusedLabelWarningIsDiagnosed ()
     {
         Endpoints.Setup(d => d.NavigatorExist(new("this", "label"))).Returns(false);
