@@ -50,5 +50,13 @@ public class DocumentFactoryTest
         Assert.Empty(line.Extract(null));
         Assert.Empty(line.Extract(new PlainText("")));
         Assert.Empty(line.Extract(new InlineRange(9, 1)));
+        Assert.Empty(line.Extract(new InlineRange(0, 0)));
+    }
+
+    [Fact]
+    public void WhenGettingRangeOfInvalidComponentReturnsEmpty ()
+    {
+        var line = new DocumentLine("", new LabelLine(""), Array.Empty<ParseError>(), new());
+        Assert.Equal(Range.Empty, line.GetRange(null, 0));
     }
 }

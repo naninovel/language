@@ -35,6 +35,7 @@ public class CompletionTest
     public void WhenOffsetIsOutOfRangeResultIsEmpty ()
     {
         Assert.Empty(Complete("foo", 4));
+        Assert.Empty(Complete("foo", -1));
     }
 
     [Fact]
@@ -203,6 +204,16 @@ public class CompletionTest
     }
 
     [Fact]
+    public void ParameterDefaultValueIsAssignedToDetails ()
+    {
+        var foo = new Parameter { Id = "foo", DefaultValue = "foo default" };
+        var bar = new Parameter { Id = "bar" };
+        meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { foo, bar } } };
+        Assert.Equal("Default value: foo default", Complete("@cmd ", 5)[0].Detail);
+        Assert.Empty(Complete("@cmd ", 5)[1].Detail);
+    }
+
+    [Fact]
     public void ParametersWithoutContextAreNotCompleted ()
     {
         var param = new Parameter { Id = "x" };
@@ -236,6 +247,15 @@ public class CompletionTest
     }
 
     [Fact]
+    public void WhenOverActorContextWithoutSubtypeEmptyIsReturned ()
+    {
+        var param = new Parameter { Id = "id", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Actor } } };
+        meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
+        meta.Actors = new[] { new Actor { Id = "1", Type = "foo" } };
+        Assert.Empty(Complete("@cmd id:x", 9));
+    }
+
+    [Fact]
     public void WhenWildcardSpecifiedForActorTypeAllActorsAreReturned ()
     {
         var param = new Parameter { Id = "id", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Actor, SubType = "*" } } };
@@ -256,6 +276,16 @@ public class CompletionTest
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { idParam, apParam } } };
         meta.Actors = new[] { new Actor { Id = "Ai", Type = "@", Appearances = new[] { "Normal" } } };
         Assert.Equal("Normal", Complete("@cmd id:Ai ap:", 14)[0].Label);
+    }
+
+    [Fact]
+    public void WhenOverAppearanceContextButParameterWithActorContextIsMissingResultIsEmpty ()
+    {
+        var idParam = new Parameter { Id = "id" };
+        var apParam = new Parameter { Id = "ap", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Appearance } } };
+        meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { idParam, apParam } } };
+        meta.Actors = new[] { new Actor { Id = "Ai", Type = "@", Appearances = new[] { "Normal" } } };
+        Assert.Empty(Complete("@cmd id:Ai ap:", 14));
     }
 
     [Fact]
@@ -396,11 +426,32 @@ public class CompletionTest
     }
 
     [Fact]
+    public void CanResolveOtherParameterWhenEvaluatingExpression ()
+    {
+        var foo = new Parameter {
+            Id = "foo",
+            ValueContext = new ValueContext[] { new() { Type = ValueContextType.Constant, SubType = "{:bar}" } }
+        };
+        var bar = new Parameter { Id = "bar" };
+        meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { foo, bar } } };
+        meta.Constants = new[] { new Constant { Name = "Test", Values = new[] { "test" } } };
+        Assert.Equal("test", Complete("@cmd foo: bar:Test", 9)[0].Label);
+    }
+
+    [Fact]
     public void WhenUnknownParameterInConstantExpressionResultIsEmpty ()
     {
         var param = new Parameter { Id = "foo", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Constant, SubType = "{:bar}" } } };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         Assert.Empty(Complete("@cmd foo:", 9));
+    }
+
+    [Fact]
+    public void WhenOverConstantContextWithoutSubtypeEmptyIsReturned ()
+    {
+        var param = new Parameter { Id = "re", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Constant } } };
+        meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
+        Assert.Empty(Complete("@cmd re:", 8));
     }
 
     [Fact]
@@ -410,6 +461,15 @@ public class CompletionTest
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Resources = new[] { new Resource { Type = "foo", Path = "nyan/pass" } };
         Assert.Equal("nyan/pass", Complete("@cmd re:", 8)[0].Label);
+    }
+
+    [Fact]
+    public void WhenOverResourceContextWithoutSubtypeEmptyIsReturned ()
+    {
+        var param = new Parameter { Id = "re", ValueContext = new ValueContext[] { new() { Type = ValueContextType.Resource } } };
+        meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
+        meta.Resources = new[] { new Resource { Type = "foo", Path = "nyan/pass" } };
+        Assert.Empty(Complete("@cmd re:", 8));
     }
 
     [Fact]

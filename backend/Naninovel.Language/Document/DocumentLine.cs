@@ -28,8 +28,7 @@ public readonly record struct DocumentLine
 
     public string Extract (in InlineRange range)
     {
-        if (range.Start < 0 || range.Length <= 0 ||
-            range.Start + range.Length > Text.Length) return "";
+        if (range.Length <= 0 || (range.Start + range.Length) > Text.Length) return "";
         return Text.Substring(range.Start, range.Length);
     }
 

@@ -151,8 +151,7 @@ public class TokenHandler : ITokenHandler
 
     private void AppendContent (ILineComponent? content, TokenType type)
     {
-        if (content is null || !line.TryResolve(content, out var lineRange)) return;
-        if (lineRange.Length <= 0 || !IsInRange(lineRange)) return;
+        if (content is null || !line.TryResolve(content, out var lineRange) || !IsInRange(lineRange)) return;
         builder.Append(lineIndex, lineRange.Start, lineRange.Length, type);
     }
 
