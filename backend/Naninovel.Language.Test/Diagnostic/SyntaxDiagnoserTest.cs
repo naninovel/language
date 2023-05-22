@@ -1,6 +1,4 @@
-﻿using System;
-using Moq;
-using Naninovel.Parsing;
+﻿using Naninovel.Parsing;
 using Xunit;
 
 namespace Naninovel.Language.Test;
