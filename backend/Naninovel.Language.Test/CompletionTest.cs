@@ -435,7 +435,7 @@ public class CompletionTest
         var bar = new Parameter { Id = "bar" };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { foo, bar } } };
         meta.Constants = new[] { new Constant { Name = "Test", Values = new[] { "test" } } };
-        Assert.Equal("test", Complete("@cmd foo: bar:Test", 9)[0].Label);
+        Assert.Equal("test", Complete("@cmd baz: foo: bar:Test", 14)[0].Label);
     }
 
     [Fact]
