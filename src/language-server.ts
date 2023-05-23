@@ -38,6 +38,8 @@ function attachHandlers(connection: Connection) {
     Backend.DiagnosticPublisher.publishDiagnostics = (uri, diags) => connection.sendDiagnostics({ uri: uri, diagnostics: diags as never });
     connection.onDidOpenTextDocument(p => upsertDocuments([{ uri: p.textDocument.uri, text: p.textDocument.text }]));
     connection.onDidChangeTextDocument(p => Backend.DocumentHandler.changeDocument(p.textDocument.uri, p.contentChanges as never));
+    connection.workspace.onDidRenameFiles(p => Backend.DocumentHandler.renameDocuments(p.files));
+    connection.workspace.onDidDeleteFiles(p => Backend.DocumentHandler.deleteDocuments(p.files));
     connection.onCompletion(p => Backend.CompletionHandler.complete(p.textDocument.uri, p.position) as never);
     connection.onDocumentSymbol(p => Backend.SymbolHandler.getSymbols(p.textDocument.uri) as never);
     connection.onRequest("textDocument/semanticTokens/full", p => Backend.TokenHandler.getAllTokens(p.textDocument.uri));

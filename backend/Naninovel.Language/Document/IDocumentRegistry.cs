@@ -8,6 +8,7 @@ public interface IDocumentRegistry
     IDocument Get (string uri);
     bool Contains (string uri);
     void Upsert (string uri, Document document);
-    void Remove (string uri);
     void Change (string uri, IReadOnlyList<DocumentChange> changes);
+    void Rename (string oldUri, string newUri);
+    void Remove (string uri);
 }

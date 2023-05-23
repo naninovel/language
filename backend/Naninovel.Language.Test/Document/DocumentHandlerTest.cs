@@ -22,17 +22,24 @@ public class DocumentHandlerTest
     }
 
     [Fact]
-    public void RemovesFromRegistryOnRemove ()
-    {
-        handler.RemoveDocument("foo");
-        registry.Verify(r => r.Remove("foo"));
-    }
-
-    [Fact]
     public void ChangesInRegistryOnChange ()
     {
         var changes = new DocumentChange[] { new(new(), "foo") };
         handler.ChangeDocument("foo", changes);
         registry.Verify(r => r.Change("foo", changes));
+    }
+
+    [Fact]
+    public void RenamesInRegistryOnRename ()
+    {
+        handler.RenameDocuments(new DocumentRenameInfo[] { new("foo", "bar") });
+        registry.Verify(r => r.Rename("foo", "bar"));
+    }
+
+    [Fact]
+    public void RemovesFromRegistryOnDelete ()
+    {
+        handler.DeleteDocuments(new DocumentDeleteInfo[] { new("foo") });
+        registry.Verify(r => r.Remove("foo"));
     }
 }

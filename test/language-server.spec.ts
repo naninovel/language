@@ -18,8 +18,9 @@ jest.spyOn(vscode, "createConnection").mockImplementation((reader, writer) => {
     connection = createConnectionOriginal(reader, writer);
     connection.sendDiagnostics = jest.fn();
     connection.onDidOpenTextDocument = jest.fn();
-    connection.onDidCloseTextDocument = jest.fn();
     connection.onDidChangeTextDocument = jest.fn();
+    connection.workspace.onDidRenameFiles = jest.fn();
+    connection.workspace.onDidDeleteFiles = jest.fn();
     connection.onCompletion = jest.fn();
     connection.onDocumentSymbol = jest.fn();
     connection.onRequest = jest.fn();
@@ -38,8 +39,9 @@ beforeEach(() => {
     Backend.TokenHandler.getAllTokens = jest.fn();
     Backend.SymbolHandler.getSymbols = jest.fn();
     Backend.DocumentHandler.upsertDocuments = jest.fn();
+    Backend.DocumentHandler.renameDocuments = jest.fn();
+    Backend.DocumentHandler.deleteDocuments = jest.fn();
     Backend.DocumentHandler.changeDocument = jest.fn();
-    Backend.DocumentHandler.removeDocument = jest.fn();
     Backend.FoldingHandler.getFoldingRanges = jest.fn();
     Backend.TokenHandler.getTokenLegend = jest.fn();
 });
@@ -108,6 +110,20 @@ test("change document handler is routed", () => {
         contentChanges: []
     });
     expect(Backend.DocumentHandler.changeDocument).toBeCalledWith("foo", []);
+});
+
+test("rename documents handler is routed", () => {
+    jest.mocked(connection.workspace.onDidRenameFiles).mock.calls[0][0]({
+        files: [{ oldUri: "foo", newUri: "bar" }]
+    });
+    expect(Backend.DocumentHandler.renameDocuments).toBeCalledWith([{ oldUri: "foo", newUri: "bar" }]);
+});
+
+test("delete documents handler is routed", () => {
+    jest.mocked(connection.workspace.onDidDeleteFiles).mock.calls[0][0]({
+        files: [{ uri: "foo" }]
+    });
+    expect(Backend.DocumentHandler.deleteDocuments).toBeCalledWith([{ uri: "foo" }]);
 });
 
 test("completion handler is routed", () => {

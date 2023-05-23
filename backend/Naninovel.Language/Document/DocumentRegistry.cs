@@ -37,13 +37,6 @@ public class DocumentRegistry : IDocumentRegistry
         else notifier.Notify(n => n.HandleDocumentChanged(uri, range));
     }
 
-    public void Remove (string uri)
-    {
-        EnsureDocumentAvailable(uri);
-        notifier.Notify(n => n.HandleDocumentRemoved(uri));
-        map.Remove(uri);
-    }
-
     public void Change (string uri, IReadOnlyList<DocumentChange> changes)
     {
         EnsureDocumentAvailable(uri);
@@ -51,6 +44,21 @@ public class DocumentRegistry : IDocumentRegistry
         notifier.Notify(n => n.HandleDocumentChanging(uri, range));
         changer.ApplyChanges(map[uri].Lines, changes);
         notifier.Notify(n => n.HandleDocumentChanged(uri, range));
+    }
+
+    public void Rename (string oldUri, string newUri)
+    {
+        EnsureDocumentAvailable(oldUri);
+        var doc = map[oldUri];
+        Remove(oldUri);
+        Upsert(newUri, doc);
+    }
+
+    public void Remove (string uri)
+    {
+        EnsureDocumentAvailable(uri);
+        notifier.Notify(n => n.HandleDocumentRemoved(uri));
+        map.Remove(uri);
     }
 
     private void EnsureDocumentAvailable (string uri)

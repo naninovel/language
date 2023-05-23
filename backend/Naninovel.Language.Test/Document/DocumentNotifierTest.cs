@@ -28,6 +28,27 @@ public class DocumentNotifierTest
     }
 
     [Fact]
+    public void NotifiesAboutRemovedDocument ()
+    {
+        registry.Upsert("foo", CreateDocument(""));
+        registry.Remove("foo");
+        notifier.Verify(d => d.HandleDocumentAdded("foo"), Times.Once);
+        notifier.Verify(d => d.HandleDocumentRemoved("foo"), Times.Once);
+        notifier.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void NotifiesAboutRenamedDocument ()
+    {
+        registry.Upsert("foo", CreateDocument(""));
+        registry.Rename("foo", "bar");
+        notifier.Verify(d => d.HandleDocumentAdded("foo"), Times.Once);
+        notifier.Verify(d => d.HandleDocumentRemoved("foo"), Times.Once);
+        notifier.Verify(d => d.HandleDocumentAdded("bar"), Times.Once);
+        notifier.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public void WhenInsertingExistingDocumentNotifiesAboutFullChange ()
     {
         registry.Upsert("foo", CreateDocument("a"));

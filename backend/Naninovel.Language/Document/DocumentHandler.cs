@@ -18,9 +18,16 @@ public class DocumentHandler : IDocumentHandler
             registry.Upsert(doc.Uri, factory.CreateDocument(doc.Text));
     }
 
-    public void RemoveDocument (string uri)
+    public void RenameDocuments (IReadOnlyList<DocumentRenameInfo> docs)
     {
-        registry.Remove(uri);
+        foreach (var doc in docs)
+            registry.Rename(doc.OldUri, doc.NewUri);
+    }
+
+    public void DeleteDocuments (IReadOnlyList<DocumentDeleteInfo> docs)
+    {
+        foreach (var doc in docs)
+            registry.Remove(doc.Uri);
     }
 
     public void ChangeDocument (string uri, IReadOnlyList<DocumentChange> changes)

@@ -9,8 +9,6 @@ namespace Naninovel.Language;
 
 public static class Program
 {
-    static Program () => ConfigureJson();
-
     public static void Main ()
     {
         // https://github.com/Elringus/DotNetJS/issues/23

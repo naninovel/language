@@ -34,6 +34,12 @@ public class DocumentRegistryTest
     }
 
     [Fact]
+    public void ErrsWhenRenamingUnknownDocument ()
+    {
+        Assert.Contains("not found", Assert.Throws<Error>(() => registry.Rename("foo", "bar")).Message);
+    }
+
+    [Fact]
     public void CanGetUpsertDocument ()
     {
         registry.Upsert("foo", CreateDocument(""));
@@ -62,5 +68,16 @@ public class DocumentRegistryTest
         registry.Upsert("foo", CreateDocument(""));
         registry.Remove("foo");
         Assert.False(registry.Contains("foo"));
+    }
+
+    [Fact]
+    public void CanRenameDocument ()
+    {
+        var doc = CreateDocument("");
+        registry.Upsert("foo", doc);
+        registry.Rename("foo", "bar");
+        Assert.False(registry.Contains("foo"));
+        Assert.True(registry.Contains("bar"));
+        Assert.Equal(doc, registry.Get("bar"));
     }
 }
