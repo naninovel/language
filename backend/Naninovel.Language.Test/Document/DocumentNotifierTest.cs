@@ -74,6 +74,24 @@ public class DocumentNotifierTest
     }
 
     [Fact]
+    public void ChangedRangeIncludesDeletedLines ()
+    {
+        registry.Upsert("foo", CreateDocument("0", "1", "2", "3"));
+        registry.Change("foo", new[] { new DocumentChange(new(new(1, 0), new(2, 1)), "12") });
+        notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(1, 3)), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(1, 3)), Times.Once);
+    }
+
+    [Fact]
+    public void ChangedRangeExcludesAddedLines ()
+    {
+        registry.Upsert("foo", CreateDocument("012", "3"));
+        registry.Change("foo", new[] { new DocumentChange(new(new(0, 0), new(0, 3)), "0\r1\n2") });
+        notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(0, 0)), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(0, 0)), Times.Once);
+    }
+
+    [Fact]
     public void EndpointsAreNotifiedBeforeOthers ()
     {
         var endpoints = new Mock<IEndpointRegistry>().As<IDocumentObserver>().Object;

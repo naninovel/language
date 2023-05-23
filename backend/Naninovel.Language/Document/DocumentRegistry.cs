@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Naninovel.Language;
 
@@ -72,9 +74,18 @@ public class DocumentRegistry : IDocumentRegistry
         var end = int.MinValue;
         foreach (var change in changes)
         {
-            if (change.Range.Start.Line < start) start = change.Range.Start.Line;
-            if (change.Range.End.Line > end) end = change.Range.End.Line;
+            var changeStart = change.Range.Start.Line;
+            var changeEnd = CountDeletedLines(change) + change.Range.End.Line;
+            if (changeStart < start) start = changeStart;
+            if (changeEnd > end) end = changeEnd;
         }
         return new LineRange(start, end);
+    }
+
+    private int CountDeletedLines (DocumentChange change)
+    {
+        var rangeDelta = change.Range.End.Line - change.Range.Start.Line;
+        var breaksCount = change.Text.Count(c => c == '\n' || c == '\r');
+        return Math.Max(0, rangeDelta - breaksCount);
     }
 }
