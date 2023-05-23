@@ -10,13 +10,13 @@ const clientWriter = new LanguageMessageWriter(serverReader);
 const testFileUri = "test.nani";
 const out: LSP.Message[] = [];
 const connection = createMessageConnection(clientReader, clientWriter);
-clientReader.listen(e => out.push(e));
 
 beforeEach(() => out.length = 0);
 
 it("can boot", async () => {
     await Backend.boot();
     expect(() => bootLanguageServer(serverReader, serverWriter)).not.toThrow();
+    clientReader.listen(e => out.push(e));
     connection.listen();
 });
 
