@@ -17,6 +17,14 @@ it("can boot", async () => {
     connection.listen();
 });
 
+it("can provide symbols", async () => {
+    await connection.sendNotification(LSP.DidOpenTextDocumentNotification.type,
+        { textDocument: { uri: "symbols.nani", text: "# label", languageId, version: 0 } });
+    const items = await connection.sendRequest(LSP.DocumentSymbolRequest.type,
+        { textDocument: { uri: "symbols.nani" } });
+    expect((items as LSP.DocumentSymbol[]).length).toBeGreaterThan(0);
+});
+
 it("can autocomplete", async () => {
     await connection.sendNotification(LSP.DidOpenTextDocumentNotification.type,
         { textDocument: { uri: "complete.nani", text: "@", languageId, version: 0 } });
