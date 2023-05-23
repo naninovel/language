@@ -98,6 +98,32 @@ public class EndpointTest
         AssertNavigatorDoesntExist(new("script", "label"));
     }
 
+    [Fact]
+    public void UpdatesLocationsAfterLinesAdded ()
+    {
+        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        docs.SetupScript("script.nani", "# label", "@goto .label");
+        registry.HandleDocumentAdded("script.nani");
+        registry.HandleDocumentChanging("script.nani", new(0, 3));
+        docs.SetupScript("script.nani", "", "", "# label", "@goto .label");
+        registry.HandleDocumentChanged("script.nani", new(0, 3));
+        AssertLabelLocations("script", "label", new LineLocation("script.nani", 2));
+        AssertNavigatorLocations(new("script", "label"), new LineLocation("script.nani", 3));
+    }
+
+    [Fact]
+    public void UpdatesLocationsAfterLinesRemoved ()
+    {
+        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        docs.SetupScript("script.nani", "", "", "# label", "@goto .label");
+        registry.HandleDocumentAdded("script.nani");
+        registry.HandleDocumentChanging("script.nani", new(0, 3));
+        docs.SetupScript("script.nani", "# label", "@goto .label");
+        registry.HandleDocumentChanged("script.nani", new(0, 3));
+        AssertLabelLocations("script", "label", new LineLocation("script.nani", 0));
+        AssertNavigatorLocations(new("script", "label"), new LineLocation("script.nani", 1));
+    }
+
     private void AssertLabelLocations (string scriptName, string label, params LineLocation[] locations)
     {
         Assert.True(registry.ScriptExist(scriptName));

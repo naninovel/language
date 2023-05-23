@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using Naninovel.Utilities;
 
 namespace Naninovel.Language;
 
@@ -42,9 +41,10 @@ public class DocumentRegistry : IDocumentRegistry
     public void Change (string uri, IReadOnlyList<DocumentChange> changes)
     {
         EnsureDocumentAvailable(uri);
-        var range = GetChangedRange(changes);
+        var doc = map[uri];
+        var range = GetChangedRange(changes, doc.LineCount);
         notifier.Notify(n => n.HandleDocumentChanging(uri, range));
-        changer.ApplyChanges(map[uri].Lines, changes);
+        changer.ApplyChanges(doc.Lines, changes);
         notifier.Notify(n => n.HandleDocumentChanged(uri, range));
     }
 
@@ -68,24 +68,25 @@ public class DocumentRegistry : IDocumentRegistry
         if (!Contains(uri)) throw new Error($"Failed to get '{uri}' document: not found.");
     }
 
-    private LineRange GetChangedRange (IReadOnlyList<DocumentChange> changes)
+    private LineRange GetChangedRange (IReadOnlyList<DocumentChange> changes, int lineCount)
     {
-        var start = int.MaxValue;
-        var end = int.MinValue;
+        var firstChangedLine = int.MaxValue;
+        var lastChangedLine = int.MinValue;
+        var insertedOrDeletedLine = false;
+        var totalInsertedBreaks = 0;
         foreach (var change in changes)
         {
-            var changeStart = change.Range.Start.Line;
-            var changeEnd = CountDeletedLines(change) + change.Range.End.Line;
-            if (changeStart < start) start = changeStart;
-            if (changeEnd > end) end = changeEnd;
+            if (change.Range.Start.Line < firstChangedLine)
+                firstChangedLine = change.Range.Start.Line;
+            if (change.Range.End.Line > lastChangedLine)
+                lastChangedLine = change.Range.End.Line;
+            var insertedBreaks = change.Text.SplitLines().Length - 1;
+            var removedBreaks = change.Range.End.Line - change.Range.Start.Line;
+            totalInsertedBreaks += insertedBreaks;
+            if (!insertedOrDeletedLine && removedBreaks != insertedBreaks)
+                insertedOrDeletedLine = true;
         }
-        return new LineRange(start, end);
-    }
-
-    private int CountDeletedLines (DocumentChange change)
-    {
-        var rangeDelta = change.Range.End.Line - change.Range.Start.Line;
-        var breaksCount = change.Text.Count(c => c == '\n' || c == '\r');
-        return Math.Max(0, rangeDelta - breaksCount);
+        var end = insertedOrDeletedLine ? (lineCount - 1 + totalInsertedBreaks) : lastChangedLine;
+        return new LineRange(firstChangedLine, end);
     }
 }
