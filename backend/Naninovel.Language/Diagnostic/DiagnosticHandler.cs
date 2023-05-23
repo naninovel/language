@@ -68,7 +68,10 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
         registry.Clear();
         foreach (var uri in docs.GetAllUris())
         foreach (var diagnoser in diagnosers)
-            diagnoser.HandleDocumentChanged(uri, new(0, docs.Get(uri).LineCount - 1));
+        {
+            diagnoser.HandleDocumentRemoved(uri);
+            diagnoser.HandleDocumentAdded(uri);
+        }
         Publish();
     }
 

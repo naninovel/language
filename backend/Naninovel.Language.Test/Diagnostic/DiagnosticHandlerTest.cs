@@ -43,7 +43,8 @@ public class DiagnosticHandlerTest
     {
         docs.SetupScript("this.nani", "#", "");
         handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
-        diagnosers[Syntax].Verify(d => d.HandleDocumentChanged("this.nani", new(0, 1)));
+        diagnosers[Syntax].Verify(d => d.HandleDocumentRemoved("this.nani"));
+        diagnosers[Syntax].Verify(d => d.HandleDocumentAdded("this.nani"));
     }
 
     [Fact]
