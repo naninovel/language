@@ -79,7 +79,7 @@ public class DocumentNotifierTest
         registry.Upsert("foo", CreateDocument("0", "1", "2", "3"));
         registry.Change("foo", new[] { new DocumentChange(new(new(1, 0), new(2, 1)), "12") });
         notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(1, 3)), Times.Once);
-        notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(1, 3)), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(1, 2)), Times.Once);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class DocumentNotifierTest
     {
         registry.Upsert("foo", CreateDocument("0", "1234", "5"));
         registry.Change("foo", new[] { new DocumentChange(new(new(1, 0), new(1, 4)), "1\r2\n3\r\n4") });
-        notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(1, 5)), Times.Once);
+        notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(1, 2)), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(1, 5)), Times.Once);
     }
 

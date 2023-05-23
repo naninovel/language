@@ -57,9 +57,9 @@ public class SyntaxDiagnoserTest : DiagnoserTest
         Docs.SetupScript("foo.nani", "# bar", "# baz");
         Handler.HandleDocumentAdded("foo.nani");
         Assert.Empty(GetDiagnostics("foo.nani"));
-
+        Handler.HandleDocumentChanging("foo.nani", new(0, 1));
         Docs.SetupScript("foo.nani", "#");
-        Handler.HandleDocumentChanged("foo.nani", new(0, 1));
+        Handler.HandleDocumentChanged("foo.nani", new(0, 0));
         Assert.NotEmpty(GetDiagnostics("foo.nani"));
     }
 

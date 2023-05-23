@@ -74,8 +74,8 @@ public class EndpointTest
         registry.HandleDocumentChanging("script2.nani", new(1, 4));
         docs.SetupScript("script1.nani", "@goto script2", "@goto .label1", "@goto script2");
         docs.SetupScript("script2.nani", "# label1", "[goto script1]", "[goto script2.label1]");
-        registry.HandleDocumentChanged("script1.nani", new(0, 4));
-        registry.HandleDocumentChanged("script2.nani", new(1, 4));
+        registry.HandleDocumentChanged("script1.nani", new(0, 2));
+        registry.HandleDocumentChanged("script2.nani", new(1, 2));
         AssertLabelDoesntExist("script1", "label1");
         AssertLabelDoesntExist("script1", "label2");
         AssertLabelLocations("script2", "label1", new LineLocation("script2.nani", 0));
@@ -119,7 +119,7 @@ public class EndpointTest
         registry.HandleDocumentAdded("script.nani");
         registry.HandleDocumentChanging("script.nani", new(0, 3));
         docs.SetupScript("script.nani", "# label", "@goto .label");
-        registry.HandleDocumentChanged("script.nani", new(0, 3));
+        registry.HandleDocumentChanged("script.nani", new(0, 1));
         AssertLabelLocations("script", "label", new LineLocation("script.nani", 0));
         AssertNavigatorLocations(new("script", "label"), new LineLocation("script.nani", 1));
     }

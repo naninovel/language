@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
@@ -41,14 +40,14 @@ public class EndpointRegistry : IEndpointRegistry, IDocumentObserver, IMetadataO
         HandleLinesRemoved(uri, name, new(0, docs.Get(uri).LineCount - 1));
     }
 
-    public void HandleDocumentChanging (string uri, LineRange range) { }
+    public void HandleDocumentChanging (string uri, LineRange range)
+    {
+        HandleLinesRemoved(uri, ToScriptName(uri), range);
+    }
 
     public void HandleDocumentChanged (string uri, LineRange range)
     {
-        var name = ToScriptName(uri);
-        var doc = docs.Get(uri);
-        HandleLinesRemoved(uri, name, range);
-        HandleLinesAdded(uri, name, doc, new(range.Start, Math.Min(range.End, doc.LineCount - 1)));
+        HandleLinesAdded(uri, ToScriptName(uri), docs.Get(uri), range);
     }
 
     public bool ScriptExist (string scriptName)

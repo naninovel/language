@@ -42,13 +42,14 @@ internal class NavigationDiagnoser : Diagnoser
     {
         var name = ToScriptName(uri);
         var doc = Docs.Get(uri);
+        Remove(uri, range);
         for (int i = range.Start; i <= range.End; i++)
             HandleLineRemoved(doc[i].Script, name);
     }
 
     public override void HandleDocumentChanged (string uri, LineRange range)
     {
-        Rediagnose(uri, range);
+        Diagnose(uri, range);
     }
 
     protected override void DiagnoseLine (in DocumentLine line)

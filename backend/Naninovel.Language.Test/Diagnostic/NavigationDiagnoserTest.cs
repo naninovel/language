@@ -173,9 +173,10 @@ public class NavigationDiagnoserTest : DiagnoserTest
         Handler.HandleDocumentAdded("foo.nani");
         Assert.Empty(GetDiagnostics("foo.nani"));
 
-        Docs.SetupScript("foo.nani", "@goto .bar");
         Endpoints.Setup(d => d.LabelExist(new("foo", "bar"))).Returns(false);
-        Handler.HandleDocumentChanged("foo.nani", new(0, 2));
+        Handler.HandleDocumentChanging("foo.nani", new(0, 2));
+        Docs.SetupScript("foo.nani", "@goto .bar");
+        Handler.HandleDocumentChanged("foo.nani", new(0, 0));
         Assert.NotEmpty(GetDiagnostics("foo.nani"));
     }
 }

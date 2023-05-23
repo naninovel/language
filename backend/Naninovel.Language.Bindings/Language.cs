@@ -28,10 +28,12 @@ public static class Language
     [JSInvokable, RequiresUnreferencedCode("DI")]
     public static void BootServer () => new ServiceCollection()
         // core services
+        .AddSingleton<ILogger, JSLogger>()
         .AddSingleton<ISettingsHandler, SettingsHandler>()
         .AddSingleton<IMetadataHandler, MetadataHandler>()
         .AddSingleton<IDocumentRegistry, DocumentRegistry>()
         .AddSingleton<IEndpointRegistry, EndpointRegistry>()
+        .AddSingleton<Debug>()
         // language services
         .AddSingleton<IDocumentHandler, DocumentHandler>()
         .AddSingleton<IDiagnosticHandler, DiagnosticHandler>()
