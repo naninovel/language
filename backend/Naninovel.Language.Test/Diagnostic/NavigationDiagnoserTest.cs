@@ -164,6 +164,50 @@ public class NavigationDiagnoserTest : DiagnoserTest
     }
 
     [Fact]
+    public void UnusedLabelIsClearedAfterChangeInSameScript ()
+    {
+        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Docs.SetupScript("script.nani", "# label", "@goto .foo");
+        Endpoints.Setup(d => d.LabelExist(new("script", "label"))).Returns(true);
+        Endpoints.Setup(d => d.NavigatorExist(new("script", "foo"))).Returns(true);
+        Endpoints.Setup(d => d.GetLabelLocations(new("script", "label"))).Returns(new HashSet<LineLocation> { new("script.nani", 0) });
+        Endpoints.Setup(d => d.GetNavigatorLocations(new("script", "foo"))).Returns(new HashSet<LineLocation> { new("script.nani", 1) });
+        Handler.HandleDocumentAdded("script.nani");
+        Assert.Contains(GetDiagnostics("script.nani"), d => d.Message == "Unknown endpoint: .foo.");
+
+        Endpoints.Setup(d => d.NavigatorExist(new("script", "foo"))).Returns(false);
+        Endpoints.Setup(d => d.NavigatorExist(new("script", "label"))).Returns(true);
+        Endpoints.Setup(d => d.GetNavigatorLocations(new("script", "foo"))).Returns(ImmutableHashSet<LineLocation>.Empty);
+        Endpoints.Setup(d => d.GetNavigatorLocations(new("script", "label"))).Returns(new HashSet<LineLocation> { new("script.nani", 1) });
+        Handler.HandleDocumentChanging("script.nani", new(1, 1));
+        Docs.SetupScript("script.nani", "# label", "@goto .label");
+        Handler.HandleDocumentChanged("script.nani", new(1, 1));
+        Assert.Empty(GetDiagnostics("script.nani"));
+    }
+
+    [Fact]
+    public void UnknownEndpointIsClearedAfterChangeInSameScript ()
+    {
+        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Docs.SetupScript("script.nani", "# foo", "@goto .label");
+        Endpoints.Setup(d => d.LabelExist(new("script", "foo"))).Returns(true);
+        Endpoints.Setup(d => d.NavigatorExist(new("script", "label"))).Returns(true);
+        Endpoints.Setup(d => d.GetLabelLocations(new("script", "foo"))).Returns(new HashSet<LineLocation> { new("script.nani", 0) });
+        Endpoints.Setup(d => d.GetNavigatorLocations(new("script", "label"))).Returns(new HashSet<LineLocation> { new("script.nani", 1) });
+        Handler.HandleDocumentAdded("script.nani");
+        Assert.Contains(GetDiagnostics("script.nani"), d => d.Message == "Unused label.");
+
+        Endpoints.Setup(d => d.LabelExist(new("script", "foo"))).Returns(false);
+        Endpoints.Setup(d => d.LabelExist(new("script", "label"))).Returns(true);
+        Endpoints.Setup(d => d.GetLabelLocations(new("script", "foo"))).Returns(ImmutableHashSet<LineLocation>.Empty);
+        Endpoints.Setup(d => d.GetLabelLocations(new("script", "label"))).Returns(new HashSet<LineLocation> { new("script.nani", 0) });
+        Handler.HandleDocumentChanging("script.nani", new(0, 0));
+        Docs.SetupScript("script.nani", "# label", "@goto .label");
+        Handler.HandleDocumentChanged("script.nani", new(0, 0));
+        Assert.Empty(GetDiagnostics("script.nani"));
+    }
+
+    [Fact]
     public void CanDiagnoseWhenRemovingLines ()
     {
         SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
