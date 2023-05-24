@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Moq;
 using Xunit;
 
 namespace Naninovel.Language.Test;
@@ -9,17 +10,25 @@ public class TokenTest
 {
     private record Token(int Line, int Char, int Length, TokenType Type);
 
+    private readonly Mock<IDocumentRegistry> docs = new();
+    private readonly TokenHandler handler;
+
+    public TokenTest ()
+    {
+        handler = new(docs.Object);
+    }
+
     [Fact]
     public void LegendModifiersAreEmpty ()
     {
-        var legend = new TokenHandler(new()).GetTokenLegend();
+        var legend = handler.GetTokenLegend();
         Assert.Empty(legend.TokenModifiers);
     }
 
     [Fact]
     public void LegendTypesAreEqualToTokenEnumNames ()
     {
-        var legend = new TokenHandler(new()).GetTokenLegend();
+        var legend = handler.GetTokenLegend();
         Assert.Equal(Enum.GetNames<TokenType>(), legend.TokenTypes);
     }
 
@@ -34,7 +43,7 @@ public class TokenTest
     [Fact]
     public void EmptyLinesDontHaveTokens ()
     {
-        Assert.Empty(GetTokens("\n", new Range(new(0, 0), new(1, 0))));
+        Assert.Empty(GetTokens(new Range(new(0, 0), new(1, 0)), "", ""));
     }
 
     [Fact]
@@ -49,7 +58,7 @@ public class TokenTest
     public void CommentLineTokenizedCorrectly ()
     {
         var tokens = GetTokens("; comment");
-        Assert.Equal(2, tokens.Length);
+        Assert.Equal(2, tokens.Count);
         Assert.Equal(new(0, 0, 2, TokenType.CommentLine), tokens[0]);
         Assert.Equal(new(0, 2, 7, TokenType.CommentText), tokens[1]);
     }
@@ -66,7 +75,7 @@ public class TokenTest
     public void LabelLineTokenizedCorrectly ()
     {
         var tokens = GetTokens("# label");
-        Assert.Equal(2, tokens.Length);
+        Assert.Equal(2, tokens.Count);
         Assert.Equal(new(0, 0, 2, TokenType.LabelLine), tokens[0]);
         Assert.Equal(new(0, 2, 5, TokenType.LabelText), tokens[1]);
     }
@@ -83,7 +92,7 @@ public class TokenTest
     public void CommandLineTokenizedCorrectly ()
     {
         var tokens = GetTokens("@cmd");
-        Assert.Equal(2, tokens.Length);
+        Assert.Equal(2, tokens.Count);
         Assert.Equal(new(0, 0, 1, TokenType.CommandLine), tokens[0]);
         Assert.Equal(new(0, 1, 3, TokenType.CommandIdentifier), tokens[1]);
     }
@@ -92,7 +101,7 @@ public class TokenTest
     public void NamelessParameterTokenizedCorrectly ()
     {
         var tokens = GetTokens("@cmd nameless");
-        Assert.Equal(4, tokens.Length);
+        Assert.Equal(4, tokens.Count);
         Assert.Equal(new(0, 3, 1, TokenType.Command), tokens[2]);
         Assert.Equal(new(0, 1, 8, TokenType.ParameterValue), tokens[3]);
     }
@@ -101,7 +110,7 @@ public class TokenTest
     public void NamelessParameterWithTextIdTokenizedCorrectly ()
     {
         var tokens = GetTokens("@cmd nameless|#id|");
-        Assert.Equal(5, tokens.Length);
+        Assert.Equal(5, tokens.Count);
         Assert.Equal(new(0, 3, 1, TokenType.Command), tokens[2]);
         Assert.Equal(new(0, 1, 8, TokenType.ParameterValue), tokens[3]);
         Assert.Equal(new(0, 8, 5, TokenType.TextIdentifier), tokens[4]);
@@ -111,7 +120,7 @@ public class TokenTest
     public void ParameterTokenizedCorrectly ()
     {
         var tokens = GetTokens("@cmd p:v");
-        Assert.Equal(6, tokens.Length);
+        Assert.Equal(6, tokens.Count);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterIdentifier), tokens[3]);
         Assert.Equal(new(0, 1, 1, TokenType.Parameter), tokens[4]);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterValue), tokens[5]);
@@ -121,7 +130,7 @@ public class TokenTest
     public void ParameterWithTextIdTokenizedCorrectly ()
     {
         var tokens = GetTokens("@cmd p:v|#id|");
-        Assert.Equal(7, tokens.Length);
+        Assert.Equal(7, tokens.Count);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterIdentifier), tokens[3]);
         Assert.Equal(new(0, 1, 1, TokenType.Parameter), tokens[4]);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterValue), tokens[5]);
@@ -132,7 +141,7 @@ public class TokenTest
     public void ParameterWithEmptyTextIdTokenizedCorrectly ()
     {
         var tokens = GetTokens("@cmd p:v|#|");
-        Assert.Equal(7, tokens.Length);
+        Assert.Equal(7, tokens.Count);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterIdentifier), tokens[3]);
         Assert.Equal(new(0, 1, 1, TokenType.Parameter), tokens[4]);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterValue), tokens[5]);
@@ -143,7 +152,7 @@ public class TokenTest
     public void ExpressionInCommandTokenizedCorrectly ()
     {
         var tokens = GetTokens("@cmd p:{exp}");
-        Assert.Equal(6, tokens.Length);
+        Assert.Equal(6, tokens.Count);
         Assert.Equal(new(0, 1, 5, TokenType.Expression), tokens[5]);
     }
 
@@ -151,7 +160,7 @@ public class TokenTest
     public void ExpressionWithTextIdInCommandTokenizedCorrectly ()
     {
         var tokens = GetTokens("@cmd p:x|#x|{exp}x|#x|");
-        Assert.Equal(10, tokens.Length);
+        Assert.Equal(10, tokens.Count);
         Assert.Equal(new(0, 1, 1, TokenType.ParameterValue), tokens[5]);
         Assert.Equal(new(0, 1, 4, TokenType.TextIdentifier), tokens[6]);
         Assert.Equal(new(0, 4, 5, TokenType.Expression), tokens[7]);
@@ -171,7 +180,7 @@ public class TokenTest
     public void GenericAuthorTokenizedCorrectly ()
     {
         var tokens = GetTokens("author: hello");
-        Assert.Equal(3, tokens.Length);
+        Assert.Equal(3, tokens.Count);
         Assert.Equal(new(0, 0, 6, TokenType.GenericTextAuthor), tokens[0]);
         Assert.Equal(new(0, 6, 2, TokenType.GenericTextPrefix), tokens[1]);
         Assert.Equal(new(0, 2, 5, TokenType.GenericTextLine), tokens[2]);
@@ -181,7 +190,7 @@ public class TokenTest
     public void GenericAppearanceTokenizedCorrectly ()
     {
         var tokens = GetTokens("author.appearance: hello");
-        Assert.Equal(5, tokens.Length);
+        Assert.Equal(5, tokens.Count);
         Assert.Equal(new(0, 0, 6, TokenType.GenericTextAuthor), tokens[0]);
         Assert.Equal(new(0, 6, 1, TokenType.GenericTextPrefix), tokens[1]);
         Assert.Equal(new(0, 1, 10, TokenType.GenericTextAuthorAppearance), tokens[2]);
@@ -193,7 +202,7 @@ public class TokenTest
     public void InlinedCommandTokenizedCorrectly ()
     {
         var tokens = GetTokens("[i] text");
-        Assert.Equal(4, tokens.Length);
+        Assert.Equal(4, tokens.Count);
         Assert.Equal(new(0, 0, 1, TokenType.InlinedCommand), tokens[0]);
         Assert.Equal(new(0, 1, 1, TokenType.CommandIdentifier), tokens[1]);
         Assert.Equal(new(0, 1, 1, TokenType.InlinedCommand), tokens[2]);
@@ -204,7 +213,7 @@ public class TokenTest
     public void ExpressionInGenericTextTokenizedCorrectly ()
     {
         var tokens = GetTokens("{exp} text");
-        Assert.Equal(2, tokens.Length);
+        Assert.Equal(2, tokens.Count);
         Assert.Equal(new(0, 0, 5, TokenType.Expression), tokens[0]);
         Assert.Equal(new(0, 5, 5, TokenType.GenericTextLine), tokens[1]);
     }
@@ -213,7 +222,7 @@ public class TokenTest
     public void TextIdInGenericTextTokenizedCorrectly ()
     {
         var tokens = GetTokens("x|#id|");
-        Assert.Equal(2, tokens.Length);
+        Assert.Equal(2, tokens.Count);
         Assert.Equal(new(0, 0, 1, TokenType.GenericTextLine), tokens[0]);
         Assert.Equal(new(0, 1, 5, TokenType.TextIdentifier), tokens[1]);
     }
@@ -221,39 +230,35 @@ public class TokenTest
     [Fact]
     public void WhenGettingSpecificRangeOnlyAffectedContentIsTokenized ()
     {
-        var tokens = GetTokens("generic\n# label\n; comment", new Range(new(1, 2), new(2, 2)));
-        Assert.Equal(2, tokens.Length);
+        var tokens = GetTokens(new Range(new(1, 2), new(2, 2)), "generic", "# label", "; comment");
+        Assert.Equal(2, tokens.Count);
     }
 
     [Fact]
     public void WhenGettingAllTokensFromEmptyDocumentResultIsEmpty ()
     {
-        var registry = new DocumentRegistry();
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", "");
-        Assert.Empty(new TokenHandler(registry).GetAllTokens("@").Data);
+        docs.SetupScript("@", "");
+        Assert.Empty(handler.GetAllTokens("@").Data);
     }
 
     [Fact]
     public void WhenGettingAllTokensAllDocumentLinesAreTokenized ()
     {
-        var registry = new DocumentRegistry();
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", "; comment\n# label\ngeneric");
-        var tokens = DecodeTokenData(new TokenHandler(registry).GetAllTokens("@").Data);
+        docs.SetupScript("@", "; comment", "# label", "generic");
+        var tokens = DecodeTokenData(handler.GetAllTokens("@").Data);
         Assert.Equal(5, tokens.Length);
     }
 
-    private Token[] GetTokens (string lineText)
+    private IReadOnlyList<Token> GetTokens (params string[] lines)
     {
-        var range = new Range(new(0, 0), new(0, lineText.Length));
-        return GetTokens(lineText, range);
+        var range = new Range(new(0, 0), new(0, lines.Length));
+        return GetTokens(range, lines);
     }
 
-    private Token[] GetTokens (string documentText, Range range)
+    private IReadOnlyList<Token> GetTokens (Range range, params string[] lines)
     {
-        var registry = new DocumentRegistry();
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", documentText);
-        var data = new TokenHandler(registry).GetTokens("@", range).Data;
-        return DecodeTokenData(data);
+        docs.SetupScript("@", lines);
+        return DecodeTokenData(handler.GetTokens("@", range).Data);
     }
 
     private Token[] DecodeTokenData (IEnumerable<int> data)

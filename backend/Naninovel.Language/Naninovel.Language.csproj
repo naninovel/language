@@ -7,12 +7,12 @@
         <Version>$([System.DateTime]::Now.ToString("yyyy.MM.dd.HHmm"))</Version>
         <Authors>Elringus</Authors>
         <Company>ReWaffle LLC</Company>
-        <PackageDescription>Language server protocol implementation for Naninovel scenario scripting language.</PackageDescription>
+        <Description>Language server protocol implementation for Naninovel scenario scripting language.</Description>
         <RepositoryUrl>https://github.com/Naninovel/Language</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Naninovel.Common" Version="2023.5.10.1546"/>
+        <PackageReference Include="Naninovel.Common.Modern" Version="2023.5.23.2041"/>
     </ItemGroup>
 
 </Project>

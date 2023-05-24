@@ -1,25 +1,28 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Naninovel.Metadata;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_definition
-
-public class DefinitionHandler
+public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
 {
-    private readonly DocumentRegistry registry;
-    private readonly IEndpointResolver resolver;
+    private readonly MetadataProvider metaProvider = new();
+    private readonly EndpointResolver resolver;
+    private readonly IDocumentRegistry registry;
     private Position position;
     private DocumentLine line;
     private string documentUri = null!;
 
-    public DefinitionHandler (DocumentRegistry registry, IEndpointResolver resolver)
+    public DefinitionHandler (IDocumentRegistry registry)
     {
         this.registry = registry;
-        this.resolver = resolver;
+        resolver = new(metaProvider);
     }
 
-    public LocationLink[]? GotoDefinition (string documentUri, Position position)
+    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
+
+    public IReadOnlyList<LocationLink>? GotoDefinition (string documentUri, Position position)
     {
         var documentLine = registry.Get(documentUri)[position.Line];
         ResetState(documentLine, position, documentUri);
@@ -46,13 +49,13 @@ public class DefinitionHandler
         return null;
     }
 
-    private LocationLink[]? FromCommand (Command command)
+    private LocationLink[]? FromCommand (Parsing.Command command)
     {
-        if (!resolver.TryResolve(command, out var script, out var label)) return null;
-        var uri = script != null ? FindDocumentUriByName(script) : documentUri;
+        if (!resolver.TryResolve(command, out var point)) return null;
+        var uri = point.Script != null ? FindDocumentUriByName(point.Script) : documentUri;
         if (uri is null) return null;
         var document = registry.Get(uri);
-        var (range, selection) = GetRanges(document, label);
+        var (range, selection) = GetRanges(document, point.Label);
         return new[] { new LocationLink(null, uri, range, selection) };
     }
 
@@ -64,27 +67,27 @@ public class DefinitionHandler
         return null;
     }
 
-    private (Range Range, Range Selection) GetRanges (Document document, string? label)
+    private (Range Range, Range Selection) GetRanges (IDocument document, string? label)
     {
         var startLineIndex = FindLabelLineIndex(document, label) ?? 0;
-        var endLineIndex = (FindNextLabelLineIndex(document, startLineIndex + 1) ?? document.Lines.Count) - 1;
-        var range = new Range(new(startLineIndex, 0), new(endLineIndex, document.Lines[endLineIndex].Range.EndIndex + 1));
-        var selection = new Range(new(startLineIndex, 0), new(startLineIndex, document.Lines[startLineIndex].Range.EndIndex + 1));
+        var endLineIndex = (FindNextLabelLineIndex(document, startLineIndex + 1) ?? document.LineCount) - 1;
+        var range = new Range(new(startLineIndex, 0), new(endLineIndex, document[endLineIndex].Range.End + 1));
+        var selection = new Range(new(startLineIndex, 0), new(startLineIndex, document[startLineIndex].Range.End + 1));
         return (range, selection);
     }
 
-    private int? FindLabelLineIndex (Document document, string? label)
+    private int? FindLabelLineIndex (IDocument document, string? label)
     {
-        for (int i = 0; i < document.Lines.Count; i++)
-            if (document.Lines[i] is { Script: LabelLine labelLine } && labelLine.Label == label)
+        for (int i = 0; i < document.LineCount; i++)
+            if (document[i] is { Script: LabelLine labelLine } && labelLine.Label == label)
                 return i;
         return null;
     }
 
-    private int? FindNextLabelLineIndex (Document document, int startLineIndex)
+    private int? FindNextLabelLineIndex (IDocument document, int startLineIndex)
     {
-        for (int i = startLineIndex; i < document.Lines.Count; i++)
-            if (document.Lines[i] is { Script: LabelLine })
+        for (int i = startLineIndex; i < document.LineCount; i++)
+            if (document[i] is { Script: LabelLine })
                 return i;
         return null;
     }

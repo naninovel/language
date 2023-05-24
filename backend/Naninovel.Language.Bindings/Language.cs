@@ -1,49 +1,55 @@
-﻿using DotNetJS;
+﻿using System.Diagnostics.CodeAnalysis;
+using DotNetJS;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
-using Naninovel.Metadata;
-using static Naninovel.Common.Bindings.Utilities;
+using Naninovel.Bindings;
+using Naninovel.Language;
+using static Naninovel.Bindings.Utilities;
 
+[assembly: ExcludeFromCodeCoverage]
 [assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
+[assembly: JSImport(new[] { typeof(IDiagnosticPublisher) })]
+[assembly: JSExport(new[] {
+    typeof(ISettingsHandler),
+    typeof(IMetadataHandler),
+    typeof(IDocumentHandler),
+    typeof(ICompletionHandler),
+    typeof(IDefinitionHandler),
+    typeof(IFoldingHandler),
+    typeof(ISymbolHandler),
+    typeof(ITokenHandler),
+    typeof(IHoverHandler)
+}, invokePattern: "(.+)", invokeReplacement: "Naninovel.Bindings.Utilities.Try(() => $1)")]
 
-namespace Naninovel.Language.Bindings.Language;
+namespace Naninovel.Language;
 
-public static partial class Language
+public static class Language
 {
-    private static readonly DocumentRegistry registry = new();
-    private static Diagnoser diagnoser = null!;
-    private static DocumentHandler document = null!;
-    private static CompletionHandler completion = null!;
-    private static SymbolHandler symbol = null!;
-    private static TokenHandler token = null!;
-    private static HoverHandler hover = null!;
-    private static FoldingHandler folding = null!;
-    private static DefinitionHandler definition = null!;
-
-    [JSInvokable]
-    public static void CreateHandlers (Project metadata)
-    {
-        var provider = new MetadataProvider(metadata);
-        diagnoser = new Diagnoser(provider, PublishDiagnostics);
-        document = new DocumentHandler(registry, diagnoser);
-        completion = new CompletionHandler(provider, registry);
-        symbol = new SymbolHandler(provider, registry);
-        token = new TokenHandler(registry);
-        hover = new HoverHandler(provider, registry);
-        folding = new FoldingHandler(registry);
-        definition = new DefinitionHandler(registry, new EndpointResolver(provider));
-    }
-
-    [JSInvokable] public static void OpenDocument (string uri, string text) => Try(document.Open, uri, text);
-    [JSInvokable] public static void CloseDocument (string uri) => Try(document.Close, uri);
-    [JSInvokable] public static void ChangeDocument (string uri, DocumentChange[] changes) => Try(document.Change, uri, changes);
-    [JSInvokable] public static CompletionItem[] Complete (string uri, Position pos) => Try(completion.Complete, uri, pos);
-    [JSInvokable] public static Symbol[] GetSymbols (string uri) => Try(symbol.GetSymbols, uri);
-    [JSInvokable] public static TokenLegend GetTokenLegend () => Try(token.GetTokenLegend);
-    [JSInvokable] public static Tokens GetAllTokens (string uri) => Try(token.GetAllTokens, uri);
-    [JSInvokable] public static Tokens GetTokens (string uri, Range range) => Try(token.GetTokens, uri, range);
-    [JSInvokable] public static Hover? Hover (string uri, Position pos) => Try(hover.Hover, uri, pos);
-    [JSInvokable] public static FoldingRange[] GetFoldingRanges (string uri) => Try(folding.GetFoldingRanges, uri);
-    [JSInvokable] public static LocationLink[]? GotoDefinition (string uri, Position pos) => Try(definition.GotoDefinition, uri, pos);
-
-    [JSFunction] public static partial void PublishDiagnostics (string uri, Diagnostic[] diagnostics);
+    [JSInvokable, RequiresUnreferencedCode("DI")]
+    public static void BootServer () => new ServiceCollection()
+        // core services
+        .AddSingleton<ILogger, JSLogger>()
+        .AddSingleton<ISettingsHandler, SettingsHandler>()
+        .AddSingleton<IMetadataHandler, MetadataHandler>()
+        .AddSingleton<IDocumentRegistry, DocumentRegistry>()
+        .AddSingleton<IEndpointRegistry, EndpointRegistry>()
+        .AddSingleton<Debug>()
+        // language services
+        .AddSingleton<IDocumentHandler, DocumentHandler>()
+        .AddSingleton<IDiagnosticHandler, DiagnosticHandler>()
+        .AddSingleton<ICompletionHandler, CompletionHandler>()
+        .AddSingleton<IDefinitionHandler, DefinitionHandler>()
+        .AddSingleton<IFoldingHandler, FoldingHandler>()
+        .AddSingleton<ISymbolHandler, SymbolHandler>()
+        .AddSingleton<ITokenHandler, TokenHandler>()
+        .AddSingleton<IHoverHandler, HoverHandler>()
+        .AddJS()
+        // observers
+        .AddObserving<ISettingsObserver>()
+        .AddObserving<IMetadataObserver>()
+        .AddObserving<IDocumentObserver>()
+        // initialization
+        .BuildServiceProvider()
+        .RegisterObservers()
+        .GetAll();
 }

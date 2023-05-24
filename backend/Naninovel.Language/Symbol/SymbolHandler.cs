@@ -4,30 +4,29 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_documentSymbol
-
-public class SymbolHandler
+public class SymbolHandler : ISymbolHandler, IMetadataObserver
 {
-    private readonly MetadataProvider meta;
-    private readonly DocumentRegistry registry;
+    private readonly MetadataProvider metaProvider = new();
+    private readonly IDocumentRegistry registry;
     private readonly List<Symbol> symbols = new();
 
     private int lineIndex;
     private DocumentLine line;
     private string commandId = "";
 
-    public SymbolHandler (MetadataProvider meta, DocumentRegistry registry)
+    public SymbolHandler (IDocumentRegistry registry)
     {
-        this.meta = meta;
         this.registry = registry;
     }
 
-    public Symbol[] GetSymbols (string documentUri)
+    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
+
+    public IReadOnlyList<Symbol> GetSymbols (string documentUri)
     {
         symbols.Clear();
         var document = registry.Get(documentUri);
-        for (int i = 0; i < document.Lines.Count; i++)
-            symbols.Add(CreateForLine(document.Lines[i], i));
+        for (int i = 0; i < document.LineCount; i++)
+            symbols.Add(CreateForLine(document[i], i));
         return symbols.ToArray();
     }
 
@@ -228,7 +227,7 @@ public class SymbolHandler
 
     private SymbolKind GetParameterValueKind (Parsing.Parameter parameter)
     {
-        var paramMeta = meta.FindParameter(commandId, parameter.Identifier);
+        var paramMeta = metaProvider.FindParameter(commandId, parameter.Identifier);
         if (paramMeta is null || parameter.Value.Dynamic)
             return SymbolKind.String;
         if (paramMeta.ValueContainerType is ValueContainerType.List or ValueContainerType.NamedList)

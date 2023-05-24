@@ -7,18 +7,17 @@ namespace Naninovel.Language;
 
 internal class CompletionProvider
 {
-    private readonly CompletionItem[] booleans;
-    private readonly CompletionItem[] commands;
-    private readonly CompletionItem[] expressions;
-    private readonly Dictionary<string, CompletionItem[]> actorsByType;
-    private readonly Dictionary<string, CompletionItem[]> appearancesByActorId;
-    private readonly Dictionary<string, CompletionItem[]> parametersByCommandId;
-    private readonly Dictionary<string, CompletionItem[]> constantsByName;
-    private readonly Dictionary<string, CompletionItem[]> resourcesByType;
+    private readonly CompletionItem[] booleans = { CreateBoolean("true"), CreateBoolean("false") };
+    private CompletionItem[] commands = Array.Empty<CompletionItem>();
+    private CompletionItem[] expressions = Array.Empty<CompletionItem>();
+    private Dictionary<string, CompletionItem[]> actorsByType = new();
+    private Dictionary<string, CompletionItem[]> appearancesByActorId = new();
+    private Dictionary<string, CompletionItem[]> parametersByCommandId = new();
+    private Dictionary<string, CompletionItem[]> constantsByName = new();
+    private Dictionary<string, CompletionItem[]> resourcesByType = new();
 
-    public CompletionProvider (MetadataProvider meta)
+    public void Update (MetadataProvider meta)
     {
-        booleans = new[] { CreateBoolean("true"), CreateBoolean("false") };
         commands = meta.Commands.Select(CreateCommand).ToArray();
         expressions = meta.Variables.Select(CreateVariable).Concat(meta.Functions.Select(CreateFunction)).ToArray();
         actorsByType = Map(meta.Actors, a => a.Type, CreateActor);

@@ -4,22 +4,21 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_hover
-
-public class HoverHandler
+public class HoverHandler : IHoverHandler, IMetadataObserver
 {
-    private readonly MetadataProvider meta;
-    private readonly DocumentRegistry registry;
+    private readonly MetadataProvider metaProvider = new();
+    private readonly IDocumentRegistry registry;
     private readonly StringBuilder builder = new();
 
     private Position position;
     private DocumentLine line;
 
-    public HoverHandler (MetadataProvider meta, DocumentRegistry registry)
+    public HoverHandler (IDocumentRegistry registry)
     {
-        this.meta = meta;
         this.registry = registry;
     }
+
+    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
 
     public Hover? Hover (string documentUri, Position position)
     {
@@ -50,7 +49,7 @@ public class HoverHandler
 
     private Hover? HoverCommand (Parsing.Command command)
     {
-        var commandMeta = meta.FindCommand(command.Identifier);
+        var commandMeta = metaProvider.FindCommand(command.Identifier);
         if (commandMeta is null) return null;
         if (IsCursorOver(command.Identifier))
             return HoverCommandIdentifier(command, commandMeta);
@@ -76,7 +75,7 @@ public class HoverHandler
 
     private Hover? HoverParameter (Metadata.Command commandMeta, Parsing.Parameter param)
     {
-        var paramMeta = meta.FindParameter(commandMeta.Id, param.Identifier);
+        var paramMeta = metaProvider.FindParameter(commandMeta.Id, param.Identifier);
         if (paramMeta is null || string.IsNullOrEmpty(paramMeta.Summary)) return null;
         var range = line.GetRange(param, position.Line);
         return new Hover(paramMeta.Summary, range);

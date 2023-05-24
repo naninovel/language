@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Moq;
 using Naninovel.Metadata;
 using Xunit;
 
@@ -5,14 +7,21 @@ namespace Naninovel.Language.Test;
 
 public class SymbolTest
 {
+    private readonly Mock<IDocumentRegistry> docs = new();
     private readonly Project meta = new();
+    private readonly SymbolHandler handler;
+
+    public SymbolTest ()
+    {
+        handler = new(docs.Object);
+    }
 
     [Fact]
     public void ResultCountEqualLineCount ()
     {
         Assert.Single(GetSymbols(""));
-        Assert.Equal(2, GetSymbols("\n").Length);
-        Assert.Equal(4, GetSymbols("@cmd p:{v}\nk: [c]\n#\n;").Length);
+        Assert.Equal(2, GetSymbols("", "").Count);
+        Assert.Equal(4, GetSymbols("@cmd p:{v}", "k: [c]", "#", ";").Count);
     }
 
     [Fact]
@@ -40,6 +49,8 @@ public class SymbolTest
         Assert.Equal("GenericTextLine", symbol.Name);
         Assert.Equal(SymbolKind.String, symbol.Kind);
         Assert.Equal(Range.Empty, symbol.Range);
+        Assert.Null(symbol.Detail);
+        Assert.Null(symbol.Tags);
     }
 
     [Fact]
@@ -212,16 +223,16 @@ public class SymbolTest
         Assert.Equal(SymbolKind.String, GetSymbol("@c named:{}").Children![0].Children![1].Children![1].Kind);
     }
 
-    private Symbol[] GetSymbols (string documentText)
+    private IReadOnlyList<Symbol> GetSymbols (params string[] lines)
     {
-        var registry = new DocumentRegistry();
-        new DocumentHandler(registry, new MockDiagnoser()).Open("@", documentText);
-        return new SymbolHandler(new MetadataProvider(meta), registry).GetSymbols("@");
+        docs.SetupScript("@", lines);
+        handler.HandleMetadataChanged(meta);
+        return handler.GetSymbols("@");
     }
 
-    private Symbol GetSymbol (string lineText)
+    private Symbol GetSymbol (string line)
     {
-        var symbols = GetSymbols(lineText);
+        var symbols = GetSymbols(line);
         Assert.Single(symbols);
         return symbols[0];
     }

@@ -3,25 +3,24 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens
-
-public class TokenHandler
+public class TokenHandler : ITokenHandler
 {
-    private readonly DocumentRegistry registry;
+    private readonly IDocumentRegistry registry;
     private readonly TokenBuilder builder = new();
 
     private DocumentLine line;
     private Range range;
     private int lineIndex;
 
-    public TokenHandler (DocumentRegistry registry)
+    public TokenHandler (IDocumentRegistry registry)
     {
         this.registry = registry;
     }
 
-    public TokenLegend GetTokenLegend () => new() {
-        TokenTypes = Enum.GetNames<TokenType>()
-    };
+    public TokenLegend GetTokenLegend () => new(
+        TokenTypes: Enum.GetNames<TokenType>(),
+        TokenModifiers: Array.Empty<string>()
+    );
 
     public Tokens GetAllTokens (string documentUri)
     {
@@ -36,18 +35,18 @@ public class TokenHandler
         return CreateTokens(document, range);
     }
 
-    private Tokens CreateTokens (Document document, in Range range)
+    private Tokens CreateTokens (IDocument document, in Range range)
     {
         ResetState(range);
         for (int i = lineIndex; i <= range.End.Line; i++)
-            AppendLine(document.Lines[i]);
+            AppendLine(document[i]);
         return new Tokens(builder.Build());
     }
 
-    private Range GetFullRange (Document document)
+    private Range GetFullRange (IDocument document)
     {
-        var endLine = document.Lines.Count - 1;
-        var endChar = document.Lines[^1].Text.Length;
+        var endLine = document.LineCount - 1;
+        var endChar = document[^1].Text.Length;
         return new Range(new(0, 0), new(endLine, endChar));
     }
 
@@ -152,23 +151,22 @@ public class TokenHandler
 
     private void AppendContent (ILineComponent? content, TokenType type)
     {
-        if (content is null || !line.TryResolve(content, out var lineRange)) return;
-        if (lineRange.Length <= 0 || !IsInRange(lineRange)) return;
-        builder.Append(lineIndex, lineRange.StartIndex, lineRange.Length, type);
+        if (content is null || !line.TryResolve(content, out var lineRange) || !IsInRange(lineRange)) return;
+        builder.Append(lineIndex, lineRange.Start, lineRange.Length, type);
     }
 
-    private void AppendContent (in LineRange lineRange, TokenType type)
+    private void AppendContent (in InlineRange inlineRange, TokenType type)
     {
-        if (lineRange.Length <= 0 || !IsInRange(lineRange)) return;
-        builder.Append(lineIndex, lineRange.StartIndex, lineRange.Length, type);
+        if (inlineRange.Length <= 0 || !IsInRange(inlineRange)) return;
+        builder.Append(lineIndex, inlineRange.Start, inlineRange.Length, type);
     }
 
-    private bool IsInRange (in LineRange lineRange)
+    private bool IsInRange (in InlineRange inlineRange)
     {
         if (lineIndex == range.Start.Line)
-            return lineRange.StartIndex >= range.Start.Character;
+            return inlineRange.Start >= range.Start.Character;
         if (lineIndex == range.End.Line)
-            return lineRange.StartIndex < range.End.Character;
+            return inlineRange.Start < range.End.Character;
         return true;
     }
 }

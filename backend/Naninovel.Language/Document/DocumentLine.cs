@@ -8,7 +8,7 @@ public readonly record struct DocumentLine
     public string Text { get; }
     public IScriptLine Script { get; }
     public IReadOnlyList<ParseError> Errors { get; }
-    public LineRange Range { get; }
+    public InlineRange Range { get; }
 
     private readonly RangeMapper mapper;
 
@@ -18,19 +18,18 @@ public readonly record struct DocumentLine
         Script = script;
         Errors = errors;
         this.mapper = mapper;
-        Range = new LineRange(0, Text.Length);
+        Range = new InlineRange(0, Text.Length);
     }
 
-    public bool TryResolve (ILineComponent component, out LineRange range)
+    public bool TryResolve (ILineComponent component, out InlineRange range)
     {
         return mapper.TryResolve(component, out range);
     }
 
-    public string Extract (in LineRange range)
+    public string Extract (in InlineRange range)
     {
-        if (range.StartIndex < 0 || range.Length <= 0 ||
-            range.StartIndex + range.Length > Text.Length) return "";
-        return Text.Substring(range.StartIndex, range.Length);
+        if (range.Length <= 0 || (range.Start + range.Length) > Text.Length) return "";
+        return Text.Substring(range.Start, range.Length);
     }
 
     public string Extract (ILineComponent? content)
@@ -42,8 +41,8 @@ public readonly record struct DocumentLine
     public bool IsCursorOver (ILineComponent? content, in Position cursor)
     {
         if (content is null || !mapper.TryResolve(content, out var range)) return false;
-        return cursor.Character >= range.StartIndex &&
-               cursor.Character <= range.EndIndex + 1;
+        return cursor.Character >= range.Start &&
+               cursor.Character <= range.End + 1;
     }
 
     public char GetCharBehindCursor (in Position cursor)
@@ -52,17 +51,17 @@ public readonly record struct DocumentLine
         return Text[cursor.Character - 1];
     }
 
-    public LineRange GetLineRange (ILineComponent? content)
+    public InlineRange GetLineRange (ILineComponent? content)
     {
         if (content is null || !mapper.TryResolve(content, out var range))
-            return new LineRange(0, 0);
+            return new InlineRange(0, 0);
         return range;
     }
 
     public Range GetRange (int lineIndex)
     {
-        var start = new Position(lineIndex, Range.StartIndex);
-        var end = new Position(lineIndex, Range.EndIndex + 1);
+        var start = new Position(lineIndex, Range.Start);
+        var end = new Position(lineIndex, Range.End + 1);
         return new Range(start, end);
     }
 
@@ -70,8 +69,8 @@ public readonly record struct DocumentLine
     {
         if (content is null || !mapper.TryResolve(content, out var range))
             return Language.Range.Empty;
-        var start = new Position(lineIndex, range.StartIndex);
-        var end = new Position(lineIndex, range.EndIndex + 1);
+        var start = new Position(lineIndex, range.Start);
+        var end = new Position(lineIndex, range.End + 1);
         return new Range(start, end);
     }
 }

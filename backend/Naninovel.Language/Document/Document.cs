@@ -1,14 +1,17 @@
+using System;
 using System.Collections.Generic;
 
 namespace Naninovel.Language;
 
-public class Document
+public class Document : IDocument
 {
-    public List<DocumentLine> Lines { get; } = new();
+    public int LineCount => Lines.Count;
+    public List<DocumentLine> Lines { get; }
 
-    public DocumentLine this [int index]
+    public Document (List<DocumentLine> lines)
     {
-        get => Lines[index];
-        set => Lines[index] = value;
+        Lines = lines;
     }
+
+    public DocumentLine this [Index index] => Lines[index];
 }
