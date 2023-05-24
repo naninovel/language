@@ -7,7 +7,7 @@ const serverReader = new Emitter<LSP.NotificationMessage>();
 const serverWriter = new Emitter<LSP.NotificationMessage>();
 const clientReader = new LanguageMessageReader(serverWriter);
 const clientWriter = new LanguageMessageWriter(serverReader);
-const testFileUri = "test.nani";
+const testFileUri = "file:\\\\dir\\test.nani";
 const out: LSP.Message[] = [];
 const connection = createMessageConnection(clientReader, clientWriter);
 
@@ -59,6 +59,7 @@ it("can publish diagnostics", async () => {
     await openScript("# label");
     expect(() => configure({ diagnoseSyntax: true, diagnoseSemantics: true, diagnoseNavigation: true })).not.toThrow();
     const params = peekOut<LSP.PublishDiagnosticsParams>(LSP.PublishDiagnosticsNotification.method);
+    expect(params.uri).toEqual(testFileUri);
     expect(params.diagnostics[0].message).toEqual("Unused label.");
     expect(params.diagnostics[0].severity).toEqual(LSP.DiagnosticSeverity.Information);
 });
