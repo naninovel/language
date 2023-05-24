@@ -44,7 +44,14 @@ public class SyntaxDiagnoserTest : DiagnoserTest
     }
 
     [Fact]
-    public void DiagnosticsAreClearedWhenCorrected ()
+    public void DiagnosticsAreAddedAfterChange ()
+    {
+        Assert.Empty(Diagnose("# foo"));
+        Assert.NotEmpty(Diagnose("#"));
+    }
+
+    [Fact]
+    public void DiagnosticsAreClearedAfterChange ()
     {
         Assert.NotEmpty(Diagnose("#"));
         Assert.Empty(Diagnose("# foo"));

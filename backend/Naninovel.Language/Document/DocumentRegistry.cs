@@ -42,9 +42,11 @@ public class DocumentRegistry : IDocumentRegistry
     {
         EnsureDocumentAvailable(uri);
         var doc = map[uri];
-        notifier.Notify(n => n.HandleDocumentChanging(uri, rangeResolver.Resolve(changes, doc.LineCount)));
+        var rangeBeforeChange = rangeResolver.Resolve(changes, doc.LineCount);
+        notifier.Notify(n => n.HandleDocumentChanging(uri, rangeBeforeChange));
         changer.ApplyChanges(doc.Lines, changes);
-        notifier.Notify(n => n.HandleDocumentChanged(uri, rangeResolver.Resolve(changes, doc.LineCount)));
+        var rangeAfterChange = rangeResolver.Resolve(changes, doc.LineCount);
+        notifier.Notify(n => n.HandleDocumentChanged(uri, rangeAfterChange));
     }
 
     public void Rename (string oldUri, string newUri)

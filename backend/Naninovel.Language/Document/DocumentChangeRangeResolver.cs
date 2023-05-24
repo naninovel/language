@@ -29,7 +29,6 @@ internal class DocumentChangeRangeResolver
 
     private void ProcessChange (in DocumentChange change)
     {
-        Debug.Log($"Range: {change.Range} Text: {change.Text}");
         if (change.Range.Start.Line < firstChangedLine)
             firstChangedLine = change.Range.Start.Line;
         if (change.Range.End.Line > lastChangedLine)

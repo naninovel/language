@@ -45,9 +45,8 @@ internal abstract class Diagnoser : IDiagnoser
     protected void Diagnose (string uri, in LineRange range)
     {
         Uri = uri;
-        var document = Docs.Get(uri);
         for (LineIndex = range.Start; LineIndex <= range.End; LineIndex++)
-            DiagnoseLine(Line = document[LineIndex]);
+            DiagnoseLine(Line = Docs.Get(uri)[LineIndex]);
     }
 
     protected void Diagnose (in LineLocation location)
