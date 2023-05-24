@@ -1,6 +1,4 @@
-cd .nuget
-rm *.nupkg
-cd ..
+rm .nuget/*.nupkg
 dotnet pack --configuration Release --output .nuget
 cd .nuget
 dotnet nuget push "*.nupkg" --source "naninovel"
