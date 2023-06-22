@@ -31,6 +31,13 @@ it("can provide symbols", async () => {
     expect((items as LSP.DocumentSymbol[]).length).toBeGreaterThan(0);
 });
 
+it("symbol kind is number", async () => {
+    await openScript("");
+    const items = await connection.sendRequest(LSP.DocumentSymbolRequest.type,
+        { textDocument: { uri: testFileUri } });
+    expect(typeof (items as LSP.DocumentSymbol[])[0].kind === "number");
+});
+
 it("can delete files", async () => {
     await openScript("");
     await connection.sendNotification(LSP.DidDeleteFilesNotification.type,

@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.2"/>
         <PackageReference Include="Moq" Version="4.18.4"/>
         <PackageReference Include="naninovel.common.testutilities" Version="2023.5.23.2041"/>
         <PackageReference Include="xunit" Version="2.4.2"/>
