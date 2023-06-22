@@ -44,7 +44,7 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForLabelLine (LabelLine labelLine) => new() {
         Name = nameof(LabelLine),
-        Kind = SymbolKind.Namespace,
+        Kind = (int)SymbolKind.Namespace,
         Range = line.GetRange(lineIndex),
         SelectionRange = line.GetRange(lineIndex),
         Children = new[] { CreateForLabelText(labelLine.Label) }
@@ -52,7 +52,7 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForCommentLine (CommentLine commentLine) => new() {
         Name = nameof(CommentLine),
-        Kind = SymbolKind.String,
+        Kind = (int)SymbolKind.String,
         Range = line.GetRange(lineIndex),
         SelectionRange = line.GetRange(lineIndex),
         Children = new[] { CreateForCommentText(commentLine.Comment) }
@@ -60,7 +60,7 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForCommandLine (CommandLine commandLine) => new() {
         Name = nameof(CommandLine),
-        Kind = SymbolKind.Struct,
+        Kind = (int)SymbolKind.Struct,
         Range = line.GetRange(lineIndex),
         SelectionRange = line.GetRange(lineIndex),
         Children = new[] { CreateForCommand(commandLine.Command) }
@@ -68,7 +68,7 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForGenericLine (GenericLine genericLine) => new() {
         Name = "GenericTextLine",
-        Kind = SymbolKind.String,
+        Kind = (int)SymbolKind.String,
         Range = line.GetRange(lineIndex),
         SelectionRange = line.GetRange(lineIndex),
         Children = CreateGenericChildren(genericLine)
@@ -76,21 +76,21 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForLabelText (PlainText text) => new() {
         Name = "LabelText",
-        Kind = SymbolKind.String,
+        Kind = (int)SymbolKind.String,
         Range = line.GetRange(text, lineIndex),
         SelectionRange = line.GetRange(text, lineIndex)
     };
 
     private Symbol CreateForCommentText (PlainText text) => new() {
         Name = "CommentText",
-        Kind = SymbolKind.String,
+        Kind = (int)SymbolKind.String,
         Range = line.GetRange(text, lineIndex),
         SelectionRange = line.GetRange(text, lineIndex)
     };
 
     private Symbol CreateForCommand (Parsing.Command command) => new() {
         Name = nameof(Parsing.Command),
-        Kind = SymbolKind.Function,
+        Kind = (int)SymbolKind.Function,
         Range = line.GetRange(command, lineIndex),
         SelectionRange = line.GetRange(command, lineIndex),
         Children = CreateCommandChildren(command)
@@ -124,7 +124,7 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
             children.Add(CreateForGenericAppearance(prefix.Appearance));
         return new Symbol {
             Name = "GenericTextPrefix",
-            Kind = SymbolKind.Constant,
+            Kind = (int)SymbolKind.Constant,
             Range = line.GetRange(prefix, lineIndex),
             SelectionRange = line.GetRange(prefix, lineIndex),
             Children = children
@@ -133,21 +133,21 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForGenericAuthor (PlainText author) => new() {
         Name = "GenericTextAuthor",
-        Kind = SymbolKind.Key,
+        Kind = (int)SymbolKind.Key,
         Range = line.GetRange(author, lineIndex),
         SelectionRange = line.GetRange(author, lineIndex)
     };
 
     private Symbol CreateForGenericAppearance (PlainText appearance) => new() {
         Name = "GenericTextAuthorAppearance",
-        Kind = SymbolKind.Enum,
+        Kind = (int)SymbolKind.Enum,
         Range = line.GetRange(appearance, lineIndex),
         SelectionRange = line.GetRange(appearance, lineIndex)
     };
 
     private Symbol CreateForInlined (InlinedCommand inlined) => new() {
         Name = nameof(InlinedCommand),
-        Kind = SymbolKind.Struct,
+        Kind = (int)SymbolKind.Struct,
         Range = line.GetRange(inlined, lineIndex),
         SelectionRange = line.GetRange(inlined, lineIndex),
         Children = new[] { CreateForCommand(inlined.Command) }
@@ -155,7 +155,7 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForGenericText (MixedValue text) => new() {
         Name = "GenericText",
-        Kind = SymbolKind.String,
+        Kind = (int)SymbolKind.String,
         Range = line.GetRange(text, lineIndex),
         SelectionRange = line.GetRange(text, lineIndex),
         Children = CreateForMixed(text)
@@ -163,14 +163,14 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForCommandIdentifier (PlainText identifier) => new() {
         Name = "CommandIdentifier",
-        Kind = SymbolKind.Key,
+        Kind = (int)SymbolKind.Key,
         Range = line.GetRange(identifier, lineIndex),
         SelectionRange = line.GetRange(identifier, lineIndex)
     };
 
     private Symbol CreateForCommandParameter (Parsing.Parameter parameter) => new() {
         Name = nameof(Parsing.Parameter),
-        Kind = SymbolKind.Field,
+        Kind = (int)SymbolKind.Field,
         Range = line.GetRange(parameter, lineIndex),
         SelectionRange = line.GetRange(parameter, lineIndex),
         Children = CreateParameterChildren(parameter)
@@ -187,14 +187,14 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForParameterIdentifier (PlainText? identifier) => new() {
         Name = "ParameterIdentifier",
-        Kind = SymbolKind.Key,
+        Kind = (int)SymbolKind.Key,
         Range = line.GetRange(identifier, lineIndex),
         SelectionRange = line.GetRange(identifier, lineIndex)
     };
 
     private Symbol CreateForParameterValue (Parsing.Parameter parameter) => new() {
         Name = "ParameterValue",
-        Kind = GetParameterValueKind(parameter),
+        Kind = (int)GetParameterValueKind(parameter),
         Range = line.GetRange(parameter.Value, lineIndex),
         SelectionRange = line.GetRange(parameter.Value, lineIndex),
         Children = CreateForMixed(parameter.Value)
@@ -213,14 +213,14 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
 
     private Symbol CreateForExpression (Expression expression) => new() {
         Name = "Expression",
-        Kind = SymbolKind.Property,
+        Kind = (int)SymbolKind.Property,
         Range = line.GetRange(expression, lineIndex),
         SelectionRange = line.GetRange(expression, lineIndex)
     };
 
     private Symbol CreateForTextIdentifier (TextIdentifier textIdentifier) => new() {
         Name = "TextIdentifier",
-        Kind = SymbolKind.String,
+        Kind = (int)SymbolKind.String,
         Range = line.GetRange(textIdentifier, lineIndex),
         SelectionRange = line.GetRange(textIdentifier, lineIndex)
     };

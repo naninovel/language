@@ -1,6 +1,6 @@
 {
     "name": "@naninovel/language",
-    "version": "1.0.15",
+    "version": "1.0.16",
     "description": "Language server protocol implementation for Naninovel scenario scripting language.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -19,7 +19,7 @@
     },
     "dependencies": {
         "vscode-languageserver": "^8.1.0",
-        "@naninovel/common": "^1.0.20"
+        "@naninovel/common": "^1.0.21"
     },
     "devDependencies": {
         "typescript": "^5.0.4",
