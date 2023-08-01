@@ -406,7 +406,7 @@ public class CompletionTest
     }
 
     [Fact]
-    public void ConstantExpressionIsEvaluated ()
+    public void ConstantExpressionInNamelessParamEvaluated ()
     {
         var param = new Parameter {
             Id = "Path",
@@ -423,6 +423,39 @@ public class CompletionTest
         Assert.Equal("foo", Complete("@goto .", 7, "root/Script001.nani")[0].Label);
         Assert.Equal("bar", Complete("@goto Script002.", 16)[0].Label);
         Assert.Equal("test", Complete("@goto Script002.", 16)[1].Label);
+    }
+
+    [Fact]
+    public void ConstantExpressionInNamedParamEvaluated ()
+    {
+        var summaryParam = new Parameter {
+            Id = "Summary",
+            Nameless = true
+        };
+        var gotoParam = new Parameter {
+            Id = "GotoPath",
+            Alias = "goto",
+            ValueContainerType = ValueContainerType.Named,
+            ValueContext = new ValueContext[] {
+                new() { Type = ValueContextType.Resource, SubType = "Scripts" },
+                new() { Type = ValueContextType.Constant, SubType = "Labels/{:GotoPath[0]??$Script}+Test" }
+            }
+        };
+        meta.Commands = new[] { new Command { Id = "AddChoice", Alias = "choice", Parameters = new[] { summaryParam, gotoParam } } };
+        meta.Resources = new[] {
+            new Resource { Path = "Script001", Type = "Scripts" },
+            new Resource { Path = "Script002", Type = "Scripts" }
+        };
+        meta.Constants = new[] {
+            new Constant { Name = "Labels/Script001", Values = new[] { "foo" } },
+            new Constant { Name = "Labels/Script002", Values = new[] { "bar" } },
+            new Constant { Name = "Test", Values = new[] { "test" } }
+        };
+        Assert.Equal("Script001", Complete("@choice x goto:", 15)[0].Label);
+        Assert.Equal("Script002", Complete("@choice x goto:", 15)[1].Label);
+        Assert.Equal("foo", Complete("@choice x goto:.", 16, "root/Script001.nani")[0].Label);
+        Assert.Equal("bar", Complete("@choice x goto:Script002.", 25)[0].Label);
+        Assert.Equal("test", Complete("@choice x goto:Script002.", 25)[1].Label);
     }
 
     [Fact]
