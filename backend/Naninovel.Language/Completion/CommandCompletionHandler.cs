@@ -107,7 +107,8 @@ internal class CommandCompletionHandler
         if (value is null || paramMeta.ValueContainerType != ValueContainerType.Named)
             return paramMeta.ValueContext.ElementAtOrDefault(0);
         var lastDotIndex = line.GetLineRange(value).Start + line.Extract(value).LastIndexOf('.');
-        if (cursor <= lastDotIndex) return paramMeta.ValueContext.ElementAtOrDefault(0);
+        if (lastDotIndex == -1 || cursor <= lastDotIndex)
+            return paramMeta.ValueContext.ElementAtOrDefault(0);
         return paramMeta.ValueContext.ElementAtOrDefault(1);
     }
 

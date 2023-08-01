@@ -24,10 +24,10 @@ internal static class Common
     {
         var context = new[] {
             new ValueContext(),
-            new ValueContext { Type = ValueContextType.Constant, SubType = Constants.LabelExpression }
+            new ValueContext { Type = ValueContextType.Constant, SubType = EndpointResolver.BuildEndpointExpression("Path") }
         };
         var parameter = new Parameter {
-            Id = "",
+            Id = "Path",
             Nameless = true,
             ValueType = Metadata.ValueType.String,
             ValueContainerType = ValueContainerType.Named,
