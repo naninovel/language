@@ -23,7 +23,7 @@ internal static class Common
     public static Project SetupCommandWithEndpoint (this Project meta, string commandId)
     {
         var context = new[] {
-            new ValueContext(),
+            new ValueContext { Type = ValueContextType.Resource, SubType = Constants.ScriptsType },
             new ValueContext { Type = ValueContextType.Constant, SubType = EndpointResolver.BuildEndpointExpression("Path") }
         };
         var parameter = new Parameter {
