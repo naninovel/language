@@ -53,9 +53,9 @@ public class FoldingTest
     [Fact]
     public void IntersectingRangesAreCorrect ()
     {
-        var ranges = GetRanges(";", ";", "@c", "#l", "", ";", "@c", "@c");
-        Assert.Equal(2, ranges.Count);
-        Assert.Equal(new FoldingRange[] { new(0, 1), new(2, 2), new(3, 7), new(5, 5), new(6, 7) }, ranges);
+        Assert.Equal(
+            new FoldingRange[] { new(0, 1), new(2, 2), new(5, 5), new(6, 7), new(3, 7), new(8, 8) },
+            GetRanges(";", ";", "@c", "#l", "", ";", "@c", "@c", "#l"));
     }
 
     private IReadOnlyList<FoldingRange> GetRanges (params string[] lines)

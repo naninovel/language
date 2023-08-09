@@ -6,10 +6,10 @@ namespace Naninovel.Language;
 public class FoldingHandler : IFoldingHandler
 {
     private readonly IDocumentRegistry registry;
-    private readonly List<FoldingRange> ranges = new();
+    private readonly List<FoldingRange> closed = new();
+    private readonly Dictionary<LineType, int> open = new();
 
     private int lineIndex;
-    private FoldingRange? range;
 
     public FoldingHandler (IDocumentRegistry registry)
     {
@@ -21,34 +21,69 @@ public class FoldingHandler : IFoldingHandler
         ResetState();
         var doc = registry.Get(documentUri);
         for (; lineIndex < doc.LineCount; lineIndex++)
-            if (ShouldFold(doc[lineIndex].Script))
-                FoldLine(doc[lineIndex].Script);
-        if (range is not null) AddRange();
-        return ranges.ToArray();
+            VisitLine(doc[lineIndex].Script);
+        CloseAll();
+        return closed.ToArray();
     }
 
     private void ResetState ()
     {
-        ranges.Clear();
+        closed.Clear();
+        open[LineType.Comment] = -1;
+        open[LineType.Command] = -1;
+        open[LineType.Label] = -1;
         lineIndex = 0;
-        range = null;
     }
 
-    private bool ShouldFold (IScriptLine line)
+    private void VisitLine (IScriptLine line)
     {
-        return line is CommentLine or CommandLine;
+        if (line is CommentLine) VisitComment();
+        else if (line is CommandLine) VisitCommand();
+        else if (line is LabelLine) VisitLabel();
+        else VisitGeneric();
     }
 
-    private void FoldLine (IScriptLine line)
+    private void VisitComment ()
     {
-        if (!range.HasValue) range = new(lineIndex, lineIndex);
-        else if (lineIndex > range.Value.EndLine + 1) AddRange();
-        else range = new FoldingRange(range.Value.StartLine, lineIndex);
+        Close(LineType.Command);
+        Open(LineType.Comment);
     }
 
-    private void AddRange ()
+    private void VisitCommand ()
     {
-        ranges.Add(range!.Value);
-        range = new(lineIndex, lineIndex);
+        Close(LineType.Comment);
+        Open(LineType.Command);
+    }
+
+    private void VisitLabel ()
+    {
+        CloseAll();
+        Open(LineType.Label);
+    }
+
+    private void VisitGeneric ()
+    {
+        Close(LineType.Comment);
+        Close(LineType.Command);
+    }
+
+    private void Open (LineType type)
+    {
+        if (open[type] < 0)
+            open[type] = lineIndex;
+    }
+
+    private void Close (LineType type)
+    {
+        if (open[type] < 0) return;
+        closed.Add(new(open[type], lineIndex - 1));
+        open[type] = -1;
+    }
+
+    private void CloseAll ()
+    {
+        Close(LineType.Comment);
+        Close(LineType.Command);
+        Close(LineType.Label);
     }
 }
