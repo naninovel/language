@@ -37,18 +37,25 @@ public class FoldingTest
     }
 
     [Fact]
-    public void OtherLinesAreNotFolded ()
+    public void LabelLineIsFolded ()
     {
-        Assert.Empty(GetRanges("generic", "# label", ""));
+        var ranges = GetRanges("# label");
+        Assert.Single(ranges);
+        Assert.Equal(new FoldingRange(0, 0), ranges[0]);
     }
 
     [Fact]
-    public void FoldingRangesAreCorrect ()
+    public void GenericLinesAreNotFolded ()
     {
-        var ranges = GetRanges(";", "@c", "#l", "", ";");
-        Assert.Equal(2, ranges.Count);
-        Assert.Equal(new FoldingRange(0, 1), ranges[0]);
-        Assert.Equal(new FoldingRange(4, 4), ranges[1]);
+        Assert.Empty(GetRanges("generic 1", "generic 2", ""));
+    }
+
+    [Fact]
+    public void IntersectingRangesAreCorrect ()
+    {
+        Assert.Equal(
+            new FoldingRange[] { new(0, 1), new(2, 2), new(5, 5), new(6, 7), new(3, 7), new(8, 8) },
+            GetRanges(";", ";", "@c", "#l", "", ";", "@c", "@c", "#l"));
     }
 
     private IReadOnlyList<FoldingRange> GetRanges (params string[] lines)
