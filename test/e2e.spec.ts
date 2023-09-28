@@ -1,5 +1,6 @@
 ﻿import * as Backend from "backend";
 import * as LSP from "vscode-languageserver-protocol";
+import { expect, test, beforeEach, beforeAll } from "vitest";
 import { Emitter, createMessageConnection } from "vscode-languageserver";
 import { bootLanguageServer, configure, languageId, LanguageMessageReader, LanguageMessageWriter } from "../src";
 
@@ -11,34 +12,34 @@ const testFileUri = "file:\\\\dir\\test.nani";
 const out: LSP.Message[] = [];
 const connection = createMessageConnection(clientReader, clientWriter);
 
-beforeEach(() => out.length = 0);
+beforeAll(async () => { await Backend.default.boot(); });
+beforeEach(() => { out.length = 0; });
 
-it("can boot", async () => {
-    await Backend.boot();
+test("can boot", async () => {
     expect(() => bootLanguageServer(serverReader, serverWriter)).not.toThrow();
     clientReader.listen(e => out.push(e));
     connection.listen();
 });
 
-it("can be configured", async () => {
+test("can be configured", async () => {
     expect(() => configure({ diagnoseSyntax: true, diagnoseSemantics: true, diagnoseNavigation: true })).not.toThrow();
 });
 
-it("can provide symbols", async () => {
+test("can provide symbols", async () => {
     await openScript("");
     const items = await connection.sendRequest(LSP.DocumentSymbolRequest.type,
         { textDocument: { uri: testFileUri } });
     expect((items as LSP.DocumentSymbol[]).length).toBeGreaterThan(0);
 });
 
-it("symbol kind is number", async () => {
+test("symbol kind is number", async () => {
     await openScript("");
     const items = await connection.sendRequest(LSP.DocumentSymbolRequest.type,
         { textDocument: { uri: testFileUri } });
     expect(typeof (items as LSP.DocumentSymbol[])[0].kind === "number");
 });
 
-it("can delete files", async () => {
+test("can delete files", async () => {
     await openScript("");
     await connection.sendNotification(LSP.DidDeleteFilesNotification.type,
         { files: [{ uri: testFileUri }] });
@@ -46,7 +47,7 @@ it("can delete files", async () => {
         { textDocument: { uri: testFileUri } })).rejects.toThrow();
 });
 
-it("can rename files", async () => {
+test("can rename files", async () => {
     await openScript("");
     await connection.sendNotification(LSP.DidRenameFilesNotification.type,
         { files: [{ oldUri: testFileUri, newUri: "new.nani" }] });
@@ -55,14 +56,14 @@ it("can rename files", async () => {
     expect((items as LSP.DocumentSymbol[]).length).toBeGreaterThan(0);
 });
 
-it("can autocomplete", async () => {
+test("can autocomplete", async () => {
     await openScript("@");
     const items = await connection.sendRequest(LSP.CompletionRequest.type,
         { textDocument: { uri: testFileUri }, position: { line: 0, character: 1 } });
     expect((items as LSP.CompletionItem[]).length).toBeGreaterThan(0);
 });
 
-it("can publish diagnostics", async () => {
+test("can publish diagnostics", async () => {
     await openScript("# label");
     expect(() => configure({ diagnoseSyntax: true, diagnoseSemantics: true, diagnoseNavigation: true })).not.toThrow();
     const params = peekOut<LSP.PublishDiagnosticsParams>(LSP.PublishDiagnosticsNotification.method);

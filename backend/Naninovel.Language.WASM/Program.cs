@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using DotNetJS;
+using Bootsharp;
 using static Naninovel.Bindings.Utilities;
 
 [assembly: ExcludeFromCodeCoverage]
@@ -9,9 +9,5 @@ namespace Naninovel.Language;
 
 public static class Program
 {
-    public static void Main ()
-    {
-        // https://github.com/Elringus/DotNetJS/issues/23
-        _ = typeof(Language).Assembly;
-    }
+    public static void Main () { }
 }

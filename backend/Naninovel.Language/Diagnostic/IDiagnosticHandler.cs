@@ -1,3 +1,3 @@
 namespace Naninovel.Language;
 
-public interface IDiagnosticHandler { }
+public interface IDiagnosticHandler;

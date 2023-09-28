@@ -1,5 +1,6 @@
 ﻿import * as Backend from "backend";
 import * as vscode from "vscode-languageserver/browser";
+import { expect, test, beforeEach, vi } from "vitest";
 import { Emitter, Message } from "vscode-languageserver";
 import { bootLanguageServer, applyCustomMetadata, upsertDocuments, configure, LanguageMessageReader, LanguageMessageWriter } from "../src";
 import { createConfiguration } from "../src/configuration";
@@ -14,36 +15,36 @@ const writer = new Emitter<Message>();
 let connection: vscode.Connection;
 
 const createConnectionOriginal = vscode.createConnection;
-jest.spyOn(vscode, "createConnection").mockImplementation((reader, writer) => {
+vi.spyOn(vscode, "createConnection").mockImplementation((reader, writer) => {
     connection = createConnectionOriginal(reader, writer);
-    connection.sendDiagnostics = jest.fn();
-    connection.onDidOpenTextDocument = jest.fn();
-    connection.onDidChangeTextDocument = jest.fn();
-    connection.workspace.onDidRenameFiles = jest.fn();
-    connection.workspace.onDidDeleteFiles = jest.fn();
-    connection.onCompletion = jest.fn();
-    connection.onDocumentSymbol = jest.fn();
-    connection.onRequest = jest.fn();
-    connection.onHover = jest.fn();
-    connection.onFoldingRanges = jest.fn();
+    connection.sendDiagnostics = vi.fn();
+    connection.onDidOpenTextDocument = vi.fn();
+    connection.onDidChangeTextDocument = vi.fn();
+    connection.workspace.onDidRenameFiles = vi.fn();
+    connection.workspace.onDidDeleteFiles = vi.fn();
+    connection.onCompletion = vi.fn();
+    connection.onDocumentSymbol = vi.fn();
+    connection.onRequest = vi.fn<[]>();
+    connection.onHover = vi.fn();
+    connection.onFoldingRanges = vi.fn();
     return connection;
 });
 
 beforeEach(() => {
-    Backend.Language.bootServer = jest.fn();
-    Backend.SettingsHandler.configure = jest.fn();
-    Backend.MetadataHandler.updateMetadata = jest.fn();
-    Backend.HoverHandler.hover = jest.fn();
-    Backend.CompletionHandler.complete = jest.fn();
-    Backend.TokenHandler.getTokens = jest.fn();
-    Backend.TokenHandler.getAllTokens = jest.fn();
-    Backend.SymbolHandler.getSymbols = jest.fn();
-    Backend.DocumentHandler.upsertDocuments = jest.fn();
-    Backend.DocumentHandler.renameDocuments = jest.fn();
-    Backend.DocumentHandler.deleteDocuments = jest.fn();
-    Backend.DocumentHandler.changeDocument = jest.fn();
-    Backend.FoldingHandler.getFoldingRanges = jest.fn();
-    Backend.TokenHandler.getTokenLegend = jest.fn();
+    Backend.Language.bootServer = vi.fn();
+    Backend.SettingsHandler.configure = vi.fn();
+    Backend.MetadataHandler.updateMetadata = vi.fn();
+    Backend.HoverHandler.hover = vi.fn();
+    Backend.CompletionHandler.complete = vi.fn();
+    Backend.TokenHandler.getTokens = vi.fn();
+    Backend.TokenHandler.getAllTokens = vi.fn();
+    Backend.SymbolHandler.getSymbols = vi.fn();
+    Backend.DocumentHandler.upsertDocuments = vi.fn();
+    Backend.DocumentHandler.renameDocuments = vi.fn();
+    Backend.DocumentHandler.deleteDocuments = vi.fn();
+    Backend.DocumentHandler.changeDocument = vi.fn();
+    Backend.FoldingHandler.getFoldingRanges = vi.fn();
+    Backend.TokenHandler.getTokenLegend = vi.fn();
 });
 
 test("after booting server metadata is updated with default values", () => {
@@ -93,19 +94,20 @@ test("when applying custom metadata update metadata is invoked", () => {
 });
 
 test("publish diagnostics on backend routes to send diagnostics", () => {
-    Backend.DiagnosticPublisher.publishDiagnostics("foo", []);
-    expect(connection.sendDiagnostics).toBeCalledWith({ diagnostics: [], uri: "foo" });
+    // @ts-ignore
+    Backend.DiagnosticPublisher.$publishDiagnostics("foo", []);
+    expect(connection.sendDiagnostics).toBeCalledWith({ uri: "foo", diagnostics: [] });
 });
 
 test("open document handler is routed", () => {
-    jest.mocked(connection.onDidOpenTextDocument).mock.calls[0][0]({
+    vi.mocked(connection.onDidOpenTextDocument).mock.calls[0][0]({
         textDocument: { uri: "foo", text: "bar", version: 0, languageId: "" }
     });
     expect(Backend.DocumentHandler.upsertDocuments).toBeCalledWith([{ uri: "foo", text: "bar" }]);
 });
 
 test("change document handler is routed", () => {
-    jest.mocked(connection.onDidChangeTextDocument).mock.calls[0][0]({
+    vi.mocked(connection.onDidChangeTextDocument).mock.calls[0][0]({
         textDocument: { uri: "foo", version: 0 },
         contentChanges: []
     });
@@ -113,21 +115,21 @@ test("change document handler is routed", () => {
 });
 
 test("rename documents handler is routed", () => {
-    jest.mocked(connection.workspace.onDidRenameFiles).mock.calls[0][0]({
+    vi.mocked(connection.workspace.onDidRenameFiles).mock.calls[0][0]({
         files: [{ oldUri: "foo", newUri: "bar" }]
     });
     expect(Backend.DocumentHandler.renameDocuments).toBeCalledWith([{ oldUri: "foo", newUri: "bar" }]);
 });
 
 test("delete documents handler is routed", () => {
-    jest.mocked(connection.workspace.onDidDeleteFiles).mock.calls[0][0]({
+    vi.mocked(connection.workspace.onDidDeleteFiles).mock.calls[0][0]({
         files: [{ uri: "foo" }]
     });
     expect(Backend.DocumentHandler.deleteDocuments).toBeCalledWith([{ uri: "foo" }]);
 });
 
 test("completion handler is routed", () => {
-    jest.mocked(connection.onCompletion).mock.calls[0][0]({
+    vi.mocked(connection.onCompletion).mock.calls[0][0]({
         textDocument: { uri: "foo" },
         position: { line: 1, character: 2 }
     }, {} as never, {} as never);
@@ -135,7 +137,7 @@ test("completion handler is routed", () => {
 });
 
 test("symbol handler is routed", () => {
-    jest.mocked(connection.onDocumentSymbol).mock.calls[0][0]({
+    vi.mocked(connection.onDocumentSymbol).mock.calls[0][0]({
         textDocument: { uri: "foo" }
     }, {} as never, {} as never);
     expect(Backend.SymbolHandler.getSymbols).toBeCalledWith("foo");
@@ -152,7 +154,7 @@ test("semantic range handler is routed", () => {
 });
 
 test("hover handler is routed", () => {
-    jest.mocked(connection.onHover).mock.calls[0][0]({
+    vi.mocked(connection.onHover).mock.calls[0][0]({
         textDocument: { uri: "foo" },
         position: { line: 1, character: 2 }
     }, {} as never, {} as never);
@@ -160,12 +162,12 @@ test("hover handler is routed", () => {
 });
 
 test("folding handler is routed", () => {
-    jest.mocked(connection.onFoldingRanges).mock.calls[0][0]({
+    vi.mocked(connection.onFoldingRanges).mock.calls[0][0]({
         textDocument: { uri: "foo" }
     }, {} as never, {} as never);
     expect(Backend.FoldingHandler.getFoldingRanges).toBeCalledWith("foo");
 });
 
 function simulateCustomRequest(callId: number, params: object) {
-    jest.mocked(connection.onRequest).mock.calls[callId].at(1)?.(params as never, {} as never, {} as never);
+    vi.mocked(connection.onRequest).mock.calls[callId].at(1)?.(params as never, {} as never, {} as never);
 }
