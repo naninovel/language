@@ -1,5 +1,5 @@
-﻿import * as Backend from "backend";
-import * as LSP from "vscode-languageserver-protocol";
+﻿import * as LSP from "vscode-languageserver-protocol";
+import backend from "backend";
 import { expect, test, beforeEach, beforeAll } from "vitest";
 import { Emitter, createMessageConnection } from "vscode-languageserver";
 import { bootLanguageServer, configure, languageId, LanguageMessageReader, LanguageMessageWriter } from "../src";
@@ -12,7 +12,7 @@ const testFileUri = "file:\\\\dir\\test.nani";
 const out: LSP.Message[] = [];
 const connection = createMessageConnection(clientReader, clientWriter);
 
-beforeAll(async () => { await Backend.default.boot(); });
+beforeAll(async () => { await backend.boot(); });
 beforeEach(() => { out.length = 0; });
 
 test("can boot", async () => {
