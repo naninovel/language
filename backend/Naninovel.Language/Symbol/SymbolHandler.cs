@@ -4,20 +4,14 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class SymbolHandler : ISymbolHandler, IMetadataObserver
+public class SymbolHandler(IDocumentRegistry registry) : ISymbolHandler, IMetadataObserver
 {
     private readonly MetadataProvider metaProvider = new();
-    private readonly IDocumentRegistry registry;
     private readonly List<Symbol> symbols = new();
 
     private int lineIndex;
     private DocumentLine line;
     private string commandId = "";
-
-    public SymbolHandler (IDocumentRegistry registry)
-    {
-        this.registry = registry;
-    }
 
     public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
 

@@ -4,19 +4,13 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class HoverHandler : IHoverHandler, IMetadataObserver
+public class HoverHandler(IDocumentRegistry registry) : IHoverHandler, IMetadataObserver
 {
     private readonly MetadataProvider metaProvider = new();
-    private readonly IDocumentRegistry registry;
     private readonly StringBuilder builder = new();
 
     private Position position;
     private DocumentLine line;
-
-    public HoverHandler (IDocumentRegistry registry)
-    {
-        this.registry = registry;
-    }
 
     public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
 

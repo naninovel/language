@@ -6,11 +6,10 @@
         <IsPackable>false</IsPackable>
         <BootsharpName>backend</BootsharpName>
         <BootsharpPackageDirectory>$(SolutionDir)</BootsharpPackageDirectory>
-        <BootsharpAggressiveTrimming>true</BootsharpAggressiveTrimming>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Bootsharp" Version="0.1.0-rc.28"/>
+        <PackageReference Include="Bootsharp" Version="0.1.0-rc.146"/>
     </ItemGroup>
 
     <ItemGroup>

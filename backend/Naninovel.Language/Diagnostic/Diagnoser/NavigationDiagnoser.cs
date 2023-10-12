@@ -4,19 +4,12 @@ using static Naninovel.Language.Common;
 
 namespace Naninovel.Language;
 
-internal class NavigationDiagnoser : Diagnoser
+internal class NavigationDiagnoser(MetadataProvider meta, IDocumentRegistry docs,
+    IEndpointRegistry endpoints, DiagnosticRegistry registry) : Diagnoser(docs, registry)
 {
     public override DiagnosticContext Context => DiagnosticContext.Navigation;
 
-    private readonly IEndpointRegistry endpoints;
-    private readonly EndpointResolver resolver;
-
-    public NavigationDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
-        IEndpointRegistry endpoints, DiagnosticRegistry registry) : base(docs, registry)
-    {
-        this.endpoints = endpoints;
-        resolver = new(meta);
-    }
+    private readonly EndpointResolver resolver = new(meta);
 
     public override void HandleDocumentAdded (string uri)
     {

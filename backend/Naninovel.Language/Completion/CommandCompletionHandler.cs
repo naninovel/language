@@ -5,23 +5,14 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class CommandCompletionHandler
+internal class CommandCompletionHandler(MetadataProvider meta, CompletionProvider provider)
 {
-    private readonly MetadataProvider meta;
-    private readonly CompletionProvider provider;
-
     private int cursor => position.Character;
     private char charBehindCursor => line.GetCharBehindCursor(position);
     private Parsing.Command command = null!;
     private Position position;
     private DocumentLine line;
     private string scriptName = string.Empty;
-
-    public CommandCompletionHandler (MetadataProvider meta, CompletionProvider provider)
-    {
-        this.meta = meta;
-        this.provider = provider;
-    }
 
     public CompletionItem[] Handle (Parsing.Command command, in Position position, in DocumentLine line, string scriptName)
     {

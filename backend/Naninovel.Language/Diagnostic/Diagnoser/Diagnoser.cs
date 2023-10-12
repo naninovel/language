@@ -2,23 +2,17 @@
 
 namespace Naninovel.Language;
 
-internal abstract class Diagnoser : IDiagnoser
+internal abstract class Diagnoser(IDocumentRegistry docs, DiagnosticRegistry registry) : IDiagnoser
 {
     public abstract DiagnosticContext Context { get; }
 
-    protected IDocumentRegistry Docs { get; }
-    protected DiagnosticRegistry Registry { get; }
+    protected IDocumentRegistry Docs { get; } = docs;
+    protected DiagnosticRegistry Registry { get; } = registry;
     protected string Uri { get; private set; } = "";
     protected DocumentLine Line { get; private set; }
     protected int LineIndex { get; private set; }
 
     private static readonly IReadOnlyList<DiagnosticTag> unnecessary = new[] { DiagnosticTag.Unnecessary };
-
-    protected Diagnoser (IDocumentRegistry docs, DiagnosticRegistry registry)
-    {
-        Docs = docs;
-        Registry = registry;
-    }
 
     public virtual void HandleDocumentAdded (string uri) => Diagnose(uri);
     public virtual void HandleDocumentRemoved (string uri) => Remove(uri);

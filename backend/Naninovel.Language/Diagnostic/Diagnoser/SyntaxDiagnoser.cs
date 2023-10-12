@@ -2,12 +2,10 @@
 
 namespace Naninovel.Language;
 
-internal class SyntaxDiagnoser : Diagnoser
+internal class SyntaxDiagnoser(IDocumentRegistry docs, DiagnosticRegistry registry)
+    : Diagnoser(docs, registry)
 {
     public override DiagnosticContext Context => DiagnosticContext.Syntax;
-
-    public SyntaxDiagnoser (IDocumentRegistry docs, DiagnosticRegistry registry)
-        : base(docs, registry) { }
 
     protected override void DiagnoseLine (in DocumentLine line)
     {
