@@ -15,7 +15,7 @@
     <ItemGroup>
         <PackageReference Include="Bootsharp.Common" Version="0.1.0-rc.146"/>
         <PackageReference Include="Bootsharp.DependencyInjection" Version="0.1.0-rc.146"/>
-        <PackageReference Include="Naninovel.Common.Bindings" Version="2023.10.13.57"/>
+        <PackageReference Include="Naninovel.Common.Bindings" Version="2023.10.13.237"/>
     </ItemGroup>
 
     <ItemGroup>

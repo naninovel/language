@@ -8,7 +8,7 @@
     "scripts": {
         "backend": "dotnet publish backend",
         "update": "ncu --interactive",
-        "test": "vitest run --experimental-vm-threads",
+        "test": "vitest run --silent --experimental-vm-threads",
         "cover": "npm test -- --coverage.enabled --coverage.include=**/src/**",
         "bundle": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --external:backend --external:@naninovel/common",
         "types": "tsc --outDir dist --declaration --emitDeclarationOnly",
@@ -17,7 +17,7 @@
     },
     "dependencies": {
         "vscode-languageserver": "^9.0.1",
-        "@naninovel/common": "^1.1.0"
+        "@naninovel/common": "^1.1.1"
     },
     "devDependencies": {
         "backend": "file:backend",
