@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 
@@ -227,9 +226,9 @@ public class SymbolHandler(IDocumentRegistry registry) : ISymbolHandler, IMetada
         if (paramMeta.ValueContainerType is ValueContainerType.List or ValueContainerType.NamedList)
             return SymbolKind.Array;
         return paramMeta.ValueType switch {
-            ValueType.Integer => SymbolKind.Number,
-            ValueType.Decimal => SymbolKind.Number,
-            ValueType.Boolean => SymbolKind.Boolean,
+            Metadata.ValueType.Integer => SymbolKind.Number,
+            Metadata.ValueType.Decimal => SymbolKind.Number,
+            Metadata.ValueType.Boolean => SymbolKind.Boolean,
             _ => SymbolKind.String
         };
     }

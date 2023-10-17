@@ -1,5 +1,4 @@
-﻿using System;
-using Naninovel.Metadata;
+﻿using Naninovel.Metadata;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;

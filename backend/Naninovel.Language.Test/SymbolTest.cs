@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using Moq;
 using Naninovel.Metadata;
-using Xunit;
 
 namespace Naninovel.Language.Test;
 
@@ -186,10 +184,10 @@ public class SymbolTest
     public void SymbolKindOfParameterValueCorrespondToValueType ()
     {
         var parameters = new[] {
-            new Parameter { Id = "str", ValueType = ValueType.String },
-            new Parameter { Id = "int", ValueType = ValueType.Integer },
-            new Parameter { Id = "dec", ValueType = ValueType.Decimal },
-            new Parameter { Id = "bool", ValueType = ValueType.Boolean },
+            new Parameter { Id = "str", ValueType = Metadata.ValueType.String },
+            new Parameter { Id = "int", ValueType = Metadata.ValueType.Integer },
+            new Parameter { Id = "dec", ValueType = Metadata.ValueType.Decimal },
+            new Parameter { Id = "bool", ValueType = Metadata.ValueType.Boolean },
             new Parameter { Id = "list", ValueContainerType = ValueContainerType.List },
             new Parameter { Id = "named", ValueContainerType = ValueContainerType.NamedList }
         };
@@ -207,10 +205,10 @@ public class SymbolTest
     public void WhenParameterValueContainsExpressionSymbolKindIsString ()
     {
         var parameters = new[] {
-            new Parameter { Id = "str", ValueType = ValueType.String },
-            new Parameter { Id = "int", ValueType = ValueType.Integer },
-            new Parameter { Id = "dec", ValueType = ValueType.Decimal },
-            new Parameter { Id = "bool", ValueType = ValueType.Boolean },
+            new Parameter { Id = "str", ValueType = Metadata.ValueType.String },
+            new Parameter { Id = "int", ValueType = Metadata.ValueType.Integer },
+            new Parameter { Id = "dec", ValueType = Metadata.ValueType.Decimal },
+            new Parameter { Id = "bool", ValueType = Metadata.ValueType.Boolean },
             new Parameter { Id = "list", ValueContainerType = ValueContainerType.List },
             new Parameter { Id = "named", ValueContainerType = ValueContainerType.NamedList }
         };

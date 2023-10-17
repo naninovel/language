@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
         <PackageId>Naninovel.Language</PackageId>
         <Version>$([System.DateTime]::Now.ToString("yyyy.MM.dd.HHmm"))</Version>
         <Authors>Elringus</Authors>
@@ -12,7 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Naninovel.Common.Modern" Version="2023.10.13.237"/>
+        <PackageReference Include="Naninovel.Common.Modern" Version="2023.10.17.347"/>
     </ItemGroup>
 
 </Project>

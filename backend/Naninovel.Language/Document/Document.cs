@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Naninovel.Language;
 
 public class Document(List<DocumentLine> lines) : IDocument

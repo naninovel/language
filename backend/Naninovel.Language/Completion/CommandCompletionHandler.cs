@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 

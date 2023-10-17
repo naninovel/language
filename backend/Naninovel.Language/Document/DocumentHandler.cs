@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Naninovel.Language;
 
 public class DocumentHandler(IDocumentRegistry registry) : IDocumentHandler

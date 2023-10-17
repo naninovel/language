@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Naninovel.Metadata;
 using static Naninovel.Language.DiagnosticContext;
 

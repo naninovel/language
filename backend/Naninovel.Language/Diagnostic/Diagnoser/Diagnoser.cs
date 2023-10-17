@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Naninovel.Language;
+﻿namespace Naninovel.Language;
 
 internal abstract class Diagnoser(IDocumentRegistry docs, DiagnosticRegistry registry) : IDiagnoser
 {

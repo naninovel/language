@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 using static Naninovel.Language.Common;

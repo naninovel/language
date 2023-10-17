@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Naninovel.Language;
+﻿namespace Naninovel.Language;
 
 public interface IDocumentRegistry
 {

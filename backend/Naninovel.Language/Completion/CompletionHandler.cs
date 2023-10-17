@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 using static Naninovel.Language.Common;

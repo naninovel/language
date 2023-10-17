@@ -1,4 +1,3 @@
-using System;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;

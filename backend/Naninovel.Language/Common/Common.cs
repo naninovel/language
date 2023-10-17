@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace Naninovel.Language;
+﻿namespace Naninovel.Language;
 
 internal static class Common
 {

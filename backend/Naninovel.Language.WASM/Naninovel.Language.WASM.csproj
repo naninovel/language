@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Bootsharp" Version="0.1.0-rc.146"/>
+        <PackageReference Include="Bootsharp" Version="0.1.0-rc.159"/>
     </ItemGroup>
 
     <ItemGroup>

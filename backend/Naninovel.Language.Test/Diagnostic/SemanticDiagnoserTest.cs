@@ -1,7 +1,4 @@
 ﻿using Naninovel.Metadata;
-using Xunit;
-using static Naninovel.Metadata.ValueContainerType;
-using static Naninovel.Metadata.ValueType;
 
 namespace Naninovel.Language.Test;
 
@@ -48,10 +45,10 @@ public class SemanticDiagnoserTest : DiagnoserTest
     public void WhenInvalidValueErrorIsDiagnosed ()
     {
         var parameters = new[] {
-            new Parameter { Id = "sb", ValueType = Boolean, ValueContainerType = Single },
-            new Parameter { Id = "nd", ValueType = Decimal, ValueContainerType = Named },
-            new Parameter { Id = "il", ValueType = Integer, ValueContainerType = List },
-            new Parameter { Id = "nbl", ValueType = Boolean, ValueContainerType = NamedList }
+            new Parameter { Id = "sb", ValueType = Metadata.ValueType.Boolean, ValueContainerType = ValueContainerType.Single },
+            new Parameter { Id = "nd", ValueType = Metadata.ValueType.Decimal, ValueContainerType = ValueContainerType.Named },
+            new Parameter { Id = "il", ValueType = Metadata.ValueType.Integer, ValueContainerType = ValueContainerType.List },
+            new Parameter { Id = "nbl", ValueType = Metadata.ValueType.Boolean, ValueContainerType = ValueContainerType.NamedList }
         };
         Meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
         var diags = Diagnose("@c sb:- nd:x.- il:,1.0 nbl:x.,x,.,.-");
@@ -69,7 +66,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenValueContainExpressionTypeValidityIsNotChecked ()
     {
-        var parameters = new[] { new Parameter { Id = "p", ValueType = Boolean } };
+        var parameters = new[] { new Parameter { Id = "p", ValueType = Metadata.ValueType.Boolean } };
         Meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
         Assert.Empty(Diagnose("@c p:{x}"));
     }

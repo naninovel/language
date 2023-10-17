@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Naninovel.Utilities;
+﻿using Naninovel.Utilities;
 
 namespace Naninovel.Language;
 

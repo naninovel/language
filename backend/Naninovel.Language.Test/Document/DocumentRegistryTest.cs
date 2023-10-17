@@ -1,6 +1,5 @@
 ﻿using Moq;
 using Naninovel.TestUtilities;
-using Xunit;
 using static Naninovel.Language.Test.Common;
 
 namespace Naninovel.Language.Test;

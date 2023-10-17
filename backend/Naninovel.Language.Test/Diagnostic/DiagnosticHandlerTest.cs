@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Moq;
-using Xunit;
+﻿using Moq;
 using static Naninovel.Language.DiagnosticContext;
 
 namespace Naninovel.Language.Test;
