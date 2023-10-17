@@ -13,7 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Naninovel.Common.Modern" Version="2023.10.17.456"/>
+        <PackageReference Include="Naninovel.Common.Modern" Version="2023.10.17.1815"/>
     </ItemGroup>
 
 </Project>

@@ -22,7 +22,11 @@ test("can boot", async () => {
 });
 
 test("can be configured", async () => {
-    expect(() => configure({ diagnoseSyntax: true, diagnoseSemantics: true, diagnoseNavigation: true })).not.toThrow();
+    expect(() => configure({
+        diagnoseSyntax: true,
+        diagnoseSemantics: true,
+        diagnoseNavigation: true
+    })).not.toThrow();
 });
 
 test("can provide symbols", async () => {
@@ -65,7 +69,11 @@ test("can autocomplete", async () => {
 
 test("can publish diagnostics", async () => {
     await openScript("# label");
-    expect(() => configure({ diagnoseSyntax: true, diagnoseSemantics: true, diagnoseNavigation: true })).not.toThrow();
+    expect(() => configure({
+        diagnoseSyntax: true,
+        diagnoseSemantics: true,
+        diagnoseNavigation: true
+    })).not.toThrow();
     const params = peekOut<LSP.PublishDiagnosticsParams>(LSP.PublishDiagnosticsNotification.method);
     expect(params.uri).toEqual(testFileUri);
     expect(params.diagnostics[0].message).toEqual("Unused label.");
