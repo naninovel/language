@@ -4,7 +4,7 @@ namespace Naninovel.Language;
 
 public readonly record struct CompletionItem
 {
-    public string Label { get; init; }
+    public required string Label { get; init; }
     public CompletionItemKind? Kind { get; init; }
     public string? Detail { get; init; }
     public MarkupContent? Documentation { get; init; }
