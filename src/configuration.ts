@@ -1,21 +1,21 @@
-﻿import * as Backend from "backend";
-import * as LS from "vscode-languageserver";
+﻿import { TokenHandler } from "backend";
+import * as ls from "vscode-languageserver";
 
-const filePattern: LS.FileOperationRegistrationOptions = { filters: [{ pattern: { glob: "**/*.nani" } }] };
+const filePattern: ls.FileOperationRegistrationOptions = { filters: [{ pattern: { glob: "**/*.nani" } }] };
 
-export function createConfiguration(): LS.InitializeResult {
+export function createConfiguration(): ls.InitializeResult {
     return {
         serverInfo: { name: "Naninovel Language Server" },
         capabilities: createCapabilities()
     };
 }
 
-function createCapabilities(): LS.ServerCapabilities {
+function createCapabilities(): ls.ServerCapabilities {
     return {
-        textDocumentSync: LS.TextDocumentSyncKind.Incremental,
+        textDocumentSync: ls.TextDocumentSyncKind.Incremental,
         workspace: { fileOperations: { didRename: filePattern, didDelete: filePattern } },
         completionProvider: { triggerCharacters: ["@", ":", "[", " ", ".", ",", "{"] },
-        semanticTokensProvider: { legend: Backend.TokenHandler.getTokenLegend(), full: { delta: false }, range: true },
+        semanticTokensProvider: { legend: TokenHandler.getTokenLegend(), full: { delta: false }, range: true },
         documentSymbolProvider: {},
         foldingRangeProvider: {},
         hoverProvider: {},

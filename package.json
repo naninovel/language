@@ -24,7 +24,7 @@
         "typescript": "^5.2.2",
         "vitest": "^0.34.6",
         "@vitest/coverage-v8": "^0.34.6",
-        "esbuild": "^0.19.4",
+        "esbuild": "^0.19.5",
         "rimraf": "^5.0.5",
         "npm-check-updates": "^16.14.6"
     }
