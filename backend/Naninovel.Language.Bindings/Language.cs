@@ -43,12 +43,12 @@ public static partial class Language
         .AddSingleton<ISymbolHandler, SymbolHandler>()
         .AddSingleton<ITokenHandler, TokenHandler>()
         .AddSingleton<IHoverHandler, HoverHandler>()
-        .AddBootsharp()
         // observers
         .AddObserving<ISettingsObserver>()
         .AddObserving<IMetadataObserver>()
         .AddObserving<IDocumentObserver>()
         // initialization
+        .AddBootsharp()
         .BuildServiceProvider()
         .RegisterObservers()
         .RunBootsharp()
