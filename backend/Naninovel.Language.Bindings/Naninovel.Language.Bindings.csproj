@@ -12,9 +12,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Bootsharp.Common" Version="0.1.0-rc.159"/>
-        <PackageReference Include="Bootsharp.DependencyInjection" Version="0.1.0-rc.159"/>
-        <PackageReference Include="Naninovel.Common.Bindings" Version="2023.10.17.1938"/>
+        <PackageReference Include="Bootsharp.Common" Version="0.3.1"/>
+        <PackageReference Include="Bootsharp.Inject" Version="0.3.1"/>
+        <PackageReference Include="Naninovel.Common.Bindings" Version="2024.2.12.1921"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Bootsharp;
-using static Naninovel.Bindings.Utilities;
+using Naninovel.Bindings;
 
 [assembly: ExcludeFromCodeCoverage]
-[assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
+[assembly: JSPreferences(Space = [Space.Pattern, Space.Replacement])]
 
 namespace Naninovel.Language;
 
