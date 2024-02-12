@@ -20,7 +20,7 @@ jobs:
           node-version: 20
       - name: cover
         run: |
-          dotnet workload restore backend
+          dotnet workload restore backend/Naninovel.Language.sln
           dotnet test backend /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
           dotnet publish backend
           npm ci

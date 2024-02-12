@@ -33,7 +33,7 @@ jobs:
           languages: ${{ matrix.language }}
       - name: build
         run: |
-          dotnet workload restore backend
+          dotnet workload restore backend/Naninovel.Language.sln
           dotnet publish backend
           npm ci
           npm run build
