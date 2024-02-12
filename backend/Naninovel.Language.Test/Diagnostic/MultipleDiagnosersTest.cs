@@ -1,6 +1,4 @@
-﻿using Xunit;
-
-namespace Naninovel.Language.Test;
+﻿namespace Naninovel.Language.Test;
 
 public class MultipleDiagnosersTest : DiagnoserTest
 {

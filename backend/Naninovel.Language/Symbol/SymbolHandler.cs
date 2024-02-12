@@ -1,23 +1,16 @@
-using System.Collections.Generic;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class SymbolHandler : ISymbolHandler, IMetadataObserver
+public class SymbolHandler(IDocumentRegistry registry) : ISymbolHandler, IMetadataObserver
 {
     private readonly MetadataProvider metaProvider = new();
-    private readonly IDocumentRegistry registry;
     private readonly List<Symbol> symbols = new();
 
     private int lineIndex;
     private DocumentLine line;
     private string commandId = "";
-
-    public SymbolHandler (IDocumentRegistry registry)
-    {
-        this.registry = registry;
-    }
 
     public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
 
@@ -233,9 +226,9 @@ public class SymbolHandler : ISymbolHandler, IMetadataObserver
         if (paramMeta.ValueContainerType is ValueContainerType.List or ValueContainerType.NamedList)
             return SymbolKind.Array;
         return paramMeta.ValueType switch {
-            ValueType.Integer => SymbolKind.Number,
-            ValueType.Decimal => SymbolKind.Number,
-            ValueType.Boolean => SymbolKind.Boolean,
+            Metadata.ValueType.Integer => SymbolKind.Number,
+            Metadata.ValueType.Decimal => SymbolKind.Number,
+            Metadata.ValueType.Boolean => SymbolKind.Boolean,
             _ => SymbolKind.String
         };
     }

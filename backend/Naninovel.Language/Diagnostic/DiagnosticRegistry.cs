@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Naninovel.Language;
+﻿namespace Naninovel.Language;
 
 internal class DiagnosticRegistry
 {

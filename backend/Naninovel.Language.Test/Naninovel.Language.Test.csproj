@@ -1,16 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3"/>
-        <PackageReference Include="Moq" Version="4.18.4"/>
-        <PackageReference Include="naninovel.common.testutilities" Version="2023.8.1.2130"/>
-        <PackageReference Include="xunit" Version="2.5.0"/>
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0">
+        <Using Include="Xunit"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Naninovel.Common.TestUtilities" Version="2023.10.17.1938"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0-preview-23503-02"/>
+        <PackageReference Include="Moq" Version="4.20.69"/>
+        <PackageReference Include="xunit" Version="2.5.3"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>

@@ -1,15 +1,15 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using DotNetJS;
+using Bootsharp;
+using Bootsharp.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.JSInterop;
 using Naninovel.Bindings;
 using Naninovel.Language;
 using static Naninovel.Bindings.Utilities;
 
 [assembly: ExcludeFromCodeCoverage]
 [assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
-[assembly: JSImport(new[] { typeof(IDiagnosticPublisher) })]
-[assembly: JSExport(new[] {
+[assembly: JSImport(typeof(IDiagnosticPublisher))]
+[assembly: JSExport(
     typeof(ISettingsHandler),
     typeof(IMetadataHandler),
     typeof(IDocumentHandler),
@@ -18,14 +18,14 @@ using static Naninovel.Bindings.Utilities;
     typeof(IFoldingHandler),
     typeof(ISymbolHandler),
     typeof(ITokenHandler),
-    typeof(IHoverHandler)
-}, invokePattern: "(.+)", invokeReplacement: "Naninovel.Bindings.Utilities.Try(() => $1)")]
+    typeof(IHoverHandler),
+    InvokePattern = "(.+)", InvokeReplacement = "Naninovel.Bindings.Utilities.Try(() => $1)")]
 
 namespace Naninovel.Language;
 
-public static class Language
+public static partial class Language
 {
-    [JSInvokable, RequiresUnreferencedCode("DI")]
+    [JSInvokable]
     public static void BootServer () => new ServiceCollection()
         // core services
         .AddSingleton<ILogger, JSLogger>()
@@ -43,13 +43,14 @@ public static class Language
         .AddSingleton<ISymbolHandler, SymbolHandler>()
         .AddSingleton<ITokenHandler, TokenHandler>()
         .AddSingleton<IHoverHandler, HoverHandler>()
-        .AddJS()
         // observers
         .AddObserving<ISettingsObserver>()
         .AddObserving<IMetadataObserver>()
         .AddObserving<IDocumentObserver>()
         // initialization
+        .AddBootsharp()
         .BuildServiceProvider()
         .RegisterObservers()
+        .RunBootsharp()
         .GetAll();
 }

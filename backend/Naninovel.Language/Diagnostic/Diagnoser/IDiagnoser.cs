@@ -1,3 +1,3 @@
 ﻿namespace Naninovel.Language;
 
-public interface IDiagnoser : IDocumentObserver { }
+public interface IDiagnoser : IDocumentObserver;

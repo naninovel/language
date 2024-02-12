@@ -1,19 +1,15 @@
 ﻿using Moq;
 using Naninovel.Parsing;
 using Naninovel.TestUtilities;
-using Xunit;
 using static Naninovel.Language.Test.Common;
 
 namespace Naninovel.Language.Test;
 
 public class DocumentChangerTest
 {
-    private readonly DocumentRegistry registry;
-
-    public DocumentChangerTest ()
-    {
-        registry = new(new Mock<IObserverRegistry<IDocumentObserver>>().Object, new NotifierMock<IDocumentObserver>());
-    }
+    private readonly DocumentRegistry registry = new(
+        new Mock<IObserverRegistry<IDocumentObserver>>().Object,
+        new NotifierMock<IDocumentObserver>());
 
     [Fact]
     public void CanInsertNewCharacter ()

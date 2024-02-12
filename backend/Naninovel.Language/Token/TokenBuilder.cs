@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Naninovel.Language;
 
 internal class TokenBuilder

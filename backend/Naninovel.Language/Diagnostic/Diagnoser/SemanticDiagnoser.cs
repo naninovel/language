@@ -1,21 +1,14 @@
-﻿using System;
-using Naninovel.Metadata;
+﻿using Naninovel.Metadata;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class SemanticDiagnoser : Diagnoser
+internal class SemanticDiagnoser(MetadataProvider meta, IDocumentRegistry docs,
+    DiagnosticRegistry registry) : Diagnoser(docs, registry)
 {
     public override DiagnosticContext Context => DiagnosticContext.Semantic;
 
     private readonly ValueValidator validator = new();
-    private readonly MetadataProvider meta;
-
-    public SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs, DiagnosticRegistry registry)
-        : base(docs, registry)
-    {
-        this.meta = meta;
-    }
 
     protected override void DiagnoseLine (in DocumentLine line)
     {

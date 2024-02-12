@@ -1,21 +1,14 @@
-using System;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class TokenHandler : ITokenHandler
+public class TokenHandler(IDocumentRegistry registry) : ITokenHandler
 {
-    private readonly IDocumentRegistry registry;
     private readonly TokenBuilder builder = new();
 
     private DocumentLine line;
     private Range range;
     private int lineIndex;
-
-    public TokenHandler (IDocumentRegistry registry)
-    {
-        this.registry = registry;
-    }
 
     public TokenLegend GetTokenLegend () => new(
         TokenTypes: Enum.GetNames<TokenType>(),

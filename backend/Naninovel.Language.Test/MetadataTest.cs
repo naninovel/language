@@ -1,7 +1,6 @@
 ﻿using Moq;
 using Naninovel.Metadata;
 using Naninovel.TestUtilities;
-using Xunit;
 
 namespace Naninovel.Language.Test;
 

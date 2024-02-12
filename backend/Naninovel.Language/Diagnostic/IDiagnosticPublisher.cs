@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Naninovel.Language;
+﻿namespace Naninovel.Language;
 
 // https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_publishDiagnostics
 

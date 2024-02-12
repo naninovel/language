@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Naninovel.Metadata;
 using static Naninovel.Language.DiagnosticContext;
 
@@ -27,7 +26,7 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
         if (settings.DiagnoseSyntax) diagnosers.Add(factory.Create(Syntax));
         if (settings.DiagnoseSemantics) diagnosers.Add(factory.Create(Semantic));
         if (settings.DiagnoseNavigation) diagnosers.Add(factory.Create(Navigation));
-        RediagnoseAll();
+        ReDiagnoseAll();
     }
 
     public void HandleDocumentAdded (string uri)
@@ -60,10 +59,10 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
     public void HandleMetadataChanged (Project meta)
     {
         metaProvider.Update(meta);
-        RediagnoseAll();
+        ReDiagnoseAll();
     }
 
-    private void RediagnoseAll ()
+    private void ReDiagnoseAll ()
     {
         registry.Clear();
         foreach (var uri in docs.GetAllUris())

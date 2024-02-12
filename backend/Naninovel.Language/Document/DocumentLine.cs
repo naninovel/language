@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;

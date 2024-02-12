@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Naninovel.Language;
+﻿namespace Naninovel.Language;
 
 public interface IDocument
 {

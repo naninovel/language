@@ -1,20 +1,13 @@
-using System.Collections.Generic;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class FoldingHandler : IFoldingHandler
+public class FoldingHandler(IDocumentRegistry registry) : IFoldingHandler
 {
-    private readonly IDocumentRegistry registry;
     private readonly List<FoldingRange> closed = new();
     private readonly Dictionary<LineType, int> open = new();
 
     private int lineIndex;
-
-    public FoldingHandler (IDocumentRegistry registry)
-    {
-        this.registry = registry;
-    }
 
     public IReadOnlyList<FoldingRange> GetFoldingRanges (string documentUri)
     {

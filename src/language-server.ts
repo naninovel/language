@@ -1,4 +1,4 @@
-﻿import * as Backend from "backend";
+﻿import * as cs from "backend";
 import { getDefaultMetadata, mergeMetadata } from "@naninovel/common";
 import { createConnection } from "vscode-languageserver/browser";
 import { Message, Connection, Emitter } from "vscode-languageserver";
@@ -7,22 +7,22 @@ import { LanguageMessageWriter } from "./message-writer";
 import { createConfiguration } from "./configuration";
 
 export function bootLanguageServer(reader: Emitter<Message>, writer: Emitter<Message>) {
-    Backend.Language.bootServer();
-    Backend.MetadataHandler.updateMetadata(getDefaultMetadata());
+    cs.Language.bootServer();
+    cs.MetadataHandler.updateMetadata(getDefaultMetadata());
     establishConnection(reader, writer);
 }
 
-export function applyCustomMetadata(customMetadata: Backend.Metadata.Project) {
+export function applyCustomMetadata(customMetadata: cs.Metadata.Project) {
     const mergedMeta = mergeMetadata(getDefaultMetadata(), customMetadata);
-    Backend.MetadataHandler.updateMetadata(mergedMeta);
+    cs.MetadataHandler.updateMetadata(mergedMeta);
 }
 
-export function configure(settings: Backend.Language.Settings) {
-    Backend.SettingsHandler.configure(settings);
+export function configure(settings: cs.Language.Settings) {
+    cs.SettingsHandler.configure(settings);
 }
 
-export function upsertDocuments(docs: Backend.Language.DocumentInfo[]) {
-    Backend.DocumentHandler.upsertDocuments(docs);
+export function upsertDocuments(docs: cs.Language.DocumentInfo[]) {
+    cs.DocumentHandler.upsertDocuments(docs);
 }
 
 function establishConnection(reader: Emitter<Message>, writer: Emitter<Message>) {
@@ -35,16 +35,16 @@ function establishConnection(reader: Emitter<Message>, writer: Emitter<Message>)
 }
 
 function attachHandlers(connection: Connection) {
-    Backend.DiagnosticPublisher.publishDiagnostics = (uri, diags) => connection.sendDiagnostics({ uri: uri, diagnostics: diags as never });
+    cs.DiagnosticPublisher.publishDiagnostics = (uri, diags) => connection.sendDiagnostics({ uri: uri, diagnostics: diags as never });
     connection.onDidOpenTextDocument(p => upsertDocuments([{ uri: p.textDocument.uri, text: p.textDocument.text }]));
-    connection.onDidChangeTextDocument(p => Backend.DocumentHandler.changeDocument(p.textDocument.uri, p.contentChanges as never));
-    connection.workspace.onDidRenameFiles(p => Backend.DocumentHandler.renameDocuments(p.files));
-    connection.workspace.onDidDeleteFiles(p => Backend.DocumentHandler.deleteDocuments(p.files));
-    connection.onCompletion(p => Backend.CompletionHandler.complete(p.textDocument.uri, p.position) as never);
-    connection.onDocumentSymbol(p => Backend.SymbolHandler.getSymbols(p.textDocument.uri) as never);
-    connection.onRequest("textDocument/semanticTokens/full", p => Backend.TokenHandler.getAllTokens(p.textDocument.uri));
-    connection.onRequest("textDocument/semanticTokens/range", p => Backend.TokenHandler.getTokens(p.textDocument.uri, p.range));
-    connection.onHover(p => Backend.HoverHandler.hover(p.textDocument.uri, p.position) as never);
-    connection.onFoldingRanges(p => Backend.FoldingHandler.getFoldingRanges(p.textDocument.uri));
-    connection.onDefinition(p => Backend.DefinitionHandler.gotoDefinition(p.textDocument.uri, p.position));
+    connection.onDidChangeTextDocument(p => cs.DocumentHandler.changeDocument(p.textDocument.uri, p.contentChanges as never));
+    connection.workspace.onDidRenameFiles(p => cs.DocumentHandler.renameDocuments(p.files));
+    connection.workspace.onDidDeleteFiles(p => cs.DocumentHandler.deleteDocuments(p.files));
+    connection.onCompletion(p => cs.CompletionHandler.complete(p.textDocument.uri, p.position) as never);
+    connection.onDocumentSymbol(p => cs.SymbolHandler.getSymbols(p.textDocument.uri) as never);
+    connection.onRequest("textDocument/semanticTokens/full", p => cs.TokenHandler.getAllTokens(p.textDocument.uri));
+    connection.onRequest("textDocument/semanticTokens/range", p => cs.TokenHandler.getTokens(p.textDocument.uri, p.range));
+    connection.onHover(p => cs.HoverHandler.hover(p.textDocument.uri, p.position) as never);
+    connection.onFoldingRanges(p => cs.FoldingHandler.getFoldingRanges(p.textDocument.uri));
+    connection.onDefinition(p => cs.DefinitionHandler.gotoDefinition(p.textDocument.uri, p.position));
 }

@@ -1,16 +1,8 @@
-using System.Collections.Generic;
-
 namespace Naninovel.Language;
 
-public class DocumentHandler : IDocumentHandler
+public class DocumentHandler(IDocumentRegistry registry) : IDocumentHandler
 {
     private readonly DocumentFactory factory = new();
-    private readonly IDocumentRegistry registry;
-
-    public DocumentHandler (IDocumentRegistry registry)
-    {
-        this.registry = registry;
-    }
 
     public void UpsertDocuments (IReadOnlyList<DocumentInfo> docs)
     {

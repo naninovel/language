@@ -1,8 +1,5 @@
-using System.Collections.Generic;
-using System.Linq;
 using Moq;
 using Naninovel.Metadata;
-using Xunit;
 
 namespace Naninovel.Language.Test;
 
@@ -152,7 +149,7 @@ public class CompletionTest
     [Fact]
     public void WhenAfterCommandWithNamelessParameterValuesAreReturned ()
     {
-        var param = new Parameter { Id = "foo", Nameless = true, ValueType = ValueType.Boolean };
+        var param = new Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         Assert.Equal("true", Complete("@cmd ", 5)[0].Label);
     }
@@ -174,7 +171,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverNamelessParameterValuesAreReturned ()
     {
-        var param = new Parameter { Id = "foo", Nameless = true, ValueType = ValueType.Boolean };
+        var param = new Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         Assert.Equal("true", Complete("@cmd x", 6)[0].Label);
     }
@@ -182,7 +179,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverNamelessParameterWithTextIdValuesAreReturned ()
     {
-        var param = new Parameter { Id = "foo", Nameless = true, ValueType = ValueType.Boolean };
+        var param = new Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         Assert.Equal("true", Complete("@cmd x|x|", 6)[0].Label);
     }
@@ -190,7 +187,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverParameterAssignmentValuesAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueType = ValueType.Boolean };
+        var param = new Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         Assert.Equal("true", Complete("@cmd id:", 8)[0].Label);
     }
@@ -224,7 +221,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverParameterValueContentValuesAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueType = ValueType.Boolean };
+        var param = new Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         Assert.Equal("true", Complete("@cmd id:x", 9)[0].Label);
     }
@@ -375,7 +372,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverBooleanContextTrueAndFalseAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueType = ValueType.Boolean };
+        var param = new Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         var items = Complete("@cmd id:x", 9);
         Assert.Equal(2, items.Count);
@@ -508,7 +505,7 @@ public class CompletionTest
     [Fact]
     public void WhenInsideCommandExpressionVariablesAndFunctionsAreReturned ()
     {
-        var param = new Parameter { Id = "@", Nameless = true, ValueType = ValueType.Boolean };
+        var param = new Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Variables = new[] { "foo" };
         meta.Functions = new[] { "bar" };
@@ -521,7 +518,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverCommandExpressionContextValuesAreReturned ()
     {
-        var param = new Parameter { Id = "@", Nameless = true, ValueType = ValueType.Boolean };
+        var param = new Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "cmd", Parameters = new[] { param } } };
         meta.Variables = new[] { "foo" };
         Assert.Equal("true", Complete("@cmd {x}", 8)[0].Label);
@@ -548,7 +545,7 @@ public class CompletionTest
     [Fact]
     public void IdAndAliasAreNotCaseSensitive ()
     {
-        var param = new Parameter { Id = "Identifier", Alias = "id", ValueType = ValueType.Boolean };
+        var param = new Parameter { Id = "Identifier", Alias = "id", ValueType = Metadata.ValueType.Boolean };
         meta.Commands = new[] { new Command { Id = "Command", Alias = "cmd", Parameters = new[] { param } } };
         Assert.Equal("true", Complete("@CMD ID:", 8)[0].Label);
         Assert.Equal("true", Complete("@command identifier:", 20)[0].Label);

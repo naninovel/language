@@ -1,12 +1,11 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Naninovel.Language", "Naninovel.Language\Naninovel.Language.csproj", "{F4F76FB6-3A38-437E-9552-35CE9D69E526}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Naninovel.Language", "Naninovel.Language/Naninovel.Language.csproj", "{F4F76FB6-3A38-437E-9552-35CE9D69E526}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Naninovel.Language.Bindings", "Naninovel.Language.Bindings\Naninovel.Language.Bindings.csproj", "{6EC2FC0A-CB15-4992-933B-810EF8217F24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Naninovel.Language.Bindings", "Naninovel.Language.Bindings/Naninovel.Language.Bindings.csproj", "{6EC2FC0A-CB15-4992-933B-810EF8217F24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Naninovel.Language.Test", "Naninovel.Language.Test\Naninovel.Language.Test.csproj", "{75931CC9-80E0-42F2-9456-75E2CD596A61}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Naninovel.Language.Test", "Naninovel.Language.Test/Naninovel.Language.Test.csproj", "{75931CC9-80E0-42F2-9456-75E2CD596A61}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Naninovel.Language.WASM", "Naninovel.Language.WASM\Naninovel.Language.WASM.csproj", "{43243D23-BCB1-4D9E-8ED1-C1910B37B677}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Naninovel.Language.WASM", "Naninovel.Language.WASM/Naninovel.Language.WASM.csproj", "{43243D23-BCB1-4D9E-8ED1-C1910B37B677}"
 EndProject
 Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
