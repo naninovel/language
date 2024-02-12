@@ -20,6 +20,7 @@ jobs:
           node-version: 20
       - name: cover
         run: |
+          dotnet nuget add source https://nuget.pkg.github.com/naninovel/index.json -n github --username ${{ secrets.GH_USER }} --password ${{ secrets.GH_TOKEN }} --store-password-in-clear-text
           dotnet workload restore backend/Naninovel.Language.sln
           dotnet test backend /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
           dotnet publish backend
