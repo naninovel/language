@@ -5,8 +5,6 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  schedule:
-    - cron: '36 7 * * 0'
 
 jobs:
   analyze:
@@ -21,20 +19,22 @@ jobs:
       matrix:
         language: [ 'csharp', 'javascript' ]
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: setup dotnet
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
       - name: initialize codeql
         uses: github/codeql-action/init@v2
         with:
           languages: ${{ matrix.language }}
       - name: build
         run: |
-          dotnet nuget add source https://nuget.pkg.github.com/Naninovel/index.json -n github --username ${{ secrets.GH_USER }} --password ${{ secrets.GH_TOKEN }} --store-password-in-clear-text
-          dotnet publish backend/Naninovel.Language.WASM/Naninovel.Language.WASM.csproj
+          dotnet workload restore backend/Naninovel.Language.sln
+          dotnet publish backend
           npm ci
           npm run build
       - name: analyze
