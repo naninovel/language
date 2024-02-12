@@ -1,5 +1,6 @@
 {
     "name": "backend",
-    "main": "Naninovel.Language.WASM/bin/backend/backend.mjs",
-    "types": "Naninovel.Language.WASM/bin/backend/types/backend.d.ts"
+    "type": "module",
+    "main": "Naninovel.Language.WASM/bin/backend/index.mjs",
+    "types": "Naninovel.Language.WASM/bin/backend/types/index.d.ts"
 }

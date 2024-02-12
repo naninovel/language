@@ -1,15 +1,14 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Bootsharp;
-using Bootsharp.DependencyInjection;
+using Bootsharp.Inject;
 using Microsoft.Extensions.DependencyInjection;
 using Naninovel.Bindings;
 using Naninovel.Language;
-using static Naninovel.Bindings.Utilities;
 
 [assembly: ExcludeFromCodeCoverage]
-[assembly: JSNamespace(NamespacePattern, NamespaceReplacement)]
+[assembly: JSPreferences(Space = [Space.Pattern, Space.Replacement])]
 [assembly: JSImport(typeof(IDiagnosticPublisher))]
-[assembly: JSExport(
+[assembly: JSExport([
     typeof(ISettingsHandler),
     typeof(IMetadataHandler),
     typeof(IDocumentHandler),
@@ -18,12 +17,12 @@ using static Naninovel.Bindings.Utilities;
     typeof(IFoldingHandler),
     typeof(ISymbolHandler),
     typeof(ITokenHandler),
-    typeof(IHoverHandler),
-    InvokePattern = "(.+)", InvokeReplacement = "Naninovel.Bindings.Utilities.Try(() => $1)")]
+    typeof(IHoverHandler)
+])]
 
 namespace Naninovel.Language;
 
-public static partial class Language
+public static class Language
 {
     [JSInvokable]
     public static void BootServer () => new ServiceCollection()
