@@ -94,8 +94,7 @@ test("when applying custom metadata update metadata is invoked", () => {
 });
 
 test("publish diagnostics on backend routes to send diagnostics", () => {
-    // @ts-ignore
-    cs.DiagnosticPublisher.$publishDiagnostics("foo", []);
+    cs.DiagnosticPublisher.publishDiagnostics("foo", []);
     expect(connection.sendDiagnostics).toBeCalledWith({ uri: "foo", diagnostics: [] });
 });
 
