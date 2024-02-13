@@ -20,5 +20,6 @@ public enum TokenType
     GenericTextPrefix = 15,
     GenericTextAuthor = 16,
     GenericTextAuthorAppearance = 17,
-    TextIdentifier = 18
+    TextIdentifier = 18,
+    WaitFlag = 19
 }

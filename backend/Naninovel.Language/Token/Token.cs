@@ -1,6 +1,6 @@
 namespace Naninovel.Language;
 
-internal readonly record struct Token(
+internal readonly record struct Token (
     int LineIndex,
     int CharIndex,
     int Length,

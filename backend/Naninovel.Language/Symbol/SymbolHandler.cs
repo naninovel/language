@@ -3,10 +3,10 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class SymbolHandler(IDocumentRegistry registry) : ISymbolHandler, IMetadataObserver
+public class SymbolHandler (IDocumentRegistry registry) : ISymbolHandler, IMetadataObserver
 {
     private readonly MetadataProvider metaProvider = new();
-    private readonly List<Symbol> symbols = new();
+    private readonly List<Symbol> symbols = [];
 
     private int lineIndex;
     private DocumentLine line;
@@ -96,6 +96,8 @@ public class SymbolHandler(IDocumentRegistry registry) : ISymbolHandler, IMetada
         symbols.Add(CreateForCommandIdentifier(command.Identifier));
         foreach (var parameter in command.Parameters)
             symbols.Add(CreateForCommandParameter(parameter));
+        if (command.WaitFlag is { } flag)
+            symbols.Add(CreateForWaitFlag(flag));
         return symbols;
     }
 
@@ -167,6 +169,13 @@ public class SymbolHandler(IDocumentRegistry registry) : ISymbolHandler, IMetada
         Range = line.GetRange(parameter, lineIndex),
         SelectionRange = line.GetRange(parameter, lineIndex),
         Children = CreateParameterChildren(parameter)
+    };
+
+    private Symbol CreateForWaitFlag (WaitFlag flag) => new() {
+        Name = "WaitFlag",
+        Kind = (int)SymbolKind.Key,
+        Range = line.GetRange(flag, lineIndex),
+        SelectionRange = line.GetRange(flag, lineIndex)
     };
 
     private IReadOnlyList<Symbol> CreateParameterChildren (Parsing.Parameter parameter)
