@@ -4,7 +4,7 @@ namespace Naninovel.Language.Test;
 
 public class TokenTest
 {
-    private record Token(int Line, int Char, int Length, TokenType Type);
+    private record Token (int Line, int Char, int Length, TokenType Type);
 
     private readonly Mock<IDocumentRegistry> docs = new();
     private readonly TokenHandler handler;
@@ -165,6 +165,16 @@ public class TokenTest
     }
 
     [Fact]
+    public void WaitFlagInCommandLineTokenizedCorrectly ()
+    {
+        var tokens = GetTokens("@c >");
+        Assert.Equal(3, tokens.Count);
+        Assert.Equal(new(0, 0, 1, TokenType.CommandLine), tokens[0]);
+        Assert.Equal(new(0, 1, 1, TokenType.CommandIdentifier), tokens[1]);
+        Assert.Equal(new(0, 1, 2, TokenType.WaitFlag), tokens[2]);
+    }
+
+    [Fact]
     public void GenericLineTokenizedCorrectly ()
     {
         var tokens = GetTokens("hello");
@@ -203,6 +213,17 @@ public class TokenTest
         Assert.Equal(new(0, 1, 1, TokenType.CommandIdentifier), tokens[1]);
         Assert.Equal(new(0, 1, 1, TokenType.InlinedCommand), tokens[2]);
         Assert.Equal(new(0, 1, 5, TokenType.GenericTextLine), tokens[3]);
+    }
+
+    [Fact]
+    public void WaitFlagInsideInlinedCommandTokenizedCorrectly ()
+    {
+        var tokens = GetTokens("[i <]");
+        Assert.Equal(4, tokens.Count);
+        Assert.Equal(new(0, 0, 1, TokenType.InlinedCommand), tokens[0]);
+        Assert.Equal(new(0, 1, 1, TokenType.CommandIdentifier), tokens[1]);
+        Assert.Equal(new(0, 1, 2, TokenType.WaitFlag), tokens[2]);
+        Assert.Equal(new(0, 2, 1, TokenType.InlinedCommand), tokens[3]);
     }
 
     [Fact]

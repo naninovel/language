@@ -1,6 +1,6 @@
 {
     "name": "@naninovel/language",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Language server protocol implementation for Naninovel scenario scripting language.",
     "main": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -8,7 +8,7 @@
     "scripts": {
         "backend": "dotnet publish backend",
         "update": "ncu --interactive",
-        "test": "vitest run --silent --experimental-vm-threads",
+        "test": "vitest run --silent --pool=vmThreads",
         "cover": "npm test -- --coverage.enabled --coverage.include=**/src/**",
         "bundle": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --external:backend --external:@naninovel/common",
         "types": "tsc --outDir dist --declaration --emitDeclarationOnly",
@@ -17,15 +17,15 @@
     },
     "dependencies": {
         "vscode-languageserver": "^9.0.1",
-        "@naninovel/common": "^1.1.1"
+        "@naninovel/common": "^1.2.0"
     },
     "devDependencies": {
         "backend": "file:backend",
-        "typescript": "^5.2.2",
-        "vitest": "^0.34.6",
-        "@vitest/coverage-v8": "^0.34.6",
-        "esbuild": "^0.19.5",
+        "typescript": "^5.3.3",
+        "vitest": "^1.2.2",
+        "@vitest/coverage-v8": "^1.2.2",
+        "esbuild": "^0.20.0",
         "rimraf": "^5.0.5",
-        "npm-check-updates": "^16.14.6"
+        "npm-check-updates": "^16.14.15"
     }
 }

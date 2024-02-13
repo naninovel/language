@@ -24,7 +24,7 @@ public class HoverTest
     [Fact]
     public void WhenParameterMetadataNotFoundNullIsReturned ()
     {
-        meta.Commands = new[] { new Command { Id = "c" } };
+        meta.Commands = [new Command { Id = "c" }];
         Assert.Null(HoverNullable("@c p", 3));
         Assert.Null(HoverNullable("[c p]", 3));
     }
@@ -32,7 +32,7 @@ public class HoverTest
     [Fact]
     public void WhenOverNothingHoverableNullIsReturned ()
     {
-        meta.Commands = new[] { new Command { Id = "c" } };
+        meta.Commands = [new Command { Id = "c" }];
         Assert.Null(HoverNullable("", 0));
         Assert.Null(HoverNullable("; comment", 5));
         Assert.Null(HoverNullable("# label", 0));
@@ -45,7 +45,7 @@ public class HoverTest
     [Fact]
     public void WhenOverCommandIdentifierHoverContainSummary ()
     {
-        meta.Commands = new[] { new Command { Id = "c", Summary = "foo" } };
+        meta.Commands = [new Command { Id = "c", Summary = "foo" }];
         Assert.Contains("foo", Hover("@c p:v", 1).Contents.Value);
         Assert.Contains("foo", Hover("[c p:v]", 1).Contents.Value);
     }
@@ -54,7 +54,7 @@ public class HoverTest
     public void WhenOverParameterHoverContentIsEqualToSummary ()
     {
         var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal("foo", Hover("@c p:v", 4).Contents.Value);
         Assert.Equal("foo", Hover("[c p:v]", 4).Contents.Value);
     }
@@ -62,7 +62,7 @@ public class HoverTest
     [Fact]
     public void CommandIdentifierHoverRangeIsEqualToContentRange ()
     {
-        meta.Commands = new[] { new Command { Id = "c", Summary = "" } };
+        meta.Commands = [new Command { Id = "c", Summary = "" }];
         Assert.Equal(new Range(new(0, 1), new(0, 2)), Hover("@c p:v", 1).Range);
     }
 
@@ -70,7 +70,7 @@ public class HoverTest
     public void ParameterHoverRangeIsEqualToContentRange ()
     {
         var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal(new Range(new(0, 3), new(0, 6)), Hover("@c p:v", 5).Range);
     }
 
@@ -78,7 +78,7 @@ public class HoverTest
     public void ParameterWithTextIdHoverRangeIsEqualToContentRange ()
     {
         var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal(new Range(new(0, 3), new(0, 10)), Hover("@c p:v|id|", 5).Range);
     }
 
@@ -86,28 +86,37 @@ public class HoverTest
     public void TextIdHoverRangeIsEqualToParameterContentRange ()
     {
         var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal(new Range(new(0, 3), new(0, 10)), Hover("@c p:v|id|", 9).Range);
+    }
+
+    [Fact]
+    public void WhenOverWaitFlagContainsHint ()
+    {
+        Assert.Contains("Next command will play without waiting for this command to finish.",
+            Hover("@c >", 3).Contents.Value);
+        Assert.Contains("Next command won't play until this command finished executing.",
+            Hover("[c <]", 3).Contents.Value);
     }
 
     [Fact]
     public void CommandSummaryHasCorrectMarkup ()
     {
-        meta.Commands = new[] { new Command { Id = "c", Summary = "foo" } };
+        meta.Commands = [new Command { Id = "c", Summary = "foo" }];
         Assert.Contains("## Summary\nfoo", Hover("@c", 1).Contents.Value);
     }
 
     [Fact]
     public void CommandRemarksHaveCorrectMarkup ()
     {
-        meta.Commands = new[] { new Command { Id = "c", Remarks = "foo" } };
+        meta.Commands = [new Command { Id = "c", Remarks = "foo" }];
         Assert.Contains("## Remarks\nfoo", Hover("@c", 1).Contents.Value);
     }
 
     [Fact]
     public void CommandExamplesHaveCorrectMarkup ()
     {
-        meta.Commands = new[] { new Command { Id = "c", Examples = "foo" } };
+        meta.Commands = [new Command { Id = "c", Examples = "foo" }];
         Assert.Contains("## Examples\n```nani\nfoo\n```", Hover("@c", 1).Contents.Value);
     }
 
@@ -121,7 +130,7 @@ public class HoverTest
             new Parameter { Id = "WithSummary", Summary = "foo" },
             new Parameter { Id = "WithAlias", Alias = "Alias" }
         };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         var content = Hover("@c", 1).Contents.Value;
         Assert.Contains("## Parameters\nName | Type | Summary\n:--- | :--- | :---\n", content);
         Assert.Contains("~nameless~ | string | \n", content);

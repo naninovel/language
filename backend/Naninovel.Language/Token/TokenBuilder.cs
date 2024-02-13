@@ -2,7 +2,7 @@ namespace Naninovel.Language;
 
 internal class TokenBuilder
 {
-    private readonly List<Token> tokens = new();
+    private readonly List<Token> tokens = [];
     private readonly TokenEncoder encoder = new();
 
     public void Append (int lineIndex, int charIndex, int length, TokenType type)
