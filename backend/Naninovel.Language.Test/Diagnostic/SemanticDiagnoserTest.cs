@@ -24,7 +24,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenParameterMetaNotFoundErrorIsDiagnosed ()
     {
-        Meta.Commands = new[] { new Command { Id = "c" } };
+        Meta.Commands = [new Command { Id = "c" }];
         var diags = Diagnose("@c p:v");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 3), new(0, 6)), DiagnosticSeverity.Error,
@@ -34,7 +34,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenNamelessParameterMetaNotFoundErrorIsDiagnosed ()
     {
-        Meta.Commands = new[] { new Command { Id = "c" } };
+        Meta.Commands = [new Command { Id = "c" }];
         var diags = Diagnose("[c n]");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 3), new(0, 4)), DiagnosticSeverity.Error,
@@ -50,7 +50,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
             new Parameter { Id = "il", ValueType = Metadata.ValueType.Integer, ValueContainerType = ValueContainerType.List },
             new Parameter { Id = "nbl", ValueType = Metadata.ValueType.Boolean, ValueContainerType = ValueContainerType.NamedList }
         };
-        Meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         var diags = Diagnose("@c sb:- nd:x.- il:,1.0 nbl:x.,x,.,.-");
         Assert.Equal(4, diags.Count);
         Assert.Equal(new(new(new(0, 6), new(0, 7)), DiagnosticSeverity.Error,
@@ -67,7 +67,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
     public void WhenValueContainExpressionTypeValidityIsNotChecked ()
     {
         var parameters = new[] { new Parameter { Id = "p", ValueType = Metadata.ValueType.Boolean } };
-        Meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Empty(Diagnose("@c p:{x}"));
     }
 
@@ -75,7 +75,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
     public void WhenMissingRequiredParameterErrorIsDiagnosed ()
     {
         var parameters = new[] { new Parameter { Id = "p", Required = true } };
-        Meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         var diags = Diagnose("@c");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 1), new(0, 2)), DiagnosticSeverity.Error,
@@ -89,7 +89,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
             new Parameter { Id = "Foo", Alias = "f", Required = true },
             new Parameter { Id = "Bar", Required = true }
         };
-        Meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Empty(Diagnose("@c f:x bar:x"));
     }
 
@@ -97,14 +97,14 @@ public class SemanticDiagnoserTest : DiagnoserTest
     public void NamelessRequiredParametersAreResolved ()
     {
         var param = new Parameter { Id = "*", Alias = "", Nameless = true, Required = true };
-        Meta.Commands = new[] { new Command { Id = "c", Parameters = new[] { param } } };
+        Meta.Commands = [new Command { Id = "c", Parameters = [param] }];
         Assert.Empty(Diagnose("@c foo"));
     }
 
     [Fact]
     public void DiagnosticsAreClearedWhenCorrected ()
     {
-        Meta.Commands = new[] { new Command { Id = "bar" } };
+        Meta.Commands = [new Command { Id = "bar" }];
         Assert.NotEmpty(Diagnose("@foo"));
         Assert.Empty(Diagnose("@bar"));
     }
