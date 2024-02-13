@@ -20,7 +20,7 @@ using Naninovel.Language;
     typeof(IHoverHandler)
 ])]
 
-namespace Naninovel.Language;
+namespace Naninovel.Language.Bindings;
 
 public static class Language
 {
