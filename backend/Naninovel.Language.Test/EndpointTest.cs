@@ -23,6 +23,8 @@ public class EndpointTest
         Assert.Empty(registry.GetLabelLocations(new("foo", "bar")));
         Assert.Empty(registry.GetNavigatorLocations(new("foo")));
         Assert.Empty(registry.GetNavigatorLocations(new("foo", "bar")));
+        Assert.Empty(registry.GetAllScriptNames());
+        Assert.Empty(registry.GetLabelsInScript("foo"));
     }
 
     [Fact]
@@ -40,6 +42,9 @@ public class EndpointTest
         AssertNavigatorLocations(new("script1", "label1"), new LineLocation("script1.nani", 2), new("script1.nani", 3));
         AssertNavigatorLocations(new("script2"), new LineLocation("script1.nani", 4));
         AssertNavigatorLocations(new("script2", "label1"), new LineLocation("script2.nani", 4));
+        Assert.Equal(["script1", "script2"], registry.GetAllScriptNames());
+        Assert.Equal(["label1", "label2"], registry.GetLabelsInScript("script1"));
+        Assert.Equal(["label1"], registry.GetLabelsInScript("script2"));
     }
 
     [Fact]
@@ -59,6 +64,9 @@ public class EndpointTest
         AssertNavigatorDoesntExist(new("script1", "label1"));
         AssertNavigatorDoesntExist(new("script2"));
         AssertNavigatorLocations(new("script2", "label1"), new LineLocation("script2.nani", 4));
+        Assert.Equal(["script2"], registry.GetAllScriptNames());
+        Assert.Empty(registry.GetLabelsInScript("script1"));
+        Assert.Equal(["label1"], registry.GetLabelsInScript("script2"));
     }
 
     [Fact]
@@ -82,6 +90,9 @@ public class EndpointTest
         AssertNavigatorLocations(new("script1", "label1"), new LineLocation("script1.nani", 1));
         AssertNavigatorLocations(new("script2"), new LineLocation("script1.nani", 0), new("script1.nani", 2));
         AssertNavigatorLocations(new("script2", "label1"), new LineLocation("script2.nani", 2));
+        Assert.Equal(["script1", "script2"], registry.GetAllScriptNames());
+        Assert.Empty(registry.GetLabelsInScript("script1"));
+        Assert.Equal(["label1"], registry.GetLabelsInScript("script2"));
     }
 
     [Fact]

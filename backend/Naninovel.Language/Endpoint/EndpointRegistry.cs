@@ -7,11 +7,11 @@ namespace Naninovel.Language;
 
 public class EndpointRegistry : IEndpointRegistry, IDocumentObserver, IMetadataObserver
 {
-    private readonly HashSet<string> scriptNames = new();
-    private readonly Dictionary<LineLocation, string> labels = new();
-    private readonly Dictionary<QualifiedLabel, HashSet<LineLocation>> labelLocations = new();
-    private readonly Dictionary<LineLocation, QualifiedEndpoint> navigators = new();
-    private readonly Dictionary<QualifiedEndpoint, HashSet<LineLocation>> navigatorLocations = new();
+    private readonly HashSet<string> scriptNames = [];
+    private readonly Dictionary<LineLocation, string> labels = [];
+    private readonly Dictionary<QualifiedLabel, HashSet<LineLocation>> labelLocations = [];
+    private readonly Dictionary<LineLocation, QualifiedEndpoint> navigators = [];
+    private readonly Dictionary<QualifiedEndpoint, HashSet<LineLocation>> navigatorLocations = [];
     private readonly MetadataProvider metaProvider = new();
     private readonly EndpointResolver resolver;
     private readonly IDocumentRegistry docs;
@@ -74,6 +74,17 @@ public class EndpointRegistry : IEndpointRegistry, IDocumentObserver, IMetadataO
         return navigatorLocations.TryGetValue(endpoint, out var locs) ? locs : ImmutableHashSet<LineLocation>.Empty;
     }
 
+    public IReadOnlySet<string> GetAllScriptNames () => scriptNames;
+
+    public IReadOnlySet<string> GetLabelsInScript (string scriptName)
+    {
+        var result = new HashSet<string>();
+        foreach (var (loc, label) in labels)
+            if (ToScriptName(loc.DocumentUri).Equals(scriptName, StringComparison.Ordinal))
+                result.Add(label);
+        return result;
+    }
+
     private void HandleLinesAdded (string uri, string name, IDocument doc, in LineRange range)
     {
         for (var i = range.Start; i <= range.End; i++)
@@ -114,7 +125,8 @@ public class EndpointRegistry : IEndpointRegistry, IDocumentObserver, IMetadataO
         void HandleLabelRemoved (int line)
         {
             var location = new LineLocation(uri, line);
-            var key = new QualifiedLabel(name, labels[location]);
+            var label = labels[location];
+            var key = new QualifiedLabel(name, label);
             var locations = GetOrAddLabelLocations(key);
             locations.Remove(location);
             if (locations.Count > 0) return;

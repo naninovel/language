@@ -5,7 +5,7 @@ namespace Naninovel.Language;
 public class DocumentFactory
 {
     private readonly ScriptParser parser;
-    private readonly ErrorCollector errors = new();
+    private readonly ErrorCollector errors = [];
     private readonly RangeMapper mapper = new();
 
     public DocumentFactory ()

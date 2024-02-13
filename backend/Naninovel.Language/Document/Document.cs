@@ -1,6 +1,6 @@
 namespace Naninovel.Language;
 
-public class Document(List<DocumentLine> lines) : IDocument
+public class Document (List<DocumentLine> lines) : IDocument
 {
     public int LineCount => Lines.Count;
     public List<DocumentLine> Lines { get; } = lines;

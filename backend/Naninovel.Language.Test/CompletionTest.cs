@@ -1,5 +1,6 @@
 using Moq;
 using Naninovel.Metadata;
+using Naninovel.Parsing;
 
 namespace Naninovel.Language.Test;
 
@@ -7,11 +8,12 @@ public class CompletionTest
 {
     private readonly Project meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();
+    private readonly Mock<IEndpointRegistry> endpoints = new();
     private readonly CompletionHandler handler;
 
     public CompletionTest ()
     {
-        handler = new(docs.Object);
+        handler = new(docs.Object, endpoints.Object);
     }
 
     [Fact]
@@ -106,51 +108,51 @@ public class CompletionTest
     [Fact]
     public void WhenOverInlinedCommandOpenCommandsAreReturned ()
     {
-        meta.Commands = [new Command { Id = "cmd" }];
+        meta.Commands = [new Metadata.Command { Id = "cmd" }];
         Assert.Equal("cmd", Complete("[", 1)[0].Label);
     }
 
     [Fact]
     public void WhenOverInlinedCommandIdContentCommandsAreReturned ()
     {
-        meta.Commands = [new Command { Id = "cmd" }];
+        meta.Commands = [new Metadata.Command { Id = "cmd" }];
         Assert.Equal("cmd", Complete("[x", 2)[0].Label);
     }
 
     [Fact]
     public void WhenOverCommandLineIdCommandsAreReturned ()
     {
-        meta.Commands = [new Command { Id = "cmd" }];
+        meta.Commands = [new Metadata.Command { Id = "cmd" }];
         Assert.Equal("cmd", Complete("@", 1)[0].Label);
     }
 
     [Fact]
     public void WhenOverCommandIdContentCommandsAreReturned ()
     {
-        meta.Commands = [new Command { Id = "cmd" }];
+        meta.Commands = [new Metadata.Command { Id = "cmd" }];
         Assert.Equal("cmd", Complete("@x", 2)[0].Label);
     }
 
     [Fact]
     public void CommandSummaryIsAssignedToDocumentation ()
     {
-        meta.Commands = [new Command { Id = "cmd", Summary = "foo" }];
+        meta.Commands = [new Metadata.Command { Id = "cmd", Summary = "foo" }];
         Assert.Equal("foo", Complete("[", 1)[0].Documentation?.Value);
     }
 
     [Fact]
     public void WhenOverCommandContentParametersAreReturned ()
     {
-        var param = new Parameter { Id = "foo" };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "foo" };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("foo", Complete("@cmd ", 5)[0].Label);
     }
 
     [Fact]
     public void WhenAfterCommandWithNamelessParameterValuesAreReturned ()
     {
-        var param = new Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("true", Complete("@cmd ", 5)[0].Label);
     }
 
@@ -163,7 +165,7 @@ public class CompletionTest
     [Fact]
     public void WhenParamMetaNotFoundItIsNotCompleted ()
     {
-        meta.Commands = [new Command { Id = "cmd" }];
+        meta.Commands = [new Metadata.Command { Id = "cmd" }];
         Assert.Empty(Complete("@cmd x", 6));
         Assert.Empty(Complete("@cmd x:y", 8));
     }
@@ -171,41 +173,41 @@ public class CompletionTest
     [Fact]
     public void WhenOverNamelessParameterValuesAreReturned ()
     {
-        var param = new Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("true", Complete("@cmd x", 6)[0].Label);
     }
 
     [Fact]
     public void WhenOverNamelessParameterWithTextIdValuesAreReturned ()
     {
-        var param = new Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("true", Complete("@cmd x|x|", 6)[0].Label);
     }
 
     [Fact]
     public void WhenOverParameterAssignmentValuesAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("true", Complete("@cmd id:", 8)[0].Label);
     }
 
     [Fact]
     public void ParameterSummaryIsAssignedToDocumentation ()
     {
-        var param = new Parameter { Id = "foo", Summary = "bar" };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "foo", Summary = "bar" };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("bar", Complete("@cmd ", 5)[0].Documentation?.Value);
     }
 
     [Fact]
     public void ParameterDefaultValueIsAssignedToDetails ()
     {
-        var foo = new Parameter { Id = "foo", DefaultValue = "foo default" };
-        var bar = new Parameter { Id = "bar" };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [foo, bar] }];
+        var foo = new Metadata.Parameter { Id = "foo", DefaultValue = "foo default" };
+        var bar = new Metadata.Parameter { Id = "bar" };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [foo, bar] }];
         Assert.Equal("Default value: foo default", Complete("@cmd ", 5)[0].Detail);
         Assert.Empty(Complete("@cmd ", 5)[1].Detail);
     }
@@ -213,32 +215,32 @@ public class CompletionTest
     [Fact]
     public void ParametersWithoutContextAreNotCompleted ()
     {
-        var param = new Parameter { Id = "x" };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "x" };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Empty(Complete("@cmd x:", 7));
     }
 
     [Fact]
     public void WhenOverParameterValueContentValuesAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("true", Complete("@cmd id:x", 9)[0].Label);
     }
 
     [Fact]
     public void WhenOverUnknownContextTypeResultIsEmpty ()
     {
-        var param = new Parameter { Id = "x", ValueContext = [new() { Type = (ValueContextType)255 }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "x", ValueContext = [new() { Type = (ValueContextType)255 }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Empty(Complete("@cmd x:", 7));
     }
 
     [Fact]
     public void WhenOverActorContextActorIdsAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueContext = [new() { Type = ValueContextType.Actor, SubType = "foo" }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "id", ValueContext = [new() { Type = ValueContextType.Actor, SubType = "foo" }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Actors = [new Actor { Id = "1", Type = "foo" }];
         Assert.Equal("1", Complete("@cmd id:x", 9)[0].Label);
     }
@@ -246,8 +248,8 @@ public class CompletionTest
     [Fact]
     public void WhenOverActorContextWithoutSubtypeEmptyIsReturned ()
     {
-        var param = new Parameter { Id = "id", ValueContext = [new() { Type = ValueContextType.Actor }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "id", ValueContext = [new() { Type = ValueContextType.Actor }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Actors = [new Actor { Id = "1", Type = "foo" }];
         Assert.Empty(Complete("@cmd id:x", 9));
     }
@@ -255,8 +257,8 @@ public class CompletionTest
     [Fact]
     public void WhenWildcardSpecifiedForActorTypeAllActorsAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueContext = [new() { Type = ValueContextType.Actor, SubType = "*" }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "id", ValueContext = [new() { Type = ValueContextType.Actor, SubType = "*" }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Actors = [
             new Actor { Id = "1", Type = "foo" },
             new Actor { Id = "2", Type = "bar" }
@@ -268,9 +270,9 @@ public class CompletionTest
     [Fact]
     public void WhenOverAppearanceContextActorAppearancesAreReturned ()
     {
-        var idParam = new Parameter { Id = "id", ValueContext = [new() { Type = ValueContextType.Actor, SubType = "@" }] };
-        var apParam = new Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [idParam, apParam] }];
+        var idParam = new Metadata.Parameter { Id = "id", ValueContext = [new() { Type = ValueContextType.Actor, SubType = "@" }] };
+        var apParam = new Metadata.Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [idParam, apParam] }];
         meta.Actors = [new Actor { Id = "Ai", Type = "@", Appearances = ["Normal"] }];
         Assert.Equal("Normal", Complete("@cmd id:Ai ap:", 14)[0].Label);
     }
@@ -278,9 +280,9 @@ public class CompletionTest
     [Fact]
     public void WhenOverAppearanceContextButParameterWithActorContextIsMissingResultIsEmpty ()
     {
-        var idParam = new Parameter { Id = "id" };
-        var apParam = new Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [idParam, apParam] }];
+        var idParam = new Metadata.Parameter { Id = "id" };
+        var apParam = new Metadata.Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [idParam, apParam] }];
         meta.Actors = [new Actor { Id = "Ai", Type = "@", Appearances = ["Normal"] }];
         Assert.Empty(Complete("@cmd id:Ai ap:", 14));
     }
@@ -288,15 +290,15 @@ public class CompletionTest
     [Fact]
     public void WhenOverAppearanceContextButParameterWithActorContextIsNotFoundResultIsEmpty ()
     {
-        var apParam = new Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [apParam] }];
+        var apParam = new Metadata.Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [apParam] }];
         Assert.Empty(Complete("@cmd id:Ai ap:", 14));
     }
 
     [Fact]
     public void WhenOverNamedValueAppearanceContextActorAppearancesAreReturned ()
     {
-        var param = new Parameter {
+        var param = new Metadata.Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
             ValueContext = [
@@ -304,7 +306,7 @@ public class CompletionTest
                 new() { Type = ValueContextType.Appearance }
             ]
         };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Actors = [new Actor { Id = "Ai", Type = "@", Appearances = ["Normal"] }];
         Assert.Equal("Normal", Complete("@cmd Ai.", 8)[0].Label);
     }
@@ -312,7 +314,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverNamedNameAppearanceContextActorAppearancesAreReturned ()
     {
-        var param = new Parameter {
+        var param = new Metadata.Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
             ValueContext = [
@@ -320,7 +322,7 @@ public class CompletionTest
                 new() { Type = ValueContextType.Actor, SubType = "@" }
             ]
         };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Actors = [new Actor { Id = "Ai", Type = "@", Appearances = ["Normal"] }];
         Assert.Equal("Normal", Complete("@cmd .Ai", 5)[0].Label);
     }
@@ -328,13 +330,13 @@ public class CompletionTest
     [Fact]
     public void WhenOverAppearanceContextAndActorIsSpecifiedInNamedParameterAppearancesAreReturned ()
     {
-        var apParam = new Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
-        var idParam = new Parameter {
+        var apParam = new Metadata.Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
+        var idParam = new Metadata.Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
             ValueContext = [new() { Type = ValueContextType.Actor, SubType = "@" }]
         };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [apParam, idParam] }];
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [apParam, idParam] }];
         meta.Actors = [new Actor { Id = "Ai", Type = "@", Appearances = ["Normal"] }];
         Assert.Equal("Normal", Complete("@cmd Ai ap:", 11)[0].Label);
     }
@@ -342,13 +344,13 @@ public class CompletionTest
     [Fact]
     public void WhenOverAppearanceContextButActorIdIsNotSpecifiedResultIsEmpty ()
     {
-        var apParam = new Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
-        var idParam = new Parameter {
+        var apParam = new Metadata.Parameter { Id = "ap", ValueContext = [new() { Type = ValueContextType.Appearance }] };
+        var idParam = new Metadata.Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
             ValueContext = [null, new() { Type = ValueContextType.Actor, SubType = "@" }]
         };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [apParam, idParam] }];
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [apParam, idParam] }];
         meta.Actors = [new Actor { Id = "Ai", Type = "@", Appearances = ["Normal"] }];
         Assert.Empty(Complete("@cmd x ap:", 10));
     }
@@ -356,12 +358,12 @@ public class CompletionTest
     [Fact]
     public void WhenActorIdIsNotSpecifiedButHasDefaultValueAppearancesAreReturned ()
     {
-        var param = new Parameter {
+        var param = new Metadata.Parameter {
             Id = "@", Nameless = true,
             ValueContainerType = ValueContainerType.Named,
             ValueContext = [new() { Type = ValueContextType.Appearance, SubType = "MainBackground" }]
         };
-        meta.Commands = [new Command { Id = "back", Parameters = [param] }];
+        meta.Commands = [new Metadata.Command { Id = "back", Parameters = [param] }];
         meta.Actors = [
             new Actor { Id = "Another", Appearances = ["Other"] },
             new Actor { Id = "MainBackground", Appearances = ["Snow"] }
@@ -372,8 +374,8 @@ public class CompletionTest
     [Fact]
     public void WhenOverBooleanContextTrueAndFalseAreReturned ()
     {
-        var param = new Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         var items = Complete("@cmd id:x", 9);
         Assert.Equal(2, items.Count);
         Assert.Equal("true", items[0].Label);
@@ -383,8 +385,8 @@ public class CompletionTest
     [Fact]
     public void WhenOverExpressionContextVariablesAndFunctionsAreReturned ()
     {
-        var param = new Parameter { Id = "ex", ValueContext = [new() { Type = ValueContextType.Expression }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "ex", ValueContext = [new() { Type = ValueContextType.Expression }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Variables = ["foo"];
         meta.Functions = ["bar"];
         var items = Complete("@cmd ex:", 8);
@@ -396,8 +398,8 @@ public class CompletionTest
     [Fact]
     public void WhenOverConstantContextConstantValuesAreReturned ()
     {
-        var param = new Parameter { Id = "ct", ValueContext = [new() { Type = ValueContextType.Constant, SubType = "foo" }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "ct", ValueContext = [new() { Type = ValueContextType.Constant, SubType = "foo" }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Constants = [new Constant { Name = "foo", Values = ["bar"] }];
         Assert.Equal("bar", Complete("@cmd ct:", 8)[0].Label);
     }
@@ -405,13 +407,13 @@ public class CompletionTest
     [Fact]
     public void ConstantExpressionInNamelessParamEvaluated ()
     {
-        var param = new Parameter {
+        var param = new Metadata.Parameter {
             Id = "Path",
             Nameless = true,
             ValueContainerType = ValueContainerType.Named,
             ValueContext = [null, new() { Type = ValueContextType.Constant, SubType = "Labels/{:Path[0]??$Script}+Test" }]
         };
-        meta.Commands = [new Command { Id = "Goto", Parameters = [param] }];
+        meta.Commands = [new Metadata.Command { Id = "Goto", Parameters = [param] }];
         meta.Constants = [
             new Constant { Name = "Labels/Script001", Values = ["foo"] },
             new Constant { Name = "Labels/Script002", Values = ["bar"] },
@@ -425,11 +427,11 @@ public class CompletionTest
     [Fact]
     public void ConstantExpressionInNamedParamEvaluated ()
     {
-        var summaryParam = new Parameter {
+        var summaryParam = new Metadata.Parameter {
             Id = "Summary",
             Nameless = true
         };
-        var gotoParam = new Parameter {
+        var gotoParam = new Metadata.Parameter {
             Id = "GotoPath",
             Alias = "goto",
             ValueContainerType = ValueContainerType.Named,
@@ -438,7 +440,7 @@ public class CompletionTest
                 new() { Type = ValueContextType.Constant, SubType = "Labels/{:GotoPath[0]??$Script}+Test" }
             ]
         };
-        meta.Commands = [new Command { Id = "AddChoice", Alias = "choice", Parameters = [summaryParam, gotoParam] }];
+        meta.Commands = [new Metadata.Command { Id = "AddChoice", Alias = "choice", Parameters = [summaryParam, gotoParam] }];
         meta.Resources = [
             new Resource { Path = "Script001", Type = "Scripts" },
             new Resource { Path = "Script002", Type = "Scripts" }
@@ -458,12 +460,12 @@ public class CompletionTest
     [Fact]
     public void CanResolveOtherParameterWhenEvaluatingExpression ()
     {
-        var foo = new Parameter {
+        var foo = new Metadata.Parameter {
             Id = "foo",
             ValueContext = [new() { Type = ValueContextType.Constant, SubType = "{:bar}" }]
         };
-        var bar = new Parameter { Id = "bar" };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [foo, bar] }];
+        var bar = new Metadata.Parameter { Id = "bar" };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [foo, bar] }];
         meta.Constants = [new Constant { Name = "Test", Values = ["test"] }];
         Assert.Equal("test", Complete("@cmd baz: foo: bar:Test", 14)[0].Label);
     }
@@ -471,24 +473,24 @@ public class CompletionTest
     [Fact]
     public void WhenUnknownParameterInConstantExpressionResultIsEmpty ()
     {
-        var param = new Parameter { Id = "foo", ValueContext = [new() { Type = ValueContextType.Constant, SubType = "{:bar}" }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "foo", ValueContext = [new() { Type = ValueContextType.Constant, SubType = "{:bar}" }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Empty(Complete("@cmd foo:", 9));
     }
 
     [Fact]
     public void WhenOverConstantContextWithoutSubtypeEmptyIsReturned ()
     {
-        var param = new Parameter { Id = "re", ValueContext = [new() { Type = ValueContextType.Constant }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "re", ValueContext = [new() { Type = ValueContextType.Constant }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Empty(Complete("@cmd re:", 8));
     }
 
     [Fact]
     public void WhenOverResourceContextResourcePathsAreReturned ()
     {
-        var param = new Parameter { Id = "re", ValueContext = [new() { Type = ValueContextType.Resource, SubType = "foo" }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "re", ValueContext = [new() { Type = ValueContextType.Resource, SubType = "foo" }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Resources = [new Resource { Type = "foo", Path = "nyan/pass" }];
         Assert.Equal("nyan/pass", Complete("@cmd re:", 8)[0].Label);
     }
@@ -496,8 +498,8 @@ public class CompletionTest
     [Fact]
     public void WhenOverResourceContextWithoutSubtypeEmptyIsReturned ()
     {
-        var param = new Parameter { Id = "re", ValueContext = [new() { Type = ValueContextType.Resource }] };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "re", ValueContext = [new() { Type = ValueContextType.Resource }] };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Resources = [new Resource { Type = "foo", Path = "nyan/pass" }];
         Assert.Empty(Complete("@cmd re:", 8));
     }
@@ -505,8 +507,8 @@ public class CompletionTest
     [Fact]
     public void WhenInsideCommandExpressionVariablesAndFunctionsAreReturned ()
     {
-        var param = new Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Variables = ["foo"];
         meta.Functions = ["bar"];
         var expected = new[] { "foo", "bar" };
@@ -518,8 +520,8 @@ public class CompletionTest
     [Fact]
     public void WhenOverCommandExpressionContextValuesAreReturned ()
     {
-        var param = new Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
-        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Variables = ["foo"];
         Assert.Equal("true", Complete("@cmd {x}", 8)[0].Label);
     }
@@ -545,10 +547,65 @@ public class CompletionTest
     [Fact]
     public void IdAndAliasAreNotCaseSensitive ()
     {
-        var param = new Parameter { Id = "Identifier", Alias = "id", ValueType = Metadata.ValueType.Boolean };
-        meta.Commands = [new Command { Id = "Command", Alias = "cmd", Parameters = [param] }];
+        var param = new Metadata.Parameter { Id = "Identifier", Alias = "id", ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "Command", Alias = "cmd", Parameters = [param] }];
         Assert.Equal("true", Complete("@CMD ID:", 8)[0].Label);
         Assert.Equal("true", Complete("@command identifier:", 20)[0].Label);
+    }
+
+    [Fact]
+    public void WhenNoEndpointsCompletesEmpty ()
+    {
+        meta.SetupCommandWithEndpoint("goto");
+        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string>());
+        Assert.Empty(Complete("@goto ", 6));
+    }
+
+    [Fact]
+    public void CanCompleteScriptEndpoint ()
+    {
+        meta.SetupCommandWithEndpoint("goto");
+        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string> { "ScriptA", "ScriptB" });
+        Assert.Equal("ScriptA", Complete("@goto ", 6)[0].Label);
+        Assert.Equal("ScriptB", Complete("@goto ", 6)[1].Label);
+    }
+
+    [Fact]
+    public void WhenNoLabelsInScriptCompletesEmptyForLabel ()
+    {
+        meta.SetupCommandWithEndpoint("goto");
+        endpoints.Setup(e => e.GetLabelsInScript("ScriptA")).Returns(new HashSet<string>());
+        Assert.Empty(Complete("@goto ScriptA.", 14));
+    }
+
+    [Fact]
+    public void CanCompleteLabelEndpoints ()
+    {
+        meta.SetupCommandWithEndpoint("goto");
+        endpoints.Setup(e => e.GetLabelsInScript("ScriptA")).Returns(new HashSet<string> { "LabelA", "LabelB" });
+        Assert.Equal("LabelA", Complete("@goto ScriptA.", 14)[0].Label);
+        Assert.Equal("LabelB", Complete("@goto ScriptA.", 14)[1].Label);
+    }
+
+    [Fact]
+    public void CanCompleteLabelEndpointsForCurrentScript ()
+    {
+        meta.SetupCommandWithEndpoint("goto");
+        endpoints.Setup(e => e.GetLabelsInScript("ScriptA")).Returns(new HashSet<string> { "LabelA", "LabelB" });
+        Assert.Equal("LabelA", Complete("@goto .", 7, "ScriptA.nani")[0].Label);
+        Assert.Equal("LabelB", Complete("@goto .", 7, "ScriptA.nani")[1].Label);
+    }
+
+    [Fact]
+    public void DoesntCompleteWhenFailedToResolveNamelessRange ()
+    {
+        var foo = new Metadata.Parameter { Id = "foo", ValueType = Metadata.ValueType.Boolean, Nameless = true };
+        var bar = new Metadata.Parameter { Id = "bar" };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [foo, bar] }];
+        handler.HandleMetadataChanged(meta);
+        var mapper = new Mock<RangeMapper>();
+        docs.Setup(d => d.Get("@")).Returns(new Document([new DocumentLine("@cmd ", new CommandLine(new("cmd")), [], mapper.Object)]));
+        Assert.Equal("foo", handler.Complete("@", new Position(0, 5))[0].Label);
     }
 
     private IReadOnlyList<CompletionItem> Complete (string line, int charOffset, string uri = "@")

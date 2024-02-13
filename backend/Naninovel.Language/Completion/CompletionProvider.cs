@@ -4,14 +4,14 @@ namespace Naninovel.Language;
 
 internal class CompletionProvider
 {
-    private readonly CompletionItem[] booleans = { CreateBoolean("true"), CreateBoolean("false") };
-    private CompletionItem[] commands = Array.Empty<CompletionItem>();
-    private CompletionItem[] expressions = Array.Empty<CompletionItem>();
-    private Dictionary<string, CompletionItem[]> actorsByType = new();
-    private Dictionary<string, CompletionItem[]> appearancesByActorId = new();
-    private Dictionary<string, CompletionItem[]> parametersByCommandId = new();
-    private Dictionary<string, CompletionItem[]> constantsByName = new();
-    private Dictionary<string, CompletionItem[]> resourcesByType = new();
+    private readonly CompletionItem[] booleans = [CreateBoolean("true"), CreateBoolean("false")];
+    private CompletionItem[] commands = [];
+    private CompletionItem[] expressions = [];
+    private Dictionary<string, CompletionItem[]> actorsByType = [];
+    private Dictionary<string, CompletionItem[]> appearancesByActorId = [];
+    private Dictionary<string, CompletionItem[]> parametersByCommandId = [];
+    private Dictionary<string, CompletionItem[]> constantsByName = [];
+    private Dictionary<string, CompletionItem[]> resourcesByType = [];
 
     public void Update (MetadataProvider meta)
     {
@@ -34,6 +34,11 @@ internal class CompletionProvider
     public CompletionItem[] GetConstants (string name) => GetOrEmpty(constantsByName, name);
     public CompletionItem[] GetResources (string type) => GetOrEmpty(resourcesByType, type);
 
+    public CompletionItem[] GetScriptEndpoints (IEnumerable<string> scriptNames) =>
+        scriptNames.Select(CreateEndpointScript).ToArray();
+    public CompletionItem[] GetLabelEndpoints (IEnumerable<string> labels) =>
+        labels.Select(CreateEndpointLabel).ToArray();
+
     private static Dictionary<string, CompletionItem[]> Map<T> (IEnumerable<T> items,
         Func<T, string> getKey, Func<T, CompletionItem> getItem)
     {
@@ -55,14 +60,14 @@ internal class CompletionProvider
     private static CompletionItem CreateBoolean (string value) => new() {
         Label = value,
         Kind = CompletionItemKind.EnumMember,
-        CommitCharacters = new[] { " " }
+        CommitCharacters = [" "]
     };
 
     private static CompletionItem CreateCommand (Command command) => new() {
         Label = command.Label,
         Kind = CompletionItemKind.Function,
         Documentation = new MarkupContent(command.Summary ?? ""),
-        CommitCharacters = new[] { " " }
+        CommitCharacters = [" "]
     };
 
     private static CompletionItem CreateParameter (Parameter param) => new() {
@@ -70,44 +75,56 @@ internal class CompletionProvider
         Kind = CompletionItemKind.Field,
         Detail = string.IsNullOrEmpty(param.DefaultValue) ? "" : $"Default value: {param.DefaultValue}",
         Documentation = new MarkupContent(param.Summary ?? ""),
-        CommitCharacters = new[] { ":" }
+        CommitCharacters = [":"]
     };
 
     private static CompletionItem CreateActor (Actor actor) => new() {
         Label = actor.Id,
         Kind = CompletionItemKind.Value,
-        CommitCharacters = new[] { " ", ".", ",", ":" },
+        CommitCharacters = [" ", ".", ",", ":"],
         Detail = actor.Description
     };
 
     private static CompletionItem CreateAppearance (string appearance) => new() {
         Label = appearance,
         Kind = CompletionItemKind.Value,
-        CommitCharacters = new[] { " ", ".", ",", ":" }
+        CommitCharacters = [" ", ".", ",", ":"]
     };
 
     private static CompletionItem CreateResource (Resource resource) => new() {
         Label = resource.Path,
         Kind = CompletionItemKind.Value,
-        CommitCharacters = new[] { " ", ".", "," }
+        CommitCharacters = [" ", ".", ","]
     };
 
     private static CompletionItem CreateConstant (string name) => new() {
         Label = name,
         Kind = CompletionItemKind.EnumMember,
-        CommitCharacters = new[] { " " }
+        CommitCharacters = [" "]
     };
 
     private static CompletionItem CreateVariable (string var) => new() {
         Label = var,
         Kind = CompletionItemKind.Variable,
-        CommitCharacters = new[] { " " }
+        CommitCharacters = [" "]
     };
 
     private static CompletionItem CreateFunction (string func) => new() {
         Label = func,
         Kind = CompletionItemKind.Method,
-        CommitCharacters = new[] { " " },
+        CommitCharacters = [" "],
         InsertText = func + "()"
+    };
+
+    private static CompletionItem CreateEndpointScript (string scriptName) => new() {
+        Label = scriptName,
+        Kind = CompletionItemKind.EnumMember,
+        CommitCharacters = [" ", "."]
+    };
+
+    private static CompletionItem CreateEndpointLabel (string label) => new() {
+        Label = label,
+        Kind = CompletionItemKind.EnumMember,
+        CommitCharacters = [" "]
     };
 }

@@ -17,10 +17,10 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     private DocumentLine line;
     private string scriptName = string.Empty;
 
-    public CompletionHandler (IDocumentRegistry docs)
+    public CompletionHandler (IDocumentRegistry docs, IEndpointRegistry endpoints)
     {
         this.docs = docs;
-        commandHandler = new CommandCompletionHandler(metaProvider, provider);
+        commandHandler = new CommandCompletionHandler(metaProvider, provider, endpoints);
     }
 
     public void HandleMetadataChanged (Project meta)

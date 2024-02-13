@@ -5,7 +5,7 @@ namespace Naninovel.Language;
 
 public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumentObserver, IMetadataObserver
 {
-    private readonly List<IDiagnoser> diagnosers = new();
+    private readonly List<IDiagnoser> diagnosers = [];
     private readonly DiagnosticRegistry registry = new();
     private readonly MetadataProvider metaProvider = new();
     private readonly IDocumentRegistry docs;

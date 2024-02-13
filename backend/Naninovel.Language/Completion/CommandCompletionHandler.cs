@@ -3,121 +3,120 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class CommandCompletionHandler(MetadataProvider meta, CompletionProvider provider)
+internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvider provider, IEndpointRegistry endpoints)
 {
+    private readonly record struct CommandContext (Parsing.Command Model, Metadata.Command Meta);
+    private readonly record struct ParameterContext (Parsing.Parameter Model, Metadata.Parameter Meta);
+
     private int cursor => position.Character;
-    private char charBehindCursor => line.GetCharBehindCursor(position);
-    private Parsing.Command command = null!;
+    private char charBehindCursor;
     private Position position;
     private DocumentLine line;
+    private CommandContext command;
+    private ParameterContext param;
     private string scriptName = string.Empty;
 
     public CompletionItem[] Handle (Parsing.Command command, in Position position, in DocumentLine line, string scriptName)
     {
-        ResetState(command, position, line, scriptName);
-        if (ShouldCompleteCommandId())
-            return provider.GetCommands();
-        if (meta.FindCommand(command.Identifier) is not { } commandMeta)
-            return Array.Empty<CompletionItem>();
-        if (ShouldCompleteNamelessValue(commandMeta))
-            return GetNamelessValues(commandMeta);
-        if (ShouldCompleteNamedValue())
-            return GetNamedValues(commandMeta);
-        return provider.GetParameters(commandMeta.Id);
+        ResetState(position, line, scriptName);
+        if (ShouldCompleteCommandId(command)) return provider.GetCommands();
+        if (!TryResolveCommandContext(command, out this.command)) return [];
+        if (!TryResolveParameterContext(out param)) return provider.GetParameters(this.command.Meta.Id);
+        return GetParameterValues();
     }
 
-    private void ResetState (Parsing.Command command, in Position position, in DocumentLine line, string scriptName)
+    private void ResetState (in Position position, in DocumentLine line, string scriptName)
     {
         this.line = line;
-        this.command = command;
         this.position = position;
         this.scriptName = scriptName;
+        charBehindCursor = line.GetCharBehindCursor(position);
     }
 
     private bool IsCursorOver (ILineComponent content) => line.IsCursorOver(content, position);
 
-    private bool ShouldCompleteCommandId ()
+    private bool ShouldCompleteCommandId (Parsing.Command command)
     {
         return IsCursorOver(command.Identifier) ||
                charBehindCursor == Identifiers.CommandLine[0] ||
                charBehindCursor == Identifiers.InlinedOpen[0];
     }
 
-    private bool ShouldCompleteNamelessValue (Metadata.Command commandMeta)
+    private bool TryResolveCommandContext (Parsing.Command model, out CommandContext ctx)
     {
-        return command.Parameters.Any(p => p.Nameless && IsCursorOver(p)) ||
-               commandMeta.Parameters.Any(p => p.Nameless) &&
-               line.TryResolve(command.Identifier, out var idRange) &&
-               cursor == idRange.End + 2;
+        ctx = default;
+        if (meta.FindCommand(model.Identifier) is not { } commandMeta) return false;
+        ctx = new(model, commandMeta);
+        return true;
     }
 
-    private bool ShouldCompleteNamedValue ()
+    private bool TryResolveParameterContext (out ParameterContext ctx)
     {
-        return command.Parameters.Any(p => IsCursorOver(p.Value)) ||
-               charBehindCursor == Identifiers.ParameterAssign[0];
+        ctx = default;
+        if (command.Model.Parameters.FirstOrDefault(IsCursorOver) is not { } paramModel)
+            if (!ShouldCompleteNameless()) return false;
+            else paramModel = new Parsing.Parameter(new MixedValue([]));
+        if (meta.FindParameter(command.Meta.Id, paramModel.Identifier) is not { } paramMeta) return false;
+        ctx = new ParameterContext(paramModel, paramMeta);
+        return true;
     }
 
-    private CompletionItem[] GetNamelessValues (Metadata.Command commandMeta)
+    private bool ShouldCompleteNameless ()
     {
-        var paramMeta = commandMeta.Parameters.FirstOrDefault(p => p.Nameless);
-        if (paramMeta is null) return Array.Empty<CompletionItem>();
-        return GetParameterValues(commandMeta, paramMeta);
+        if (!command.Meta.Parameters.Any(p => p.Nameless)) return false;
+        if (!line.TryResolve(command.Model.Identifier, out var idRange)) return false;
+        return cursor == idRange.End + 2;
     }
 
-    private CompletionItem[] GetNamedValues (Metadata.Command commandMeta)
-    {
-        var param = command.Parameters.First(IsCursorOver);
-        var paramMeta = meta.FindParameter(commandMeta.Id, param.Identifier);
-        if (paramMeta is null) return Array.Empty<CompletionItem>();
-        return GetParameterValues(commandMeta, paramMeta);
-    }
-
-    private CompletionItem[] GetParameterValues (Metadata.Command commandMeta, Metadata.Parameter paramMeta)
+    private CompletionItem[] GetParameterValues ()
     {
         if (ShouldCompleteExpressions())
             return provider.GetExpressions();
-        if (paramMeta.ValueType == Metadata.ValueType.Boolean)
+        if (param.Meta.ValueType == Metadata.ValueType.Boolean)
             return provider.GetBooleans();
-        if (FindValueContext(paramMeta) is { } context)
-            return GetContextValues(context, commandMeta);
-        return Array.Empty<CompletionItem>();
+        if (FindValueContext() is { } context)
+            return GetContextValues(context);
+        return [];
     }
 
     private bool ShouldCompleteExpressions ()
     {
-        return command.Parameters.Any(p => p.Value.OfType<Expression>().Any(IsCursorOver)) &&
+        return param.Model.Value.OfType<Expression>().Any(IsCursorOver) &&
                charBehindCursor != Identifiers.ExpressionClose[0];
     }
 
-    private ValueContext? FindValueContext (Metadata.Parameter paramMeta)
+    private ValueContext? FindValueContext ()
     {
-        if (paramMeta.ValueContext is null) return null;
-        var value = command.Parameters.FirstOrDefault(IsCursorOver)?.Value;
-        if (value is null || paramMeta.ValueContainerType != ValueContainerType.Named)
-            return paramMeta.ValueContext.ElementAtOrDefault(0);
-        var lastDotIndex = line.GetLineRange(value).Start + line.Extract(value).LastIndexOf('.');
-        if (lastDotIndex == -1 || cursor <= lastDotIndex)
-            return paramMeta.ValueContext.ElementAtOrDefault(0);
-        return paramMeta.ValueContext.ElementAtOrDefault(1);
+        if (param.Meta.ValueContext is null) return null;
+        if (IsCursorOverNamed(out var overValue) && overValue)
+            return param.Meta.ValueContext.ElementAtOrDefault(1);
+        return param.Meta.ValueContext.ElementAtOrDefault(0);
     }
 
-    public CompletionItem[] GetContextValues (ValueContext context, Metadata.Command commandMeta)
+    private bool IsCursorOverNamed (out bool overNamedValue)
     {
-        return context.Type switch {
-            ValueContextType.Expression => provider.GetExpressions(),
-            ValueContextType.Constant => GetConstantValues(context, commandMeta),
-            ValueContextType.Resource => provider.GetResources(context.SubType ?? ""),
-            ValueContextType.Actor => provider.GetActors(context.SubType ?? ""),
-            ValueContextType.Appearance when FindActorId(commandMeta) is { } id => provider.GetAppearances(id),
-            ValueContextType.Appearance when !string.IsNullOrEmpty(context.SubType) => provider.GetAppearances(context.SubType),
-            _ => Array.Empty<CompletionItem>()
-        };
+        overNamedValue = false;
+        if (param.Model.Value.Count == 0 || param.Meta.ValueContainerType != ValueContainerType.Named) return false;
+        var lastDotIndex = line.GetLineRange(param.Model.Value).Start + line.Extract(param.Model.Value).LastIndexOf('.');
+        overNamedValue = lastDotIndex >= 0 && cursor > lastDotIndex;
+        return true;
     }
 
-    private string? FindActorId (Metadata.Command commandMeta)
+    private CompletionItem[] GetContextValues (ValueContext ctx) => ctx.Type switch {
+        ValueContextType.Expression => provider.GetExpressions(),
+        ValueContextType.Constant => GetConstantValues(ctx),
+        ValueContextType.Endpoint => GetEndpointValues(ctx),
+        ValueContextType.Resource => provider.GetResources(ctx.SubType ?? ""),
+        ValueContextType.Actor => provider.GetActors(ctx.SubType ?? ""),
+        ValueContextType.Appearance when FindActorId() is { } id => provider.GetAppearances(id),
+        ValueContextType.Appearance when !string.IsNullOrEmpty(ctx.SubType) => provider.GetAppearances(ctx.SubType),
+        _ => Array.Empty<CompletionItem>()
+    };
+
+    private string? FindActorId ()
     {
-        foreach (var param in command.Parameters)
-            if (meta.FindParameter(commandMeta.Id, param.Identifier) is not { } paramMeta) continue;
+        foreach (var param in command.Model.Parameters)
+            if (meta.FindParameter(command.Meta.Id, param.Identifier) is not { } paramMeta) continue;
             else if (paramMeta.ValueContext is null) continue;
             else if (paramMeta.ValueContext.ElementAtOrDefault(0)?.Type == ValueContextType.Actor)
                 return paramMeta.ValueContainerType == ValueContainerType.Named
@@ -138,17 +137,25 @@ internal class CommandCompletionHandler(MetadataProvider meta, CompletionProvide
         return string.IsNullOrEmpty(result) ? null : result;
     }
 
-    private CompletionItem[] GetConstantValues (ValueContext context, Metadata.Command commandMeta)
+    private CompletionItem[] GetConstantValues (ValueContext context)
     {
         var names = ConstantEvaluator.EvaluateNames(context.SubType ?? "", scriptName, GetParamValue);
         return names.SelectMany(provider.GetConstants).ToArray();
 
         string? GetParamValue (string id, int? index)
         {
-            foreach (var param in command.Parameters)
-                if (meta.FindParameter(commandMeta.Id, param.Identifier)?.Id == id)
+            foreach (var param in command.Model.Parameters)
+                if (meta.FindParameter(command.Meta.Id, param.Identifier)?.Id == id)
                     return index.HasValue ? GetNamedValue(param.Value, index == 0) : line.Extract(param.Value);
             return null;
         }
+    }
+
+    private CompletionItem[] GetEndpointValues (ValueContext context)
+    {
+        if (context.SubType == Constants.EndpointScript)
+            return provider.GetScriptEndpoints(endpoints.GetAllScriptNames());
+        var script = GetNamedValue(param.Model.Value, true) ?? scriptName;
+        return provider.GetLabelEndpoints(endpoints.GetLabelsInScript(script));
     }
 }
