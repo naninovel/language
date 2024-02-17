@@ -108,4 +108,25 @@ public class SemanticDiagnoserTest : DiagnoserTest
         Assert.NotEmpty(Diagnose("@foo"));
         Assert.Empty(Diagnose("@bar"));
     }
+
+    [Fact]
+    public void WarnsOnDynamicParametersPreventingPreload ()
+    {
+        var parameters = new Parameter[] {
+            new() { Id = "p1", ValueContext = [new ValueContext { Type = ValueContextType.Resource }] },
+            new() { Id = "p2", ValueContext = [new ValueContext { Type = ValueContextType.Actor }] },
+            new() { Id = "p3", ValueContext = [new ValueContext { Type = ValueContextType.Appearance }] },
+            new() { Id = "p4", ValueContext = [new ValueContext { Type = ValueContextType.Color }, null] },
+            new() { Id = "p5" }
+        };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
+        var diags = Diagnose("@c p1:{} p2:x{}x p3:\"x { x } x\" p4:{} p5:{}");
+        Assert.Equal(3, diags.Count);
+        Assert.Equal(new(new(new(0, 6), new(0, 8)), DiagnosticSeverity.Information,
+            "Expressions in this parameter prevent pre-loading associated resources."), diags[0]);
+        Assert.Equal(new(new(new(0, 12), new(0, 16)), DiagnosticSeverity.Information,
+            "Expressions in this parameter prevent pre-loading associated resources."), diags[1]);
+        Assert.Equal(new(new(new(0, 20), new(0, 31)), DiagnosticSeverity.Information,
+            "Expressions in this parameter prevent pre-loading associated resources."), diags[2]);
+    }
 }

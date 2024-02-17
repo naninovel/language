@@ -3,7 +3,7 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class SemanticDiagnoser(MetadataProvider meta, IDocumentRegistry docs,
+internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
     DiagnosticRegistry registry) : Diagnoser(docs, registry)
 {
     public override DiagnosticContext Context => DiagnosticContext.Semantic;
@@ -45,9 +45,14 @@ internal class SemanticDiagnoser(MetadataProvider meta, IDocumentRegistry docs,
     private void DiagnoseParameter (Parsing.Parameter param, Metadata.Command commandMeta)
     {
         var paramMeta = meta.FindParameter(commandMeta.Id, param.Identifier);
-        if (paramMeta is null) AddUnknownParameter(param, commandMeta);
-        else if (param.Value.Count == 0 || param.Value.Dynamic || param.Value[0] is not PlainText value) return;
-        else if (!validator.Validate(value, paramMeta.ValueContainerType, paramMeta.ValueType)) AddInvalidValue(value, paramMeta);
+        if (paramMeta is null)
+        {
+            AddUnknownParameter(param, commandMeta);
+            return;
+        }
+        if (IsPreventingPreload(param, paramMeta)) AddPreventingPreload(param.Value);
+        if (param.Value.Count == 0 || param.Value.Dynamic || param.Value[0] is not PlainText value) return;
+        if (!validator.Validate(value, paramMeta.ValueContainerType, paramMeta.ValueType)) AddInvalidValue(value, paramMeta);
     }
 
     private void AddUnknownCommand (Parsing.Command command)
@@ -77,12 +82,32 @@ internal class SemanticDiagnoser(MetadataProvider meta, IDocumentRegistry docs,
         AddError(range, $"Invalid value: '{value}' is not a {paramMeta.TypeLabel}.");
     }
 
+    private void AddPreventingPreload (MixedValue value)
+    {
+        var range = Line.GetRange(value, LineIndex);
+        AddInfo(range, "Expressions in this parameter prevent pre-loading associated resources.");
+    }
+
     private static bool IsParameterDefined (Metadata.Parameter paramMeta, Parsing.Command command)
     {
         foreach (var param in command.Parameters)
             if (param.Nameless && paramMeta.Nameless) return true;
             else if (string.Equals(param.Identifier, paramMeta.Id, StringComparison.OrdinalIgnoreCase)) return true;
             else if (string.Equals(param.Identifier, paramMeta.Alias, StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
+    }
+
+    private bool IsPreventingPreload (Parsing.Parameter model, Metadata.Parameter meta)
+    {
+        if (!model.Value.Dynamic || meta.ValueContext is null) return false;
+        foreach (var ctx in meta.ValueContext)
+            switch (ctx?.Type)
+            {
+                case ValueContextType.Resource:
+                case ValueContextType.Actor:
+                case ValueContextType.Appearance: return true;
+                default: continue;
+            }
         return false;
     }
 }

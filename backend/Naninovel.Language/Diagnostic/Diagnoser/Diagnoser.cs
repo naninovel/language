@@ -1,6 +1,6 @@
 ﻿namespace Naninovel.Language;
 
-internal abstract class Diagnoser(IDocumentRegistry docs, DiagnosticRegistry registry) : IDiagnoser
+internal abstract class Diagnoser (IDocumentRegistry docs, DiagnosticRegistry registry) : IDiagnoser
 {
     public abstract DiagnosticContext Context { get; }
 
@@ -22,6 +22,9 @@ internal abstract class Diagnoser(IDocumentRegistry docs, DiagnosticRegistry reg
 
     protected void AddWarning (in Range range, string message) =>
         AddDiagnostic(new(range, DiagnosticSeverity.Warning, message));
+
+    protected void AddInfo (in Range range, string message) =>
+        AddDiagnostic(new(range, DiagnosticSeverity.Information, message));
 
     protected void AddUnnecessary (in Range range, string message) =>
         AddDiagnostic(new(range, DiagnosticSeverity.Information, message, unnecessary));
