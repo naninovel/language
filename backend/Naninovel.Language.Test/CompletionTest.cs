@@ -26,7 +26,7 @@ public class CompletionTest
     [Fact]
     public void WhenEmptyLineCharacterIdsAreReturned ()
     {
-        meta.Actors = [new Actor { Id = "Ai", Type = "Characters" }];
+        meta.Actors = [new Actor { Id = "Ai", Type = Constants.CharacterType }];
         Assert.Equal("Ai", Complete("", 0)[0].Label);
     }
 
@@ -40,7 +40,7 @@ public class CompletionTest
     [Fact]
     public void WhenOverAuthorContentCharacterIdsAreReturned ()
     {
-        meta.Actors = [new Actor { Id = "Ai", Type = "Characters" }];
+        meta.Actors = [new Actor { Id = "Ai", Type = Constants.CharacterType }];
         Assert.Equal("Ai", Complete("Ai: Hello.", 1)[0].Label);
         Assert.Equal("Ai", Complete("Ai.Happy: Hey!", 2)[0].Label);
     }
@@ -50,7 +50,7 @@ public class CompletionTest
     {
         meta.Actors = [
             new Actor { Id = "Bubble", Type = "TextPrinters" },
-            new Actor { Id = "Kohaku", Type = "Characters" }
+            new Actor { Id = "Kohaku", Type = Constants.CharacterType }
         ];
         var items = Complete("", 0);
         Assert.Single(items);
@@ -66,42 +66,42 @@ public class CompletionTest
     [Fact]
     public void CharacterDescriptionIsAssignedToCompletionDetail ()
     {
-        meta.Actors = [new Actor { Type = "Characters", Description = "foo" }];
+        meta.Actors = [new Actor { Type = Constants.CharacterType, Description = "foo" }];
         Assert.Equal("foo", Complete("", 0)[0].Detail);
     }
 
     [Fact]
     public void AuthorCompletionHasValueKind ()
     {
-        meta.Actors = [new Actor { Type = "Characters" }];
+        meta.Actors = [new Actor { Type = Constants.CharacterType }];
         Assert.Equal(CompletionItemKind.Value, Complete("", 0)[0].Kind);
     }
 
     [Fact]
     public void WhenOverAppearanceContentAppearancesAreReturned ()
     {
-        meta.Actors = [new Actor { Id = "Ai", Appearances = ["Happy"], Type = "Characters" }];
+        meta.Actors = [new Actor { Id = "Ai", Appearances = ["Happy"], Type = Constants.CharacterType }];
         Assert.Equal("Happy", Complete("Ai.Happy: Hi!", 3)[0].Label);
     }
 
     [Fact]
     public void WhenAfterDotPrefixedByNonWhitespaceCharactersAppearancesAreReturned ()
     {
-        meta.Actors = [new Actor { Id = "Ai", Appearances = ["Happy"], Type = "Characters" }];
+        meta.Actors = [new Actor { Id = "Ai", Appearances = ["Happy"], Type = Constants.CharacterType }];
         Assert.Equal("Happy", Complete("Ai.", 3)[0].Label);
     }
 
     [Fact]
     public void WhenAfterDotPrefixedByTextWithWhitespaceResultIsEmpty ()
     {
-        meta.Actors = [new Actor { Id = "Ai", Appearances = ["Happy"], Type = "Characters" }];
+        meta.Actors = [new Actor { Id = "Ai", Appearances = ["Happy"], Type = Constants.CharacterType }];
         Assert.Empty(Complete("Ai .", 4));
     }
 
     [Fact]
     public void WhenNoAppearancesOnAppearanceCompletionResultIsEmpty ()
     {
-        meta.Actors = [new Actor { Id = "Ai", Type = "Characters" }];
+        meta.Actors = [new Actor { Id = "Ai", Type = Constants.CharacterType }];
         Assert.Empty(Complete("Ai.", 3));
     }
 
@@ -365,8 +365,8 @@ public class CompletionTest
         };
         meta.Commands = [new Metadata.Command { Id = "back", Parameters = [param] }];
         meta.Actors = [
-            new Actor { Id = "Another", Appearances = ["Other"] },
-            new Actor { Id = "MainBackground", Appearances = ["Snow"] }
+            new Actor { Id = "Another", Appearances = ["Other"], Type = Constants.BackgroundType },
+            new Actor { Id = "MainBackground", Appearances = ["Snow"], Type = Constants.BackgroundType }
         ];
         Assert.Equal("Snow", Complete("@back ", 6)[0].Label);
     }
