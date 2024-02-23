@@ -55,7 +55,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
         if (string.IsNullOrEmpty(line.Text) || IsCursorOver(genericLine.Prefix?.Author))
             return provider.GetActors(CharacterType);
         if (ShouldCompleteAuthorAppearance(genericLine, out var authorId))
-            return provider.GetAppearances(authorId);
+            return provider.GetAppearances(authorId, CharacterType);
         if (genericLine.Content.OfType<InlinedCommand>().FirstOrDefault(IsCursorOver) is { } inlined)
             return commandHandler.Handle(inlined.Command, position, line, scriptName);
         if (genericLine.Content.OfType<MixedValue>().FirstOrDefault(IsCursorOver) is { } text)

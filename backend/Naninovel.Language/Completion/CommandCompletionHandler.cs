@@ -108,22 +108,22 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
         ValueContextType.Endpoint => GetEndpointValues(ctx),
         ValueContextType.Resource => provider.GetResources(ctx.SubType ?? ""),
         ValueContextType.Actor => provider.GetActors(ctx.SubType ?? ""),
-        ValueContextType.Appearance when FindActorId() is { } id => provider.GetAppearances(id),
+        ValueContextType.Appearance when FindActor() is { } actor => provider.GetAppearances(actor.Id, actor.Type),
         ValueContextType.Appearance when !string.IsNullOrEmpty(ctx.SubType) => provider.GetAppearances(ctx.SubType),
         _ => Array.Empty<CompletionItem>()
     };
 
-    private string? FindActorId ()
+    private (string? Id, string? Type)? FindActor ()
     {
         foreach (var param in command.Model.Parameters)
             if (meta.FindParameter(command.Meta.Id, param.Identifier) is not { } paramMeta) continue;
             else if (paramMeta.ValueContext is null) continue;
             else if (paramMeta.ValueContext.ElementAtOrDefault(0)?.Type == ValueContextType.Actor)
                 return paramMeta.ValueContainerType == ValueContainerType.Named
-                    ? GetNamedValue(param.Value, true)
-                    : line.Extract(param.Value);
+                    ? (GetNamedValue(param.Value, true), paramMeta.ValueContext[0]!.SubType)
+                    : (line.Extract(param.Value), paramMeta.ValueContext[0]!.SubType);
             else if (paramMeta.ValueContext.ElementAtOrDefault(1)?.Type == ValueContextType.Actor)
-                return GetNamedValue(param.Value, false);
+                return (GetNamedValue(param.Value, false), paramMeta.ValueContext[1]!.SubType);
         return null;
     }
 

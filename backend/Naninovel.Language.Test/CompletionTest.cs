@@ -372,6 +372,37 @@ public class CompletionTest
     }
 
     [Fact]
+    public void DoesntMixAppearancesOfDifferentActorTypesWithSameId ()
+    {
+        var charParam = new Metadata.Parameter {
+            Id = "@", Nameless = true, ValueContainerType = ValueContainerType.Named,
+            ValueContext = [
+                new() { Type = ValueContextType.Actor, SubType = Constants.CharacterType },
+                new() { Type = ValueContextType.Appearance }
+            ]
+        };
+        var backParam = new Metadata.Parameter {
+            Id = "@", Nameless = true, ValueContainerType = ValueContainerType.Named,
+            ValueContext = [
+                new() { Type = ValueContextType.Actor, SubType = Constants.BackgroundType },
+                new() { Type = ValueContextType.Appearance }
+            ]
+        };
+        meta.Commands = [
+            new Metadata.Command { Id = "char", Parameters = [charParam] },
+            new Metadata.Command { Id = "back", Parameters = [backParam] }
+        ];
+        meta.Actors = [
+            new Actor { Id = "k", Appearances = ["Happy"], Type = Constants.CharacterType },
+            new Actor { Id = "k", Appearances = ["Snow"], Type = Constants.BackgroundType }
+        ];
+        Assert.Single(Complete("@char k.", 8));
+        Assert.Equal("Happy", Complete("@char k.", 8)[0].Label);
+        Assert.Single(Complete("@back k.", 6));
+        Assert.Equal("Snow", Complete("@back k.", 8)[0].Label);
+    }
+
+    [Fact]
     public void WhenOverBooleanContextTrueAndFalseAreReturned ()
     {
         var param = new Metadata.Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
