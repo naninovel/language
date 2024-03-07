@@ -37,8 +37,10 @@ internal class CompletionProvider
     public CompletionItem[] GetConstants (string name) => GetOrEmpty(constantsByName, name);
     public CompletionItem[] GetResources (string type) => GetOrEmpty(resourcesByType, type);
 
-    public CompletionItem[] GetScriptEndpoints (IEnumerable<string> scriptNames) =>
-        scriptNames.Select(CreateEndpointScript).ToArray();
+    public CompletionItem[] GetScriptEndpoints (IEnumerable<string> scriptNames, bool withEmpty) => withEmpty
+        ? scriptNames.Select(CreateEndpointScript).Prepend(CreateEndpointScript("")).ToArray()
+        : scriptNames.Select(CreateEndpointScript).ToArray();
+
     public CompletionItem[] GetLabelEndpoints (IEnumerable<string> labels) =>
         labels.Select(CreateEndpointLabel).ToArray();
 
@@ -120,9 +122,11 @@ internal class CompletionProvider
     };
 
     private static CompletionItem CreateEndpointScript (string scriptName) => new() {
-        Label = scriptName,
-        Kind = CompletionItemKind.EnumMember,
-        CommitCharacters = [" ", "."]
+        Label = scriptName == "" ? "(this)" : scriptName,
+        InsertText = scriptName == "" ? "." : scriptName,
+        Kind = scriptName == "" ? CompletionItemKind.Constant : CompletionItemKind.EnumMember,
+        Detail = scriptName == "" ? "Shortcut for current script." : null,
+        CommitCharacters = scriptName == "" ? [" "] : [" ", "."]
     };
 
     private static CompletionItem CreateEndpointLabel (string label) => new() {

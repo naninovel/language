@@ -154,7 +154,10 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
     private CompletionItem[] GetEndpointValues (ValueContext context)
     {
         if (context.SubType == Constants.EndpointScript)
-            return provider.GetScriptEndpoints(endpoints.GetAllScriptNames());
+        {
+            var labels = endpoints.GetLabelsInScript(scriptName);
+            return provider.GetScriptEndpoints(endpoints.GetAllScriptNames(), labels.Count > 0);
+        }
         var script = GetNamedValue(param.Model.Value, true) ?? scriptName;
         return provider.GetLabelEndpoints(endpoints.GetLabelsInScript(script));
     }
