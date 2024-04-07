@@ -96,8 +96,6 @@ public class SymbolHandler (IDocumentRegistry registry) : ISymbolHandler, IMetad
         symbols.Add(CreateForCommandIdentifier(command.Identifier));
         foreach (var parameter in command.Parameters)
             symbols.Add(CreateForCommandParameter(parameter));
-        if (command.WaitFlag is { } flag)
-            symbols.Add(CreateForWaitFlag(flag));
         return symbols;
     }
 
@@ -169,13 +167,6 @@ public class SymbolHandler (IDocumentRegistry registry) : ISymbolHandler, IMetad
         Range = line.GetRange(parameter, lineIndex),
         SelectionRange = line.GetRange(parameter, lineIndex),
         Children = CreateParameterChildren(parameter)
-    };
-
-    private Symbol CreateForWaitFlag (WaitFlag flag) => new() {
-        Name = "WaitFlag",
-        Kind = (int)SymbolKind.Key,
-        Range = line.GetRange(flag, lineIndex),
-        SelectionRange = line.GetRange(flag, lineIndex)
     };
 
     private IReadOnlyList<Symbol> CreateParameterChildren (Parsing.Parameter parameter)

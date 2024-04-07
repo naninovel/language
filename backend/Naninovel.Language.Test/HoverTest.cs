@@ -91,15 +91,6 @@ public class HoverTest
     }
 
     [Fact]
-    public void WhenOverWaitFlagContainsHint ()
-    {
-        Assert.Contains("Next command will play without waiting for this command to finish.",
-            Hover("@c >", 3).Contents.Value);
-        Assert.Contains("Next command won't play until this command finished executing.",
-            Hover("[c <]", 3).Contents.Value);
-    }
-
-    [Fact]
     public void CommandSummaryHasCorrectMarkup ()
     {
         meta.Commands = [new Command { Id = "c", Summary = "foo" }];

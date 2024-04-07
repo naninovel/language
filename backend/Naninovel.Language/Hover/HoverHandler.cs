@@ -43,8 +43,6 @@ public class HoverHandler (IDocumentRegistry registry) : IHoverHandler, IMetadat
 
     private Hover? HoverCommand (Parsing.Command command)
     {
-        if (command.WaitFlag is { } flag && IsCursorOver(flag))
-            return HoverFlag(flag);
         var commandMeta = metaProvider.FindCommand(command.Identifier);
         if (commandMeta is null) return null;
         if (IsCursorOver(command.Identifier))
@@ -75,14 +73,6 @@ public class HoverHandler (IDocumentRegistry registry) : IHoverHandler, IMetadat
         if (paramMeta is null || string.IsNullOrEmpty(paramMeta.Summary)) return null;
         var range = line.GetRange(param, position.Line);
         return new Hover(paramMeta.Summary, range);
-    }
-
-    private Hover HoverFlag (WaitFlag flag)
-    {
-        const string dontWait = "Next command will play without waiting for this command to finish.";
-        const string doWait = "Next command won't play until this command finished executing.";
-        var range = line.GetRange(flag, position.Line);
-        return new Hover(flag.Wait ? doWait : dontWait, range);
     }
 
     private void AppendParameters (Metadata.Parameter[] parameters)

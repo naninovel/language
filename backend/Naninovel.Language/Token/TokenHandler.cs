@@ -93,8 +93,6 @@ public class TokenHandler (IDocumentRegistry registry) : ITokenHandler
         AppendContent(command.Identifier, TokenType.CommandIdentifier);
         foreach (var parameter in command.Parameters)
             AppendParameter(parameter);
-        if (command.WaitFlag is { } flag)
-            AppendWaitFlag(flag);
     }
 
     private void AppendParameter (Parameter parameter)
@@ -113,11 +111,6 @@ public class TokenHandler (IDocumentRegistry registry) : ITokenHandler
     private void AppendTextIdentifier (TextIdentifier textIdentifier)
     {
         AppendContent(textIdentifier, TokenType.TextIdentifier);
-    }
-
-    private void AppendWaitFlag (WaitFlag flag)
-    {
-        AppendContent(flag, TokenType.WaitFlag);
     }
 
     private void AppendGenericPrefix (GenericPrefix prefix)

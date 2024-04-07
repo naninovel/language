@@ -80,29 +80,32 @@ public class SymbolTest
     [Fact]
     public void CommandLineSymbolsAraValid ()
     {
-        var symbol = GetSymbol("@cmd nameless param:{exp}x|#id| >");
+        var symbol = GetSymbol("@cmd nameless param:{exp}x|#id| p! !p");
         Assert.Equal("CommandLine", symbol.Name);
         Assert.Equal((int)SymbolKind.Struct, symbol.Kind);
-        Assert.Equal(new Range(new(0, 0), new(0, 33)), symbol.Range);
+        Assert.Equal(new Range(new(0, 0), new(0, 37)), symbol.Range);
+
         Assert.Single(symbol.Children);
         Assert.Equal("Command", symbol.Children[0].Name);
         Assert.Equal((int)SymbolKind.Function, symbol.Children[0].Kind);
-        Assert.Equal(new Range(new(0, 1), new(0, 33)), symbol.Children[0].Range);
-        Assert.Equal(4, symbol.Children[0].Children!.Count);
+        Assert.Equal(new Range(new(0, 1), new(0, 37)), symbol.Children[0].Range);
+        Assert.Equal(5, symbol.Children[0].Children!.Count);
         Assert.Equal("CommandIdentifier", symbol.Children[0].Children[0].Name);
         Assert.Equal((int)SymbolKind.Key, symbol.Children[0].Children[0].Kind);
         Assert.Equal(new Range(new(0, 1), new(0, 4)), symbol.Children[0].Children[0].Range);
+
         Assert.Equal("Parameter", symbol.Children[0].Children[1].Name);
         Assert.Equal((int)SymbolKind.Field, symbol.Children[0].Children[1].Kind);
         Assert.Equal(new Range(new(0, 5), new(0, 13)), symbol.Children[0].Children[1].Range);
-        Assert.Equal("Parameter", symbol.Children[0].Children[2].Name);
-        Assert.Equal((int)SymbolKind.Field, symbol.Children[0].Children[2].Kind);
-        Assert.Equal(new Range(new(0, 14), new(0, 31)), symbol.Children[0].Children[2].Range);
         Assert.Single(symbol.Children[0].Children[1].Children);
         Assert.Equal("ParameterValue", symbol.Children[0].Children[1].Children[0].Name);
         Assert.Equal((int)SymbolKind.String, symbol.Children[0].Children[1].Children[0].Kind);
         Assert.Equal(new Range(new(0, 5), new(0, 13)), symbol.Children[0].Children[1].Children[0].Range);
+
         Assert.Equal(2, symbol.Children[0].Children[2].Children!.Count);
+        Assert.Equal("Parameter", symbol.Children[0].Children[2].Name);
+        Assert.Equal((int)SymbolKind.Field, symbol.Children[0].Children[2].Kind);
+        Assert.Equal(new Range(new(0, 14), new(0, 31)), symbol.Children[0].Children[2].Range);
         Assert.Equal("ParameterIdentifier", symbol.Children[0].Children[2].Children[0].Name);
         Assert.Equal((int)SymbolKind.Key, symbol.Children[0].Children[2].Children[0].Kind);
         Assert.Equal(new Range(new(0, 14), new(0, 19)), symbol.Children[0].Children[2].Children[0].Range);
@@ -116,9 +119,28 @@ public class SymbolTest
         Assert.Equal("TextIdentifier", symbol.Children[0].Children[2].Children[1].Children[1].Name);
         Assert.Equal((int)SymbolKind.String, symbol.Children[0].Children[2].Children[1].Children[1].Kind);
         Assert.Equal(new Range(new(0, 26), new(0, 31)), symbol.Children[0].Children[2].Children[1].Children[1].Range);
-        Assert.Equal("WaitFlag", symbol.Children[0].Children[3].Name);
-        Assert.Equal((int)SymbolKind.Key, symbol.Children[0].Children[3].Kind);
-        Assert.Equal(new Range(new(0, 31), new(0, 33)), symbol.Children[0].Children[3].Range);
+
+        Assert.Equal(2, symbol.Children[0].Children[3].Children!.Count);
+        Assert.Equal("Parameter", symbol.Children[0].Children[3].Name);
+        Assert.Equal((int)SymbolKind.Field, symbol.Children[0].Children[3].Kind);
+        Assert.Equal(new Range(new(0, 32), new(0, 34)), symbol.Children[0].Children[3].Range);
+        Assert.Equal("ParameterIdentifier", symbol.Children[0].Children[3].Children[0].Name);
+        Assert.Equal((int)SymbolKind.Key, symbol.Children[0].Children[3].Children[0].Kind);
+        Assert.Equal(new Range(new(0, 32), new(0, 33)), symbol.Children[0].Children[3].Children[0].Range);
+        Assert.Equal("ParameterValue", symbol.Children[0].Children[3].Children[1].Name);
+        Assert.Equal((int)SymbolKind.String, symbol.Children[0].Children[3].Children[1].Kind);
+        Assert.Equal(new Range(new(0, 33), new(0, 34)), symbol.Children[0].Children[3].Children[1].Range);
+
+        Assert.Equal(2, symbol.Children[0].Children[4].Children!.Count);
+        Assert.Equal("Parameter", symbol.Children[0].Children[4].Name);
+        Assert.Equal((int)SymbolKind.Field, symbol.Children[0].Children[4].Kind);
+        Assert.Equal(new Range(new(0, 35), new(0, 37)), symbol.Children[0].Children[4].Range);
+        Assert.Equal("ParameterIdentifier", symbol.Children[0].Children[4].Children[0].Name);
+        Assert.Equal((int)SymbolKind.Key, symbol.Children[0].Children[4].Children[0].Kind);
+        Assert.Equal(new Range(new(0, 36), new(0, 37)), symbol.Children[0].Children[4].Children[0].Range);
+        Assert.Equal("ParameterValue", symbol.Children[0].Children[4].Children[1].Name);
+        Assert.Equal((int)SymbolKind.String, symbol.Children[0].Children[4].Children[1].Kind);
+        Assert.Equal(new Range(new(0, 35), new(0, 36)), symbol.Children[0].Children[4].Children[1].Range);
     }
 
     [Fact]
