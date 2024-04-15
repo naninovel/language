@@ -32,8 +32,8 @@ public abstract class DiagnoserTest
         Assert.Empty(Diagnose(""));
     }
 
-    [Fact]
-    public void WhenChangingDocumentDiagnosesOnlyChangedLines ()
+    [Fact] // Always start from beginning (not from range.Start) to handle nested.
+    public void WhenChangingDocumentDiagnosesOnlyUpToLastChangedLine ()
     {
         var doc = new Mock<IDocument>();
         doc.Setup(d => d.LineCount).Returns(4);
@@ -44,7 +44,7 @@ public abstract class DiagnoserTest
         Handler.HandleDocumentAdded("foo.nani");
         doc.Invocations.Clear();
         Handler.HandleDocumentChanged("foo.nani", new Range(new(1, 0), new(2, 0)));
-        doc.VerifyGet(l => l[0], Times.Never);
+        doc.VerifyGet(l => l[0], Times.Once);
         doc.VerifyGet(l => l[1], Times.Once);
         doc.VerifyGet(l => l[2], Times.Once);
         doc.VerifyGet(l => l[3], Times.Never);

@@ -40,8 +40,9 @@ internal abstract class Diagnoser (IDocumentRegistry docs, DiagnosticRegistry re
     protected void Diagnose (string uri, in LineRange range)
     {
         Uri = uri;
-        for (LineIndex = range.Start; LineIndex <= range.End; LineIndex++)
-            DiagnoseLine(Line = Docs.Get(uri)[LineIndex]);
+        var doc = Docs.Get(uri);
+        for (LineIndex = 0; LineIndex <= range.End; LineIndex++)
+            DiagnoseLine(Line = doc[LineIndex]);
     }
 
     protected void Diagnose (in LineLocation location)
@@ -58,7 +59,7 @@ internal abstract class Diagnoser (IDocumentRegistry docs, DiagnosticRegistry re
 
     protected void Remove (string uri, LineRange range)
     {
-        Registry.Remove(uri, i => i.Context == Context && range.Contains(i.Line));
+        Registry.Remove(uri, i => i.Context == Context && i.Line <= range.End);
     }
 
     protected void Remove (LineLocation location)
