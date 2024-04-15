@@ -36,7 +36,7 @@ public class DocumentFactoryTest
     [Fact]
     public void WhenCantGetLineRangeReturnsEmpty ()
     {
-        var line = new DocumentLine("", new LabelLine(""), Array.Empty<ParseError>(), new());
+        var line = new DocumentLine("", new LabelLine(""), [], new());
         Assert.Equal(new InlineRange(0, 0), line.GetLineRange(null));
         Assert.Equal(new InlineRange(0, 0), line.GetLineRange(new PlainText("")));
     }
@@ -44,7 +44,7 @@ public class DocumentFactoryTest
     [Fact]
     public void WhenCantExtractTextReturnsEmpty ()
     {
-        var line = new DocumentLine("", new LabelLine(""), Array.Empty<ParseError>(), new());
+        var line = new DocumentLine("", new LabelLine(""), [], new());
         Assert.Empty(line.Extract(null));
         Assert.Empty(line.Extract(new PlainText("")));
         Assert.Empty(line.Extract(new InlineRange(9, 1)));
@@ -54,7 +54,7 @@ public class DocumentFactoryTest
     [Fact]
     public void WhenGettingRangeOfInvalidComponentReturnsEmpty ()
     {
-        var line = new DocumentLine("", new LabelLine(""), Array.Empty<ParseError>(), new());
+        var line = new DocumentLine("", new LabelLine(""), [], new());
         Assert.Equal(Range.Empty, line.GetRange(null, 0));
     }
 }

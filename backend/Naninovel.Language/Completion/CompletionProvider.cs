@@ -59,7 +59,7 @@ internal class CompletionProvider
     private static CompletionItem[] GetOrEmpty<TKey> (Dictionary<TKey, CompletionItem[]> map, TKey key) where TKey : notnull
     {
         if (map.TryGetValue(key, out var items)) return items;
-        return Array.Empty<CompletionItem>();
+        return [];
     }
 
     private static CompletionItem CreateBoolean (string value) => new() {

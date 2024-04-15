@@ -9,7 +9,7 @@ internal class DiagnosticRegistry
     {
         return uriToItems.TryGetValue(uri, out var items)
             ? items.ToArray()
-            : Array.Empty<DiagnosticRegistryItem>();
+            : [];
     }
 
     public IReadOnlyList<Diagnostic> CollectDiagnostics (string uri)
@@ -17,7 +17,7 @@ internal class DiagnosticRegistry
         diags.Clear();
         foreach (var item in GetOrAddItems(uri))
             diags.Add(item.Diagnostic);
-        return diags.Count > 0 ? diags.ToArray() : Array.Empty<Diagnostic>();
+        return diags.Count > 0 ? diags.ToArray() : [];
     }
 
     public void Clear ()

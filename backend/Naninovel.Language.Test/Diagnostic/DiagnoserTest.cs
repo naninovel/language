@@ -32,22 +32,23 @@ public abstract class DiagnoserTest
         Assert.Empty(Diagnose(""));
     }
 
-    [Fact] // Always start from beginning (not from range.Start) to handle nested.
+    [Fact]
     public void WhenChangingDocumentDiagnosesOnlyUpToLastChangedLine ()
     {
         var doc = new Mock<IDocument>();
-        doc.Setup(d => d.LineCount).Returns(4);
+        doc.Setup(d => d.LineCount).Returns(5);
         doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory().CreateLine("@"));
         Docs.Setup(d => d.GetAllUris()).Returns(["foo.nani"]);
         Docs.Setup(d => d.Get("foo.nani")).Returns(doc.Object);
         Handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
         Handler.HandleDocumentAdded("foo.nani");
         doc.Invocations.Clear();
-        Handler.HandleDocumentChanged("foo.nani", new Range(new(1, 0), new(2, 0)));
-        doc.VerifyGet(l => l[0], Times.Once);
-        doc.VerifyGet(l => l[1], Times.Once);
+        Handler.HandleDocumentChanged("foo.nani", new Range(new(2, 0), new(3, 0)));
+        doc.VerifyGet(l => l[0], Times.Never);
+        doc.VerifyGet(l => l[1], Times.Once); // Start from range.Start - 1 to handle nested hosts.
         doc.VerifyGet(l => l[2], Times.Once);
-        doc.VerifyGet(l => l[3], Times.Never);
+        doc.VerifyGet(l => l[3], Times.Once);
+        doc.VerifyGet(l => l[4], Times.Never);
     }
 
     protected IReadOnlyList<Diagnostic> GetDiagnostics (string uri = DefaultUri)

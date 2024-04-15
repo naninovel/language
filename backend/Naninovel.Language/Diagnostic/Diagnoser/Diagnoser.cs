@@ -41,7 +41,9 @@ internal abstract class Diagnoser (IDocumentRegistry docs, DiagnosticRegistry re
     {
         Uri = uri;
         var doc = Docs.Get(uri);
-        for (LineIndex = 0; LineIndex <= range.End; LineIndex++)
+        // Start from -1 to diagnose nested hosts.
+        var startIndex = range.Start == 0 ? 0 : range.Start - 1;
+        for (LineIndex = startIndex; LineIndex <= range.End; LineIndex++)
             DiagnoseLine(Line = doc[LineIndex]);
     }
 
@@ -59,7 +61,9 @@ internal abstract class Diagnoser (IDocumentRegistry docs, DiagnosticRegistry re
 
     protected void Remove (string uri, LineRange range)
     {
-        Registry.Remove(uri, i => i.Context == Context && i.Line <= range.End);
+        // Start from -1 to diagnose nested hosts.
+        range = new LineRange(range.Start - 1, range.End);
+        Registry.Remove(uri, i => i.Context == Context && range.Contains(i.Line));
     }
 
     protected void Remove (LineLocation location)
