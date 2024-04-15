@@ -38,7 +38,7 @@ public abstract class DiagnoserTest
         var doc = new Mock<IDocument>();
         doc.Setup(d => d.LineCount).Returns(4);
         doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory().CreateLine("@"));
-        Docs.Setup(d => d.GetAllUris()).Returns(new[] { "foo.nani" });
+        Docs.Setup(d => d.GetAllUris()).Returns(["foo.nani"]);
         Docs.Setup(d => d.Get("foo.nani")).Returns(doc.Object);
         Handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
         Handler.HandleDocumentAdded("foo.nani");
@@ -61,18 +61,18 @@ public abstract class DiagnoserTest
         Handler.HandleMetadataChanged(meta ?? Meta);
     }
 
-    protected IReadOnlyList<Diagnostic> Diagnose (string line)
+    protected IReadOnlyList<Diagnostic> Diagnose (params string[] lines)
     {
         SetupHandler();
         if (Docs.Object.GetAllUris().Contains(DefaultUri))
         {
             Handler.HandleDocumentChanging(DefaultUri, new(0, 0));
-            Docs.SetupScript(DefaultUri, line);
+            Docs.SetupScript(DefaultUri, lines);
             Handler.HandleDocumentChanged(DefaultUri, new(0, 0));
         }
         else
         {
-            Docs.SetupScript(DefaultUri, line);
+            Docs.SetupScript(DefaultUri, lines);
             Handler.HandleDocumentAdded(DefaultUri);
         }
         return GetDiagnostics();
