@@ -1,14 +1,21 @@
+using Naninovel.Metadata;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class TokenHandler (IDocumentRegistry registry) : ITokenHandler
+public class TokenHandler (IDocumentRegistry registry) : ITokenHandler, IMetadataObserver
 {
     private readonly TokenBuilder builder = new();
+    private readonly MetadataProvider meta = new();
 
     private DocumentLine line;
     private Range range;
     private int lineIndex;
+
+    public void HandleMetadataChanged (Project meta)
+    {
+        this.meta.Update(meta);
+    }
 
     public TokenLegend GetTokenLegend () => new(
         TokenTypes: Enum.GetNames<TokenType>(),
@@ -87,20 +94,24 @@ public class TokenHandler (IDocumentRegistry registry) : ITokenHandler
             AppendGenericContent(content);
     }
 
-    private void AppendCommand (Command command)
+    private void AppendCommand (Parsing.Command command)
     {
+        var commandMeta = meta.FindCommand(command.Identifier);
         AppendContent(command, TokenType.Command);
         AppendContent(command.Identifier, TokenType.CommandIdentifier);
         foreach (var parameter in command.Parameters)
-            AppendParameter(parameter);
+            AppendParameter(parameter, commandMeta);
     }
 
-    private void AppendParameter (Parameter parameter)
+    private void AppendParameter (Parsing.Parameter param, Metadata.Command? commandMeta)
     {
-        AppendContent(parameter, TokenType.Parameter);
-        AppendContent(parameter.Identifier, TokenType.ParameterIdentifier);
-        AppendContent(parameter.Value, TokenType.ParameterValue);
-        AppendMixedValue(parameter.Value);
+        var paramMeta = commandMeta != null ? meta.FindParameter(commandMeta.Id, param.Identifier) : null;
+        AppendContent(param, TokenType.Parameter);
+        AppendContent(param.Identifier, TokenType.ParameterIdentifier);
+        if (paramMeta?.ValueContext?.FirstOrDefault()?.Type == ValueContextType.Expression)
+            AppendContent(param.Value, TokenType.Expression);
+        else AppendContent(param.Value, TokenType.ParameterValue);
+        AppendMixedValue(param.Value);
     }
 
     private void AppendExpression (Expression expression)
