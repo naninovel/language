@@ -2,71 +2,85 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class FoldingHandler(IDocumentRegistry registry) : IFoldingHandler
+public class FoldingHandler (IDocumentRegistry registry) : IFoldingHandler
 {
-    private readonly List<FoldingRange> closed = new();
-    private readonly Dictionary<LineType, int> open = new();
+    private enum Region
+    {
+        Comment,
+        Label,
+        Nested
+    }
 
+    private readonly List<FoldingRange> closed = [];
+    private readonly Dictionary<Region, int> open = new();
+
+    private IDocument doc = null!;
     private int lineIndex;
 
     public IReadOnlyList<FoldingRange> GetFoldingRanges (string documentUri)
     {
-        ResetState();
-        var doc = registry.Get(documentUri);
+        ResetState(documentUri);
         for (; lineIndex < doc.LineCount; lineIndex++)
             VisitLine(doc[lineIndex].Script);
         CloseAll();
         return closed.ToArray();
     }
 
-    private void ResetState ()
+    private void ResetState (string documentUri)
     {
         closed.Clear();
-        open[LineType.Comment] = -1;
-        open[LineType.Command] = -1;
-        open[LineType.Label] = -1;
+        open[Region.Comment] = -1;
+        open[Region.Label] = -1;
+        open[Region.Nested] = -1;
         lineIndex = 0;
+        doc = registry.Get(documentUri);
     }
 
     private void VisitLine (IScriptLine line)
     {
         if (line is CommentLine) VisitComment();
-        else if (line is CommandLine) VisitCommand();
         else if (line is LabelLine) VisitLabel();
+        else if (line is CommandLine) VisitCommand();
         else VisitGeneric();
+        VisitNested(line);
     }
 
     private void VisitComment ()
     {
-        Close(LineType.Command);
-        Open(LineType.Comment);
-    }
-
-    private void VisitCommand ()
-    {
-        Close(LineType.Comment);
-        Open(LineType.Command);
+        Open(Region.Comment);
     }
 
     private void VisitLabel ()
     {
-        CloseAll();
-        Open(LineType.Label);
+        Close(Region.Comment);
+        Close(Region.Label);
+        Open(Region.Label);
+    }
+
+    private void VisitCommand ()
+    {
+        Close(Region.Comment);
     }
 
     private void VisitGeneric ()
     {
-        Close(LineType.Comment);
-        Close(LineType.Command);
+        Close(Region.Comment);
     }
 
-    private void Open (LineType type)
+    private void VisitNested (IScriptLine line)
+    {
+        if (line.Indent == 0) Close(Region.Nested);
+        if (line.Indent > 0 && open[Region.Nested] < 0)
+            open[Region.Nested] = lineIndex - 1;
+    }
+
+    private void Open (Region type)
     {
         if (open[type] < 0)
             open[type] = lineIndex;
     }
 
-    private void Close (LineType type)
+    private void Close (Region type)
     {
         if (open[type] < 0) return;
         closed.Add(new(open[type], lineIndex - 1));
@@ -75,8 +89,8 @@ public class FoldingHandler(IDocumentRegistry registry) : IFoldingHandler
 
     private void CloseAll ()
     {
-        Close(LineType.Comment);
-        Close(LineType.Command);
-        Close(LineType.Label);
+        Close(Region.Comment);
+        Close(Region.Label);
+        Close(Region.Nested);
     }
 }

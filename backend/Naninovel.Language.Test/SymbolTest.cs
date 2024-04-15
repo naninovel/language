@@ -216,7 +216,7 @@ public class SymbolTest
             new Parameter { Id = "list", ValueContainerType = ValueContainerType.List },
             new Parameter { Id = "named", ValueContainerType = ValueContainerType.NamedList }
         };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal((int)SymbolKind.String, GetSymbol("@c str:x").Children![0].Children![1].Children![1].Kind);
         Assert.Equal((int)SymbolKind.Number, GetSymbol("@c int:x").Children![0].Children![1].Children![1].Kind);
         Assert.Equal((int)SymbolKind.Number, GetSymbol("@c dec:x").Children![0].Children![1].Children![1].Kind);
@@ -237,7 +237,7 @@ public class SymbolTest
             new Parameter { Id = "list", ValueContainerType = ValueContainerType.List },
             new Parameter { Id = "named", ValueContainerType = ValueContainerType.NamedList }
         };
-        meta.Commands = new[] { new Command { Id = "c", Parameters = parameters } };
+        meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal((int)SymbolKind.String, GetSymbol("@c str:{}").Children![0].Children![1].Children![1].Kind);
         Assert.Equal((int)SymbolKind.String, GetSymbol("@c int:{}").Children![0].Children![1].Children![1].Kind);
         Assert.Equal((int)SymbolKind.String, GetSymbol("@c dec:{}").Children![0].Children![1].Children![1].Kind);
