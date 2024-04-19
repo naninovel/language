@@ -56,6 +56,30 @@ public class FoldingTest
             GetRanges("x", "@c", "    x", "    ", "    ;", "    @c", "    #x", "x"));
     }
 
+    [Fact]
+    public void RegionsAreFolded ()
+    {
+        Assert.Contains(
+            new FoldingRange(1, 6),
+            GetRanges("x", "; > my region", "x", "", ";", "@c", "; < my region", "x"));
+    }
+
+    [Fact]
+    public void UnclosedRegionsAreNotFolded ()
+    {
+        Assert.DoesNotContain(
+            new FoldingRange(1, 6),
+            GetRanges("x", "; > my region", "x", "", ";", "@c", "; > my region", "x"));
+    }
+
+    [Fact]
+    public void UnopenedRegionsAreNotFolded ()
+    {
+        Assert.DoesNotContain(
+            new FoldingRange(1, 6),
+            GetRanges("x", "; < my region", "x", "", ";", "@c", "; < my region", "x"));
+    }
+
     private IReadOnlyList<FoldingRange> GetRanges (params string[] lines)
     {
         docs.SetupScript("@", lines);
