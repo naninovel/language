@@ -40,6 +40,7 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
                 AddMissingRequiredParameter(command, paramMeta);
         foreach (var param in command.Parameters)
             DiagnoseParameter(param, commandMeta);
+        DiagnoseNesting(command, commandMeta);
     }
 
     private void DiagnoseParameter (Parsing.Parameter param, Metadata.Command commandMeta)
@@ -97,10 +98,10 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
         return false;
     }
 
-    private bool IsPreventingPreload (Parsing.Parameter model, Metadata.Parameter meta)
+    private bool IsPreventingPreload (Parsing.Parameter param, Metadata.Parameter paramMeta)
     {
-        if (!model.Value.Dynamic || meta.ValueContext is null) return false;
-        foreach (var ctx in meta.ValueContext)
+        if (!param.Value.Dynamic || paramMeta.ValueContext is null) return false;
+        foreach (var ctx in paramMeta.ValueContext)
             switch (ctx?.Type)
             {
                 case ValueContextType.Resource:
@@ -109,5 +110,17 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
                 default: continue;
             }
         return false;
+    }
+
+    private void DiagnoseNesting (Parsing.Command command, Metadata.Command commandMeta)
+    {
+        var doc = Docs.Get(Uri);
+        var nextLine = doc.LineCount == (LineIndex + 1) ? default : doc[LineIndex + 1];
+        var hasNested = nextLine != default && nextLine.Script.Indent > Line.Script.Indent;
+
+        if (!commandMeta.NestedHost && hasNested)
+            AddWarning(Line.GetRange(command, LineIndex), "This command doesn't support nesting.");
+        if (commandMeta.RequiresNested && !hasNested)
+            AddError(Line.GetRange(command, LineIndex), "This command requires nested lines.");
     }
 }

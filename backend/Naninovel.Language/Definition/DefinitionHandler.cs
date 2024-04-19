@@ -54,7 +54,7 @@ public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
         if (uri is null) return null;
         var document = registry.Get(uri);
         var (range, selection) = GetRanges(document, point.Label);
-        return new[] { new LocationLink(null, uri, range, selection) };
+        return [new LocationLink(null, uri, range, selection)];
     }
 
     private string? FindDocumentUriByName (string name)

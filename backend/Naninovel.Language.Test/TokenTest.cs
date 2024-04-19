@@ -1,4 +1,5 @@
 using Moq;
+using Naninovel.Metadata;
 
 namespace Naninovel.Language.Test;
 
@@ -7,12 +8,8 @@ public class TokenTest
     private record Token (int Line, int Char, int Length, TokenType Type);
 
     private readonly Mock<IDocumentRegistry> docs = new();
-    private readonly TokenHandler handler;
-
-    public TokenTest ()
-    {
-        handler = new(docs.Object);
-    }
+    private readonly Project meta = new();
+    private TokenHandler handler => GetHandler();
 
     [Fact]
     public void LegendModifiersAreEmpty ()
@@ -31,7 +28,7 @@ public class TokenTest
     [Fact]
     public void TokenDataDecodedCorrectly ()
     {
-        var tokens = DecodeTokenData(new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+        var tokens = DecodeTokenData([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
         Assert.Equal(new(0, 1, 2, (TokenType)3), tokens[0]);
         Assert.Equal(new(5, 6, 7, (TokenType)8), tokens[1]);
     }
@@ -150,6 +147,22 @@ public class TokenTest
         var tokens = GetTokens("@cmd p:{exp}");
         Assert.Equal(6, tokens.Count);
         Assert.Equal(new(0, 1, 5, TokenType.Expression), tokens[5]);
+    }
+
+    [Fact]
+    public void ParameterWithExpressionContextTokenizedAsExpression ()
+    {
+        var param = new Parameter {
+            Id = "Condition",
+            Nameless = true,
+            ValueContext = [new() { Type = ValueContextType.Expression }]
+        };
+        meta.Commands = [new Command { Id = "if", Parameters = [param] }];
+
+        var tokens = GetTokens("@if x");
+        Assert.Equal(4, tokens.Count);
+        Assert.Equal(new(0, 2, 1, TokenType.Command), tokens[2]);
+        Assert.Equal(new(0, 1, 1, TokenType.Expression), tokens[3]);
     }
 
     [Fact]
@@ -293,5 +306,12 @@ public class TokenTest
         return data.Select((v, i) => new { index = i, value = v })
             .GroupBy(x => x.index / 5).Select(x => x.Select(v => v.value).ToArray())
             .Select(d => new Token(d[0], d[1], d[2], (TokenType)d[3])).ToArray();
+    }
+
+    private TokenHandler GetHandler ()
+    {
+        var handler = new TokenHandler(docs.Object);
+        handler.HandleMetadataChanged(meta);
+        return handler;
     }
 }

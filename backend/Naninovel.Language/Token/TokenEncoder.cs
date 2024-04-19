@@ -3,7 +3,7 @@ namespace Naninovel.Language;
 internal class TokenEncoder
 {
     private int index, lastLine, lastChar;
-    private int[] data = Array.Empty<int>();
+    private int[] data = [];
 
     public int[] Encode (IReadOnlyList<Token> tokens)
     {

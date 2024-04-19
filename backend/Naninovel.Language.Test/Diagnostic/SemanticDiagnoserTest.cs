@@ -129,4 +129,44 @@ public class SemanticDiagnoserTest : DiagnoserTest
         Assert.Equal(new(new(new(0, 20), new(0, 31)), DiagnosticSeverity.Information,
             "Expressions in this parameter prevent pre-loading associated resources."), diags[2]);
     }
+
+    [Fact]
+    public void ErrsWhenMissingRequiredNested ()
+    {
+        Meta.Commands = [new Command { Id = "c", NestedHost = true, RequiresNested = true }];
+        Assert.Equal(new(new(new(0, 1), new(0, 2)), DiagnosticSeverity.Error,
+            "This command requires nested lines."), Diagnose("@c")[0]);
+        Assert.Equal(new(new(new(0, 1), new(0, 2)), DiagnosticSeverity.Error,
+            "This command requires nested lines."), Diagnose("@c", "...")[0]);
+    }
+
+    [Fact]
+    public void DoesntErrWhenHasRequiredNested ()
+    {
+        Meta.Commands = [new Command { Id = "c", NestedHost = true, RequiresNested = true }];
+        Assert.Empty(Diagnose("@c", "    ..."));
+    }
+
+    [Fact]
+    public void DoesntErrWhenMissingNestedButNestedAreNotRequired ()
+    {
+        Meta.Commands = [new Command { Id = "c", NestedHost = true, RequiresNested = false }];
+        Assert.Empty(Diagnose("@c"));
+        Assert.Empty(Diagnose("@c", "..."));
+    }
+
+    [Fact]
+    public void DoesntErrWhenHasNestedWhichAreNotRequired ()
+    {
+        Meta.Commands = [new Command { Id = "c", NestedHost = true, RequiresNested = false }];
+        Assert.Empty(Diagnose("@c", "    ..."));
+    }
+
+    [Fact]
+    public void WarnsWhenHasNestedWhileTheCommandIsNotNestedHost ()
+    {
+        Meta.Commands = [new Command { Id = "c", NestedHost = false }];
+        Assert.Equal(new(new(new(0, 1), new(0, 2)), DiagnosticSeverity.Warning,
+            "This command doesn't support nesting."), Diagnose("@c", "    ...")[0]);
+    }
 }

@@ -43,6 +43,24 @@ public class SyntaxDiagnoserTest : DiagnoserTest
     }
 
     [Fact]
+    public void WhenTabIndentErrorIsDiagnosed ()
+    {
+        Diagnose("\tx");
+        Assert.Single(GetDiagnostics());
+        Assert.Equal(new(new(new(0, 0), new(0, 1)), DiagnosticSeverity.Error,
+            "Tab indents are not supported. Use 4 spaces."), GetDiagnostics()[0]);
+    }
+
+    [Fact]
+    public void WhenIncorrectIndentLengthErrorIsDiagnosed ()
+    {
+        Diagnose("  x");
+        Assert.Single(GetDiagnostics());
+        Assert.Equal(new(new(new(0, 0), new(0, 2)), DiagnosticSeverity.Error,
+            "Each indent level should be exactly 4 spaces."), GetDiagnostics()[0]);
+    }
+
+    [Fact]
     public void DiagnosticsAreAddedAfterChange ()
     {
         Assert.Empty(Diagnose("# foo"));

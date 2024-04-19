@@ -149,6 +149,24 @@ public class CompletionTest
     }
 
     [Fact]
+    public void DoesntReturnParametersWhichAreAlreadySpecified ()
+    {
+        var foo = new Metadata.Parameter { Id = "foo" };
+        var bar = new Metadata.Parameter { Id = "bar" };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [foo, bar] }];
+        Assert.Single(Complete("@cmd foo:x ", 11));
+        Assert.Equal("bar", Complete("@cmd foo:x ", 11)[0].Label);
+    }
+
+    [Fact]
+    public void DoesntReturnNamelessParameterAfterNamed ()
+    {
+        var foo = new Metadata.Parameter { Id = "foo", Nameless = true };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [foo] }];
+        Assert.Empty(Complete("@cmd x ", 7));
+    }
+
+    [Fact]
     public void WhenAfterCommandWithNamelessParameterValuesAreReturned ()
     {
         var param = new Metadata.Parameter { Id = "foo", Nameless = true, ValueType = Metadata.ValueType.Boolean };

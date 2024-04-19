@@ -21,7 +21,7 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
         ResetState(position, line, scriptName);
         if (ShouldCompleteCommandId(command)) return provider.GetCommands();
         if (!TryResolveCommandContext(command, out this.command)) return [];
-        if (!TryResolveParameterContext(out param)) return provider.GetParameters(this.command.Meta.Id);
+        if (!TryResolveParameterContext(out param)) return GetParameters();
         return GetParameterValues();
     }
 
@@ -31,6 +31,18 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
         this.position = position;
         this.scriptName = scriptName;
         charBehindCursor = line.GetCharBehindCursor(position);
+    }
+
+    private CompletionItem[] GetParameters ()
+    {
+        return provider.GetParameters(command.Meta.Id)
+            .Where(item => {
+                var itemId = item.Label;
+                var paramMeta = meta.FindParameter(command.Meta.Id, itemId);
+                if (paramMeta != null && paramMeta.Nameless && command.Model.Parameters.Any(p => p.Nameless))
+                    return false;
+                return !command.Model.Parameters.Any(p => itemId == p.Identifier);
+            }).ToArray();
     }
 
     private bool IsCursorOver (ILineComponent content) => line.IsCursorOver(content, position);
@@ -110,7 +122,7 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
         ValueContextType.Actor => provider.GetActors(ctx.SubType ?? ""),
         ValueContextType.Appearance when FindActor() is { } actor => provider.GetAppearances(actor.Id, actor.Type),
         ValueContextType.Appearance when !string.IsNullOrEmpty(ctx.SubType) => provider.GetAppearances(ctx.SubType),
-        _ => Array.Empty<CompletionItem>()
+        _ => []
     };
 
     private (string? Id, string? Type)? FindActor ()

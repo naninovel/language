@@ -1,82 +1,119 @@
 using Naninovel.Parsing;
+using Naninovel.Utilities;
 
 namespace Naninovel.Language;
 
-public class FoldingHandler(IDocumentRegistry registry) : IFoldingHandler
+public class FoldingHandler (IDocumentRegistry registry) : IFoldingHandler
 {
-    private readonly List<FoldingRange> closed = new();
-    private readonly Dictionary<LineType, int> open = new();
+    private enum FoldType
+    {
+        Comment,
+        Label,
+        Nested
+    }
+
+    private readonly Dictionary<string, int> regionToIndex = [];
+    private readonly Dictionary<FoldType, int> foldToIndex = new();
+    private readonly List<FoldingRange> closed = [];
 
     private int lineIndex;
 
     public IReadOnlyList<FoldingRange> GetFoldingRanges (string documentUri)
     {
-        ResetState();
         var doc = registry.Get(documentUri);
+        ResetState(documentUri);
         for (; lineIndex < doc.LineCount; lineIndex++)
             VisitLine(doc[lineIndex].Script);
         CloseAll();
         return closed.ToArray();
     }
 
-    private void ResetState ()
+    private void ResetState (string documentUri)
     {
         closed.Clear();
-        open[LineType.Comment] = -1;
-        open[LineType.Command] = -1;
-        open[LineType.Label] = -1;
+        foldToIndex[FoldType.Comment] = -1;
+        foldToIndex[FoldType.Label] = -1;
+        foldToIndex[FoldType.Nested] = -1;
+        regionToIndex.Clear();
         lineIndex = 0;
     }
 
     private void VisitLine (IScriptLine line)
     {
-        if (line is CommentLine) VisitComment();
-        else if (line is CommandLine) VisitCommand();
+        if (line is CommentLine comment) VisitComment(comment);
         else if (line is LabelLine) VisitLabel();
+        else if (line is CommandLine) VisitCommand();
         else VisitGeneric();
+        VisitNested(line);
     }
 
-    private void VisitComment ()
+    private void VisitComment (CommentLine line)
     {
-        Close(LineType.Command);
-        Open(LineType.Comment);
-    }
+        Open(FoldType.Comment);
 
-    private void VisitCommand ()
-    {
-        Close(LineType.Comment);
-        Open(LineType.Command);
+        if (TryCloseRegion(line.Comment, out var region) &&
+            regionToIndex.TryGetValue(region, out var openIndex))
+        {
+            closed.Add(new(openIndex, lineIndex));
+            regionToIndex.Remove(region);
+        }
+        else if (TryOpenRegion(line.Comment, out region))
+            regionToIndex[region] = lineIndex;
     }
 
     private void VisitLabel ()
     {
-        CloseAll();
-        Open(LineType.Label);
+        Close(FoldType.Comment);
+        Close(FoldType.Label);
+        Open(FoldType.Label);
+    }
+
+    private void VisitCommand ()
+    {
+        Close(FoldType.Comment);
     }
 
     private void VisitGeneric ()
     {
-        Close(LineType.Comment);
-        Close(LineType.Command);
+        Close(FoldType.Comment);
     }
 
-    private void Open (LineType type)
+    private void VisitNested (IScriptLine line)
     {
-        if (open[type] < 0)
-            open[type] = lineIndex;
+        if (line.Indent == 0) Close(FoldType.Nested);
+        if (line.Indent > 0 && foldToIndex[FoldType.Nested] < 0)
+            foldToIndex[FoldType.Nested] = lineIndex - 1;
     }
 
-    private void Close (LineType type)
+    private void Open (FoldType type)
     {
-        if (open[type] < 0) return;
-        closed.Add(new(open[type], lineIndex - 1));
-        open[type] = -1;
+        if (foldToIndex[type] < 0)
+            foldToIndex[type] = lineIndex;
+    }
+
+    private void Close (FoldType type)
+    {
+        if (foldToIndex[type] < 0) return;
+        closed.Add(new(foldToIndex[type], lineIndex - 1));
+        foldToIndex[type] = -1;
     }
 
     private void CloseAll ()
     {
-        Close(LineType.Comment);
-        Close(LineType.Command);
-        Close(LineType.Label);
+        Close(FoldType.Comment);
+        Close(FoldType.Label);
+        Close(FoldType.Nested);
+    }
+
+    private bool TryOpenRegion (string comment, out string region)
+    {
+        region = comment.GetAfterFirst(">").Trim();
+        return comment.TrimStart().StartsWith('>');
+    }
+
+    private bool TryCloseRegion (string comment, out string region)
+    {
+        region = comment.GetAfterFirst("<").Trim();
+        return comment.TrimStart().StartsWith('<');
     }
 }

@@ -31,7 +31,7 @@ public class DocumentFactory
 
     private ParseError[] CollectErrors ()
     {
-        if (errors.Count == 0) return Array.Empty<ParseError>();
+        if (errors.Count == 0) return [];
         var lineErrors = errors.ToArray();
         errors.Clear();
         return lineErrors;

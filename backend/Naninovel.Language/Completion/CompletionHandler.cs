@@ -37,7 +37,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
         return documentLine.Script switch {
             GenericLine line => GetForGenericLine(line),
             CommandLine line => commandHandler.Handle(line.Command, position, documentLine, scriptName),
-            _ => Array.Empty<CompletionItem>()
+            _ => []
         };
     }
 
@@ -60,7 +60,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
             return commandHandler.Handle(inlined.Command, position, line, scriptName);
         if (genericLine.Content.OfType<MixedValue>().FirstOrDefault(IsCursorOver) is { } text)
             return GetForGenericText(text);
-        return Array.Empty<CompletionItem>();
+        return [];
     }
 
     private bool ShouldCompleteAuthorAppearance (GenericLine genericLine, out string authorId)
@@ -74,9 +74,9 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     private CompletionItem[] GetForGenericText (MixedValue text)
     {
         if (!text.OfType<Expression>().Any(IsCursorOver))
-            return Array.Empty<CompletionItem>();
+            return [];
         if (charBehindCursor == Identifiers.ExpressionClose[0])
-            return Array.Empty<CompletionItem>();
+            return [];
         return provider.GetExpressions();
     }
 }
