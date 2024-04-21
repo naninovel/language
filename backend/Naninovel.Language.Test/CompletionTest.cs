@@ -134,6 +134,26 @@ public class CompletionTest
     }
 
     [Fact]
+    public void ParametrizeGenericCommandReturnedForInlined ()
+    {
+        meta.Preferences = new Preferences {
+            ParametrizeGenericCommandId = "ParametrizeGeneric"
+        };
+        meta.Commands = [new Metadata.Command { Id = "ParametrizeGeneric", Alias = "<" }];
+        Assert.Equal("<", Complete("[", 1)[0].Label);
+    }
+
+    [Fact]
+    public void ParametrizeGenericCommandNotReturnedForCommandLine ()
+    {
+        meta.Preferences = new Preferences {
+            ParametrizeGenericCommandId = "ParametrizeGeneric"
+        };
+        meta.Commands = [new Metadata.Command { Id = "ParametrizeGeneric", Alias = "<" }];
+        Assert.Empty(Complete("@", 1));
+    }
+
+    [Fact]
     public void CommandSummaryIsAssignedToDocumentation ()
     {
         meta.Commands = [new Metadata.Command { Id = "cmd", Summary = "foo" }];

@@ -5,7 +5,8 @@ namespace Naninovel.Language;
 internal class CompletionProvider
 {
     private readonly CompletionItem[] booleans = [CreateBoolean("true"), CreateBoolean("false")];
-    private CompletionItem[] commands = [];
+    private CompletionItem[] inlineCommands = [];
+    private CompletionItem[] lineCommands = [];
     private CompletionItem[] expressions = [];
     private Dictionary<string, CompletionItem[]> actorsByType = [];
     private Dictionary<string, CompletionItem[]> appearancesByActorId = [];
@@ -16,7 +17,8 @@ internal class CompletionProvider
 
     public void Update (MetadataProvider meta)
     {
-        commands = meta.Commands.Select(CreateCommand).ToArray();
+        inlineCommands = meta.Commands.Select(CreateCommand).ToArray();
+        lineCommands = meta.Commands.Where(c => c.Id != meta.Preferences.ParametrizeGenericCommandId).Select(CreateCommand).ToArray();
         expressions = meta.Variables.Select(CreateVariable).Concat(meta.Functions.Select(CreateFunction)).ToArray();
         actorsByType = Map(meta.Actors, a => a.Type, CreateActor);
         actorsByType[Constants.WildcardType] = actorsByType.SelectMany(kv => kv.Value).ToArray();
@@ -28,7 +30,8 @@ internal class CompletionProvider
     }
 
     public CompletionItem[] GetBooleans () => booleans;
-    public CompletionItem[] GetCommands () => commands;
+    public CompletionItem[] GetInlineCommands () => inlineCommands;
+    public CompletionItem[] GetLineCommands () => lineCommands;
     public CompletionItem[] GetExpressions () => expressions;
     public CompletionItem[] GetActors (string type) => GetOrEmpty(actorsByType, type);
     public CompletionItem[] GetAppearances (string actorId, string? actorType = null) => actorType != null

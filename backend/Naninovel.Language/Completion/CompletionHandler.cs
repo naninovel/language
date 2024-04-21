@@ -36,7 +36,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
         ResetState(documentLine, position, scriptName);
         return documentLine.Script switch {
             GenericLine line => GetForGenericLine(line),
-            CommandLine line => commandHandler.Handle(line.Command, position, documentLine, scriptName),
+            CommandLine line => commandHandler.Handle(line.Command, position, documentLine, scriptName, false),
             _ => []
         };
     }
@@ -57,7 +57,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
         if (ShouldCompleteAuthorAppearance(genericLine, out var authorId))
             return provider.GetAppearances(authorId, CharacterType);
         if (genericLine.Content.OfType<InlinedCommand>().FirstOrDefault(IsCursorOver) is { } inlined)
-            return commandHandler.Handle(inlined.Command, position, line, scriptName);
+            return commandHandler.Handle(inlined.Command, position, line, scriptName, true);
         if (genericLine.Content.OfType<MixedValue>().FirstOrDefault(IsCursorOver) is { } text)
             return GetForGenericText(text);
         return [];

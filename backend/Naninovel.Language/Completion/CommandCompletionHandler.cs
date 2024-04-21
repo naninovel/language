@@ -16,10 +16,12 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
     private ParameterContext param;
     private string scriptName = string.Empty;
 
-    public CompletionItem[] Handle (Parsing.Command command, in Position position, in DocumentLine line, string scriptName)
+    public CompletionItem[] Handle (Parsing.Command command, in Position position,
+        in DocumentLine line, string scriptName, bool inline)
     {
         ResetState(position, line, scriptName);
-        if (ShouldCompleteCommandId(command)) return provider.GetCommands();
+        if (ShouldCompleteCommandId(command))
+            return inline ? provider.GetInlineCommands() : provider.GetLineCommands();
         if (!TryResolveCommandContext(command, out this.command)) return [];
         if (!TryResolveParameterContext(out param)) return GetParameters();
         return GetParameterValues();
