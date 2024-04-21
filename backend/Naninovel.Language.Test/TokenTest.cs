@@ -237,6 +237,15 @@ public class TokenTest
     }
 
     [Fact]
+    public void EmptyInlinedCommandTokenizedCorrectly ()
+    {
+        var tokens = GetTokens("[] text");
+        Assert.Equal(2, tokens.Count);
+        Assert.Equal(new(0, 0, 2, TokenType.InlinedCommand), tokens[0]);
+        Assert.Equal(new(0, 2, 5, TokenType.GenericTextLine), tokens[1]);
+    }
+
+    [Fact]
     public void ExpressionInGenericTextTokenizedCorrectly ()
     {
         var tokens = GetTokens("{exp} text");
