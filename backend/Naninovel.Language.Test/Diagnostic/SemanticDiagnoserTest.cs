@@ -52,11 +52,11 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenInvalidValueErrorIsDiagnosed ()
     {
-        var parameters = new[] {
-            new Parameter { Id = "sb", ValueType = Metadata.ValueType.Boolean, ValueContainerType = ValueContainerType.Single },
-            new Parameter { Id = "nd", ValueType = Metadata.ValueType.Decimal, ValueContainerType = ValueContainerType.Named },
-            new Parameter { Id = "il", ValueType = Metadata.ValueType.Integer, ValueContainerType = ValueContainerType.List },
-            new Parameter { Id = "nbl", ValueType = Metadata.ValueType.Boolean, ValueContainerType = ValueContainerType.NamedList }
+        var parameters = new Parameter[] {
+            new() { Id = "sb", ValueType = Metadata.ValueType.Boolean, ValueContainerType = ValueContainerType.Single },
+            new() { Id = "nd", ValueType = Metadata.ValueType.Decimal, ValueContainerType = ValueContainerType.Named },
+            new() { Id = "il", ValueType = Metadata.ValueType.Integer, ValueContainerType = ValueContainerType.List },
+            new() { Id = "nbl", ValueType = Metadata.ValueType.Boolean, ValueContainerType = ValueContainerType.NamedList }
         };
         Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         var diags = Diagnose("@c sb:- nd:x.- il:,1.0 nbl:x.,x,.,.-");
@@ -101,9 +101,9 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenCommandIsValidNoErrorsAreDiagnosed ()
     {
-        var parameters = new[] {
-            new Parameter { Id = "Foo", Alias = "f", Required = true },
-            new Parameter { Id = "Bar", Required = true }
+        var parameters = new Parameter[] {
+            new() { Id = "Foo", Alias = "f", Required = true },
+            new() { Id = "Bar", Required = true }
         };
         Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Empty(Diagnose("@c f:x bar:x"));
