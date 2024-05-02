@@ -204,6 +204,19 @@ public class SemanticDiagnoserTest : DiagnoserTest
     {
         var parameters = new Parameter[] {
             new() { Id = "@", Nameless = true, ValueContext = [new() { Type = ValueContextType.Expression, SubType = "Assignment" }] },
+        };
+        Meta.Commands = [new Command { Id = "set", Parameters = parameters }];
+        var diags = Diagnose("@set =x");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 5), new(0, 7)), DiagnosticSeverity.Error,
+            "Missing assigned variable name."), diags[0]);
+    }
+
+    [Fact]
+    public void SyntaxErrsInAssignmentExpressionAreDiagnosed ()
+    {
+        var parameters = new Parameter[] {
+            new() { Id = "@", Nameless = true, ValueContext = [new() { Type = ValueContextType.Expression, SubType = "Assignment" }] },
             new() { Id = "p" }
         };
         Meta.Commands = [new Command { Id = "set", Parameters = parameters }];
@@ -211,6 +224,16 @@ public class SemanticDiagnoserTest : DiagnoserTest
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 7), new(0, 8)), DiagnosticSeverity.Error,
             "Missing unary operand."), diags[0]);
+    }
+
+    [Fact]
+    public void DoesntDiagnoseAssignmentInNonAssignmentExpressions ()
+    {
+        var parameters = new Parameter[] {
+            new() { Id = "@", Nameless = true }
+        };
+        Meta.Commands = [new Command { Id = "if", Parameters = parameters }];
+        Assert.Empty(Diagnose("@if {x}"));
     }
 
     [Fact]
@@ -224,5 +247,15 @@ public class SemanticDiagnoserTest : DiagnoserTest
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 9), new(0, 10)), DiagnosticSeverity.Error,
             "Unclosed string."), diags[0]);
+    }
+
+    [Fact]
+    public void CorrectDynamicValuesHaveNoErrors ()
+    {
+        var parameters = new Parameter[] {
+            new() { Id = "@", Nameless = true }
+        };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
+        Assert.Empty(Diagnose("@c {x}.x"));
     }
 }
