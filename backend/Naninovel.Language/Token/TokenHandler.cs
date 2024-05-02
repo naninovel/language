@@ -114,7 +114,7 @@ public class TokenHandler (IDocumentRegistry registry) : ITokenHandler, IMetadat
         AppendMixedValue(param.Value);
     }
 
-    private void AppendExpression (Expression expression)
+    private void AppendExpression (Parsing.Expression expression)
     {
         AppendContent(expression, TokenType.Expression);
     }
@@ -147,7 +147,7 @@ public class TokenHandler (IDocumentRegistry registry) : ITokenHandler, IMetadat
     private void AppendMixedValue (MixedValue mixed)
     {
         foreach (var component in mixed)
-            if (component is Expression expression)
+            if (component is Parsing.Expression expression)
                 AppendExpression(expression);
             else if (component is IdentifiedText id)
                 AppendTextIdentifier(id.Id);

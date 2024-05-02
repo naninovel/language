@@ -1,16 +1,20 @@
-﻿namespace Naninovel.Language;
+﻿using Naninovel.Metadata;
+
+namespace Naninovel.Language;
 
 public class DocumentRegistry : IDocumentRegistry
 {
     private readonly Dictionary<string, Document> map = new();
-    private readonly DocumentChanger changer = new();
     private readonly DocumentChangeRangeResolver rangeResolver = new();
     private readonly IObserverNotifier<IDocumentObserver> notifier;
+    private readonly DocumentChanger changer;
 
-    public DocumentRegistry (IObserverRegistry<IDocumentObserver> observers, IObserverNotifier<IDocumentObserver> notifier)
+    public DocumentRegistry (IObserverRegistry<IDocumentObserver> observers,
+        IObserverNotifier<IDocumentObserver> notifier, MetadataProvider meta)
     {
         observers.Order(Comparer<IDocumentObserver>.Create((x, y) => x is IEndpointRegistry ? -1 : 1));
         this.notifier = notifier;
+        changer = new(meta);
     }
 
     public IReadOnlyCollection<string> GetAllUris () => map.Keys;

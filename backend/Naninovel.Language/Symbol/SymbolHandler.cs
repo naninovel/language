@@ -197,14 +197,14 @@ public class SymbolHandler (IDocumentRegistry registry) : ISymbolHandler, IMetad
     {
         var symbols = new List<Symbol>();
         foreach (var component in mixed)
-            if (component is Expression expression)
+            if (component is Parsing.Expression expression)
                 symbols.Add(CreateForExpression(expression));
             else if (component is IdentifiedText id)
                 symbols.Add(CreateForTextIdentifier(id.Id));
         return symbols;
     }
 
-    private Symbol CreateForExpression (Expression expression) => new() {
+    private Symbol CreateForExpression (Parsing.Expression expression) => new() {
         Name = "Expression",
         Kind = (int)SymbolKind.Property,
         Range = line.GetRange(expression, lineIndex),

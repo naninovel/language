@@ -10,7 +10,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     private readonly IDocumentRegistry docs;
     private readonly CompletionProvider provider = new();
     private readonly CommandCompletionHandler commandHandler;
-    private readonly MetadataProvider metaProvider = new();
+    private readonly MetadataProvider meta = new();
 
     private char charBehindCursor => line.GetCharBehindCursor(position);
     private Position position;
@@ -20,13 +20,13 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     public CompletionHandler (IDocumentRegistry docs, IEndpointRegistry endpoints)
     {
         this.docs = docs;
-        commandHandler = new CommandCompletionHandler(metaProvider, provider, endpoints);
+        commandHandler = new CommandCompletionHandler(meta, provider, endpoints);
     }
 
     public void HandleMetadataChanged (Project meta)
     {
-        metaProvider.Update(meta);
-        provider.Update(metaProvider);
+        this.meta.Update(meta);
+        provider.Update(this.meta);
     }
 
     public IReadOnlyList<CompletionItem> Complete (string documentUri, Position position)
@@ -67,15 +67,15 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     {
         authorId = genericLine.Prefix?.Author;
         if (IsCursorOver(genericLine.Prefix?.Appearance)) return true;
-        return charBehindCursor == Identifiers.AuthorAppearance[0] &&
+        return charBehindCursor == meta.Preferences.Identifiers.AuthorAppearance[0] &&
                !(authorId = line.Text[..(position.Character - 1)]).Any(char.IsWhiteSpace);
     }
 
     private CompletionItem[] GetForGenericText (MixedValue text)
     {
-        if (!text.OfType<Expression>().Any(IsCursorOver))
+        if (!text.OfType<Parsing.Expression>().Any(IsCursorOver))
             return [];
-        if (charBehindCursor == Identifiers.ExpressionClose[0])
+        if (charBehindCursor == meta.Preferences.Identifiers.ExpressionClose[0])
             return [];
         return provider.GetExpressions();
     }

@@ -8,7 +8,7 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
 {
     public override DiagnosticContext Context => DiagnosticContext.Semantic;
 
-    private readonly ValueValidator validator = new();
+    private readonly ValueValidator validator = new(meta.Preferences.Identifiers);
 
     protected override void DiagnoseLine (in DocumentLine line)
     {

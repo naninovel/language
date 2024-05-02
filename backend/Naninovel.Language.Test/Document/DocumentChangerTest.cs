@@ -9,7 +9,7 @@ public class DocumentChangerTest
 {
     private readonly DocumentRegistry registry = new(
         new Mock<IObserverRegistry<IDocumentObserver>>().Object,
-        new NotifierMock<IDocumentObserver>());
+        new NotifierMock<IDocumentObserver>(), new());
 
     [Fact]
     public void CanInsertNewCharacter ()

@@ -11,7 +11,7 @@ public class DocumentRegistryTest
 
     public DocumentRegistryTest ()
     {
-        registry = new(new Mock<IObserverRegistry<IDocumentObserver>>().Object, notifier);
+        registry = new(new Mock<IObserverRegistry<IDocumentObserver>>().Object, notifier, new());
     }
 
     [Fact]

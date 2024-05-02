@@ -1,4 +1,5 @@
-﻿using Naninovel.Parsing;
+﻿using Naninovel.Metadata;
+using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
@@ -8,9 +9,12 @@ public class DocumentFactory
     private readonly ErrorCollector errors = [];
     private readonly RangeMapper mapper = new();
 
-    public DocumentFactory ()
+    public DocumentFactory (MetadataProvider meta)
     {
-        parser = new(new() { ErrorHandler = errors, RangeAssociator = mapper });
+        parser = new(new() {
+            Handlers = new() { ErrorHandler = errors, RangeAssociator = mapper },
+            Identifiers = meta.Preferences.Identifiers
+        });
     }
 
     public Document CreateDocument (string scriptText)

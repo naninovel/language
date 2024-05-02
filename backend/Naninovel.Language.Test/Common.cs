@@ -7,7 +7,7 @@ internal static class Common
 {
     public static Document CreateDocument (params string[] lines)
     {
-        return new DocumentFactory().CreateDocument(string.Join('\n', lines));
+        return new DocumentFactory(new()).CreateDocument(string.Join('\n', lines));
     }
 
     public static void SetupScript (this Mock<IDocumentRegistry> docs, string uri, params string[] lines)

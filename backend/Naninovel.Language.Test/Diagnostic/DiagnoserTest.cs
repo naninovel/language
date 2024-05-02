@@ -37,7 +37,7 @@ public abstract class DiagnoserTest
     {
         var doc = new Mock<IDocument>();
         doc.Setup(d => d.LineCount).Returns(5);
-        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory().CreateLine("@"));
+        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory(new()).CreateLine("@"));
         Docs.Setup(d => d.GetAllUris()).Returns(["foo.nani"]);
         Docs.Setup(d => d.Get("foo.nani")).Returns(doc.Object);
         Handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });

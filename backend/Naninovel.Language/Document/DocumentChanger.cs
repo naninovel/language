@@ -1,12 +1,13 @@
 ﻿using System.Text;
+using Naninovel.Metadata;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class DocumentChanger
+internal class DocumentChanger (MetadataProvider meta)
 {
     private readonly StringBuilder builder = new();
-    private readonly DocumentFactory factory = new();
+    private readonly DocumentFactory factory = new(meta);
     private IList<DocumentLine> lines = null!;
 
     public void ApplyChanges (IList<DocumentLine> lines, IReadOnlyList<DocumentChange> changes)
