@@ -3,18 +3,20 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class DocumentFactory
+public class DocumentFactory : IMetadataObserver, IDocumentFactory
 {
-    private readonly ScriptParser parser;
     private readonly ErrorCollector errors = [];
     private readonly RangeMapper mapper = new();
+    private ScriptParser parser;
 
-    public DocumentFactory (MetadataProvider meta)
+    public DocumentFactory ()
     {
-        parser = new(new() {
-            Handlers = new() { ErrorHandler = errors, RangeAssociator = mapper },
-            Identifiers = meta.Preferences.Identifiers
-        });
+        parser = CreateParser(Identifiers.Default);
+    }
+
+    public void HandleMetadataChanged (Project meta)
+    {
+        parser = CreateParser(meta.Preferences.Identifiers);
     }
 
     public Document CreateDocument (string scriptText)
@@ -49,4 +51,9 @@ public class DocumentFactory
         mapper.Clear();
         return lineMapper;
     }
+
+    private ScriptParser CreateParser (Identifiers ids) => new(new() {
+        Handlers = new() { ErrorHandler = errors, RangeAssociator = mapper },
+        Identifiers = ids
+    });
 }

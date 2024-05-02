@@ -1,13 +1,10 @@
 ﻿using System.Text;
-using Naninovel.Metadata;
-using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class DocumentChanger (MetadataProvider meta)
+internal class DocumentChanger (IDocumentFactory factory)
 {
     private readonly StringBuilder builder = new();
-    private readonly DocumentFactory factory = new(meta);
     private IList<DocumentLine> lines = null!;
 
     public void ApplyChanges (IList<DocumentLine> lines, IReadOnlyList<DocumentChange> changes)
@@ -35,6 +32,6 @@ internal class DocumentChanger (MetadataProvider meta)
         builder.Append(startLineText.AsSpan(0, documentChange.Range.Start.Character));
         builder.Append(documentChange.Text);
         builder.Append(endLineText.AsSpan(documentChange.Range.End.Character));
-        return ScriptParser.SplitText(builder.ToString());
+        return Parsing.ScriptParser.SplitText(builder.ToString());
     }
 }

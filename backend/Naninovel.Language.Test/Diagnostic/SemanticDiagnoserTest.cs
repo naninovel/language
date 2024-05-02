@@ -113,10 +113,10 @@ public class SemanticDiagnoserTest : DiagnoserTest
     public void WarnsOnDynamicParametersPreventingPreload ()
     {
         var parameters = new Parameter[] {
-            new() { Id = "p1", ValueContext = [new ValueContext { Type = ValueContextType.Resource }] },
-            new() { Id = "p2", ValueContext = [new ValueContext { Type = ValueContextType.Actor }] },
-            new() { Id = "p3", ValueContext = [new ValueContext { Type = ValueContextType.Appearance }] },
-            new() { Id = "p4", ValueContext = [new ValueContext { Type = ValueContextType.Color }, null] },
+            new() { Id = "p1", ValueContext = [new() { Type = ValueContextType.Resource }] },
+            new() { Id = "p2", ValueContext = [new() { Type = ValueContextType.Actor }] },
+            new() { Id = "p3", ValueContext = [new() { Type = ValueContextType.Appearance }] },
+            new() { Id = "p4", ValueContext = [new() { Type = ValueContextType.Color }, null] },
             new() { Id = "p5" }
         };
         Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
@@ -168,5 +168,45 @@ public class SemanticDiagnoserTest : DiagnoserTest
         Meta.Commands = [new Command { Id = "c", NestedHost = false }];
         Assert.Equal(new(new(new(0, 1), new(0, 2)), DiagnosticSeverity.Warning,
             "This command doesn't support nesting."), Diagnose("@c", "    ...")[0]);
+    }
+
+    [Fact]
+    public void FunctionErrDiagnosed ()
+    {
+        var parameters = new Parameter[] {
+            new() { Id = "@", Nameless = true, ValueContext = [new() { Type = ValueContextType.Expression }] }
+        };
+        Meta.Commands = [new Command { Id = "if", Parameters = parameters }];
+        var diags = Diagnose("@if +");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 4), new(0, 5)), DiagnosticSeverity.Error,
+            "Missing unary operand."), diags[0]);
+    }
+
+    [Fact]
+    public void FunctionAssignmentErrDiagnosed ()
+    {
+        var parameters = new Parameter[] {
+            new() { Id = "@", Nameless = true, ValueContext = [new() { Type = ValueContextType.Expression, SubType = "Assignment" }] },
+            new() { Id = "p" }
+        };
+        Meta.Commands = [new Command { Id = "set", Parameters = parameters }];
+        var diags = Diagnose("@set x=+ p:v");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 7), new(0, 8)), DiagnosticSeverity.Error,
+            "Missing unary operand."), diags[0]);
+    }
+
+    [Fact]
+    public void FunctionErrInDynamicDiagnosed ()
+    {
+        var parameters = new Parameter[] {
+            new() { Id = "@", Nameless = true }
+        };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
+        var diags = Diagnose("@c x{\"}x");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 5), new(0, 6)), DiagnosticSeverity.Error,
+            "Unclosed string."), diags[0]);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Naninovel.Metadata;
+﻿using Naninovel.Expression;
+using Naninovel.Metadata;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
@@ -52,8 +53,27 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
             return;
         }
         if (IsPreventingPreload(param, paramMeta)) AddPreventingPreload(param.Value);
-        if (param.Value.Count == 0 || param.Value.Dynamic || param.Value[0] is not PlainText value) return;
-        if (!validator.Validate(value, paramMeta.ValueContainerType, paramMeta.ValueType)) AddInvalidValue(value, paramMeta);
+        if (param.Value.Count == 0) return;
+
+        var ctx = paramMeta.ValueContext?.FirstOrDefault();
+        if (ctx?.Type == ValueContextType.Expression || param.Value.Dynamic)
+            foreach (var value in param.Value)
+                DiagnoseExpression(value, !string.IsNullOrEmpty(ctx?.SubType));
+
+        if (param.Value.Dynamic || param.Value[0] is not PlainText plain) return;
+        if (!validator.Validate(plain, paramMeta.ValueContainerType, paramMeta.ValueType)) AddInvalidValue(plain, paramMeta);
+    }
+
+    private void DiagnoseExpression (IValueComponent component, bool assignment)
+    {
+        var text = component is Parsing.Expression exp ? exp.Body : component as PlainText;
+        if (text is null) return;
+        var parser = new Parser(new() {
+            Identifiers = meta.Preferences.Identifiers,
+            HandleDiagnostic = d => AddExpressionError(text, d)
+        });
+        if (assignment) _ = parser.TryParseAssignments(text, []);
+        else _ = parser.TryParse(text, out _);
     }
 
     private void AddUnknownCommand (Parsing.Command command)
@@ -87,6 +107,15 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
     {
         var range = Line.GetRange(value, LineIndex);
         AddInfo(range, "Expressions in this parameter prevent pre-loading associated resources.");
+    }
+
+    private void AddExpressionError (PlainText text, ParseDiagnostic diagnostic)
+    {
+        var range = Line.GetRange(text, LineIndex);
+        range = new(
+            new(range.Start.Line, range.Start.Character + diagnostic.Index),
+            new(range.End.Line, range.Start.Character + diagnostic.Index + diagnostic.Length));
+        AddError(range, diagnostic.Message);
     }
 
     private static bool IsParameterDefined (Metadata.Parameter paramMeta, Parsing.Command command)

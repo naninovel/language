@@ -9,7 +9,7 @@ public class DocumentHandlerTest
 
     public DocumentHandlerTest ()
     {
-        handler = new DocumentHandler(registry.Object, new());
+        handler = new DocumentHandler(registry.Object, new DocumentFactory());
     }
 
     [Fact]

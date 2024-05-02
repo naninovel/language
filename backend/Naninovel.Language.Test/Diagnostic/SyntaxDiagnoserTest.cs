@@ -97,4 +97,12 @@ public class SyntaxDiagnoserTest : DiagnoserTest
         Handler.HandleDocumentRemoved("foo.nani");
         Assert.Empty(GetDiagnostics("foo.nani"));
     }
+
+    [Fact]
+    public void RespectsCompilerLocalization ()
+    {
+        Meta.Preferences.Identifiers.LabelLine = ";";
+        Meta.Preferences.Identifiers.CommentLine = "#";
+        Assert.Empty(Diagnose("#"));
+    }
 }

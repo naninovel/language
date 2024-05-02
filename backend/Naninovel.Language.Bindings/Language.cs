@@ -30,6 +30,7 @@ public static class Language
         .AddSingleton<ILogger, JSLogger>()
         .AddSingleton<ISettingsHandler, SettingsHandler>()
         .AddSingleton<IMetadataHandler, MetadataHandler>()
+        .AddSingleton<IDocumentFactory, DocumentFactory>()
         .AddSingleton<IDocumentRegistry, DocumentRegistry>()
         .AddSingleton<IEndpointRegistry, EndpointRegistry>()
         .AddSingleton<Debug>()

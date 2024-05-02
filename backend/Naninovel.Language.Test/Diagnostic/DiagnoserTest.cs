@@ -37,7 +37,7 @@ public abstract class DiagnoserTest
     {
         var doc = new Mock<IDocument>();
         doc.Setup(d => d.LineCount).Returns(5);
-        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory(new()).CreateLine("@"));
+        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory().CreateLine("@"));
         Docs.Setup(d => d.GetAllUris()).Returns(["foo.nani"]);
         Docs.Setup(d => d.Get("foo.nani")).Returns(doc.Object);
         Handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
@@ -68,12 +68,12 @@ public abstract class DiagnoserTest
         if (Docs.Object.GetAllUris().Contains(DefaultUri))
         {
             Handler.HandleDocumentChanging(DefaultUri, new(0, 0));
-            Docs.SetupScript(DefaultUri, lines);
+            Docs.SetupScript(Meta, DefaultUri, lines);
             Handler.HandleDocumentChanged(DefaultUri, new(0, 0));
         }
         else
         {
-            Docs.SetupScript(DefaultUri, lines);
+            Docs.SetupScript(Meta, DefaultUri, lines);
             Handler.HandleDocumentAdded(DefaultUri);
         }
         return GetDiagnostics();

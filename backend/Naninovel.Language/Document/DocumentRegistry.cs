@@ -1,6 +1,4 @@
-﻿using Naninovel.Metadata;
-
-namespace Naninovel.Language;
+﻿namespace Naninovel.Language;
 
 public class DocumentRegistry : IDocumentRegistry
 {
@@ -10,11 +8,11 @@ public class DocumentRegistry : IDocumentRegistry
     private readonly DocumentChanger changer;
 
     public DocumentRegistry (IObserverRegistry<IDocumentObserver> observers,
-        IObserverNotifier<IDocumentObserver> notifier, MetadataProvider meta)
+        IObserverNotifier<IDocumentObserver> notifier, IDocumentFactory factory)
     {
         observers.Order(Comparer<IDocumentObserver>.Create((x, y) => x is IEndpointRegistry ? -1 : 1));
         this.notifier = notifier;
-        changer = new(meta);
+        changer = new(factory);
     }
 
     public IReadOnlyCollection<string> GetAllUris () => map.Keys;

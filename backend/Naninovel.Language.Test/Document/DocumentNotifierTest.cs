@@ -12,7 +12,7 @@ public class DocumentNotifierTest
 
     public DocumentNotifierTest ()
     {
-        registry = new(observers.Object, notifier, new());
+        registry = new(observers.Object, notifier, new DocumentFactory());
     }
 
     [Fact]

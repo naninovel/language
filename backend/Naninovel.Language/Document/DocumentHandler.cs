@@ -1,11 +1,7 @@
-using Naninovel.Metadata;
-
 namespace Naninovel.Language;
 
-public class DocumentHandler (IDocumentRegistry registry, MetadataProvider meta) : IDocumentHandler
+public class DocumentHandler (IDocumentRegistry registry, IDocumentFactory factory) : IDocumentHandler
 {
-    private readonly DocumentFactory factory = new(meta);
-
     public void UpsertDocuments (IReadOnlyList<DocumentInfo> docs)
     {
         foreach (var doc in docs)
