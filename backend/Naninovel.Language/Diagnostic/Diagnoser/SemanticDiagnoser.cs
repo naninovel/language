@@ -52,7 +52,8 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
             AddUnknownParameter(param, commandMeta);
             return;
         }
-        if (IsPreventingPreload(param, paramMeta)) AddPreventingPreload(param.Value);
+        if (IsPreventingPreload(param, paramMeta))
+            AddPreventingPreload(param.Value);
         if (param.Value.Count == 0) return;
 
         var ctx = paramMeta.ValueContext?.FirstOrDefault();
@@ -61,7 +62,8 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
                 DiagnoseExpression(value, !string.IsNullOrEmpty(ctx?.SubType));
 
         if (param.Value.Dynamic || param.Value[0] is not PlainText plain) return;
-        if (!validator.Validate(plain, paramMeta.ValueContainerType, paramMeta.ValueType)) AddInvalidValue(plain, paramMeta);
+        if (!validator.Validate(plain, paramMeta.ValueContainerType, paramMeta.ValueType))
+            AddInvalidValue(plain, paramMeta);
     }
 
     private void DiagnoseExpression (IValueComponent component, bool assignment)

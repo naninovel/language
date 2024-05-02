@@ -42,6 +42,14 @@ public class SemanticDiagnoserTest : DiagnoserTest
     }
 
     [Fact]
+    public void DoesntDiagnoseMissingValue () // It's handled by syntax diagnoser.
+    {
+        var parameters = new[] { new Parameter { Id = "p", Required = true } };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
+        Assert.Empty(Diagnose("@c p:"));
+    }
+
+    [Fact]
     public void WhenInvalidValueErrorIsDiagnosed ()
     {
         var parameters = new[] {
@@ -69,6 +77,14 @@ public class SemanticDiagnoserTest : DiagnoserTest
         var parameters = new[] { new Parameter { Id = "p", ValueType = Metadata.ValueType.Boolean } };
         Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Empty(Diagnose("@c p:{x}"));
+    }
+
+    [Fact]
+    public void WhenValueIsIdentifiedTextTypeValidityIsNotChecked ()
+    {
+        var parameters = new[] { new Parameter { Id = "p", ValueType = Metadata.ValueType.Boolean } };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
+        Assert.Empty(Diagnose("@c p:x|#x|"));
     }
 
     [Fact]
@@ -191,7 +207,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
             new() { Id = "p" }
         };
         Meta.Commands = [new Command { Id = "set", Parameters = parameters }];
-        var diags = Diagnose("@set x=+ p:v");
+        var diags = Diagnose("@set x=+ p:x|#x|");
         Assert.Single(diags);
         Assert.Equal(new(new(new(0, 7), new(0, 8)), DiagnosticSeverity.Error,
             "Missing unary operand."), diags[0]);
@@ -204,9 +220,9 @@ public class SemanticDiagnoserTest : DiagnoserTest
             new() { Id = "@", Nameless = true }
         };
         Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
-        var diags = Diagnose("@c x{\"}x");
+        var diags = Diagnose("@c x|#x|{\"}x");
         Assert.Single(diags);
-        Assert.Equal(new(new(new(0, 5), new(0, 6)), DiagnosticSeverity.Error,
+        Assert.Equal(new(new(new(0, 9), new(0, 10)), DiagnosticSeverity.Error,
             "Unclosed string."), diags[0]);
     }
 }
