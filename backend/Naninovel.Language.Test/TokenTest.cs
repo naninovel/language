@@ -100,6 +100,17 @@ public class TokenTest
     }
 
     [Fact]
+    public void LocalizableTokenizedCorrectly ()
+    {
+        var param = new Parameter { Id = "@", Nameless = true, Localizable = true };
+        meta.Commands = [new Command { Id = "cmd", Parameters = [param] }];
+        var tokens = GetTokens("@cmd nameless");
+        Assert.Equal(4, tokens.Count);
+        Assert.Equal(new(0, 3, 1, TokenType.Command), tokens[2]);
+        Assert.Equal(new(0, 1, 8, TokenType.LocalizableValue), tokens[3]);
+    }
+
+    [Fact]
     public void NamelessParameterWithTextIdTokenizedCorrectly ()
     {
         var tokens = GetTokens("@cmd nameless|#id|");

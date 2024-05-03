@@ -110,6 +110,8 @@ public class TokenHandler (IDocumentRegistry registry) : ITokenHandler, IMetadat
         AppendContent(param.Identifier, TokenType.ParameterIdentifier);
         if (paramMeta?.ValueContext?.FirstOrDefault()?.Type == ValueContextType.Expression)
             AppendContent(param.Value, TokenType.Expression);
+        else if (paramMeta?.Localizable ?? false)
+            AppendContent(param.Value, TokenType.LocalizableValue);
         else AppendContent(param.Value, TokenType.ParameterValue);
         AppendMixedValue(param.Value);
     }
