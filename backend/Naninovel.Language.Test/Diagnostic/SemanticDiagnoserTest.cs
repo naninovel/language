@@ -62,13 +62,13 @@ public class SemanticDiagnoserTest : DiagnoserTest
         var diags = Diagnose("@c sb:- nd:x.- il:,1.0 nbl:x.,x,.,.-");
         Assert.Equal(4, diags.Count);
         Assert.Equal(new(new(new(0, 6), new(0, 7)), DiagnosticSeverity.Error,
-            "Invalid value: '-' is not a boolean."), diags[0]);
+            "Invalid value: '-' is not a boolean. Expected 'true' or 'false'."), diags[0]);
         Assert.Equal(new(new(new(0, 11), new(0, 14)), DiagnosticSeverity.Error,
             "Invalid value: 'x.-' is not a named decimal."), diags[1]);
         Assert.Equal(new(new(new(0, 18), new(0, 22)), DiagnosticSeverity.Error,
             "Invalid value: ',1.0' is not a integer list."), diags[2]);
         Assert.Equal(new(new(new(0, 27), new(0, 36)), DiagnosticSeverity.Error,
-            "Invalid value: 'x.,x,.,.-' is not a named boolean list."), diags[3]);
+            "Invalid value: 'x.,x,.,.-' is not a named boolean list. Expected 'true' or 'false'."), diags[3]);
     }
 
     [Fact]
@@ -257,5 +257,20 @@ public class SemanticDiagnoserTest : DiagnoserTest
         };
         Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Empty(Diagnose("@c {x}.x"));
+    }
+
+    [Fact]
+    public void RespectsCompilerLocalizationWhenDiagnosingBoolean ()
+    {
+        Meta.Preferences.Identifiers.True = "да";
+        Meta.Preferences.Identifiers.False = "нет";
+        var parameters = new Parameter[] {
+            new() { Id = "p1", ValueType = Metadata.ValueType.Boolean },
+            new() { Id = "p2", ValueType = Metadata.ValueType.Boolean },
+            new() { Id = "p3", ValueType = Metadata.ValueType.Boolean },
+            new() { Id = "p4", ValueType = Metadata.ValueType.Boolean }
+        };
+        Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
+        Assert.Empty(Diagnose("@c p1:да p2:нет p3! !p4"));
     }
 }

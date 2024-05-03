@@ -9,8 +9,6 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
 {
     public override DiagnosticContext Context => DiagnosticContext.Semantic;
 
-    private readonly ValueValidator validator = new(meta.Preferences.Identifiers);
-
     protected override void DiagnoseLine (in DocumentLine line)
     {
         if (line.Script is CommandLine commandLine)
@@ -63,6 +61,8 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
                     DiagnoseExpression(value, ctx?.SubType == "Assignment");
 
         if (param.Value.Dynamic || param.Value[0] is not PlainText plain) return;
+
+        var validator = new ValueValidator(meta.Preferences.Identifiers);
         if (!validator.Validate(plain, paramMeta.ValueContainerType, paramMeta.ValueType))
             AddInvalidValue(plain, paramMeta);
     }
@@ -102,7 +102,10 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
     private void AddInvalidValue (PlainText value, Metadata.Parameter paramMeta)
     {
         var range = Line.GetRange(value, LineIndex);
-        AddError(range, $"Invalid value: '{value}' is not a {paramMeta.TypeLabel}.");
+        var msg = $"Invalid value: '{value}' is not a {paramMeta.TypeLabel}.";
+        if (paramMeta.ValueType == Metadata.ValueType.Boolean)
+            msg += $" Expected '{meta.Preferences.Identifiers.True}' or '{meta.Preferences.Identifiers.False}'.";
+        AddError(range, msg);
     }
 
     private void AddPreventingPreload (MixedValue value)

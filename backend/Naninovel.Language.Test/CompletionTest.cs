@@ -715,6 +715,19 @@ public class CompletionTest
         Assert.Equal("foo", handler.Complete("@", new Position(0, 5))[0].Label);
     }
 
+    [Fact]
+    public void RespectsCompilerLocalization ()
+    {
+        meta.Preferences.Identifiers.True = "да";
+        meta.Preferences.Identifiers.False = "нет";
+        var param = new Metadata.Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
+        var items = Complete("@cmd ", 5);
+        Assert.Equal(2, items.Count);
+        Assert.Equal("да", items[0].Label);
+        Assert.Equal("нет", items[1].Label);
+    }
+
     private IReadOnlyList<CompletionItem> Complete (string line, int charOffset, string uri = "@")
     {
         handler.HandleMetadataChanged(meta);

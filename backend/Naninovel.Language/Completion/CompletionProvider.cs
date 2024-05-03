@@ -4,7 +4,7 @@ namespace Naninovel.Language;
 
 internal class CompletionProvider
 {
-    private readonly CompletionItem[] booleans = [CreateBoolean("true"), CreateBoolean("false")];
+    private CompletionItem[] booleans = [];
     private CompletionItem[] inlineCommands = [];
     private CompletionItem[] lineCommands = [];
     private CompletionItem[] expressions = [];
@@ -17,6 +17,7 @@ internal class CompletionProvider
 
     public void Update (MetadataProvider meta)
     {
+        booleans = [CreateBoolean(meta.Preferences.Identifiers.True), CreateBoolean(meta.Preferences.Identifiers.False)];
         inlineCommands = meta.Commands.Select(CreateCommand).ToArray();
         lineCommands = meta.Commands.Where(c => c.Id != meta.Preferences.ParametrizeGenericCommandId).Select(CreateCommand).ToArray();
         expressions = meta.Variables.Select(CreateVariable).Concat(meta.Functions.Select(CreateFunction)).ToArray();
