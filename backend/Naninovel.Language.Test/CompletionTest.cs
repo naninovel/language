@@ -716,7 +716,7 @@ public class CompletionTest
     }
 
     [Fact]
-    public void RespectsCompilerLocalization ()
+    public void RespectBooleanLocalization ()
     {
         meta.Preferences.Identifiers.True = "да";
         meta.Preferences.Identifiers.False = "нет";
@@ -728,10 +728,20 @@ public class CompletionTest
         Assert.Equal("нет", items[1].Label);
     }
 
+    [Fact]
+    public void WhenCommandAndParameterIdsAreSameCompletesParameterValues ()
+    {
+        meta.Preferences.Identifiers.CommandLine = ":";
+        var param = new Metadata.Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
+        meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
+        Assert.Equal("cmd", Complete(":", 1)[0].Label);
+        Assert.Equal("true", Complete(":cmd id:", 8)[0].Label);
+    }
+
     private IReadOnlyList<CompletionItem> Complete (string line, int charOffset, string uri = "@")
     {
         handler.HandleMetadataChanged(meta);
-        docs.SetupScript(uri, line);
+        docs.SetupScript(meta, uri, line);
         return handler.Complete(uri, new Position(0, charOffset));
     }
 }

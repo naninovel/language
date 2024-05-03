@@ -51,9 +51,9 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
 
     private bool ShouldCompleteCommandId (Parsing.Command command)
     {
-        return IsCursorOver(command.Identifier) ||
-               charBehindCursor == meta.Preferences.Identifiers.CommandLine[0] ||
-               charBehindCursor == meta.Preferences.Identifiers.InlinedOpen[0];
+        return IsCursorOver(command.Identifier) || string.IsNullOrEmpty(command.Identifier) &&
+            (charBehindCursor == meta.Preferences.Identifiers.CommandLine[0] ||
+             charBehindCursor == meta.Preferences.Identifiers.InlinedOpen[0]);
     }
 
     private bool TryResolveCommandContext (Parsing.Command model, out CommandContext ctx)
