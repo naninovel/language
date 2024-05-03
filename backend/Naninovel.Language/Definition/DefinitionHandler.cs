@@ -22,6 +22,7 @@ public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
 
     public IReadOnlyList<LocationLink>? GotoDefinition (string documentUri, Position position)
     {
+        documentUri = Uri.UnescapeDataString(documentUri);
         var documentLine = registry.Get(documentUri)[position.Line];
         ResetState(documentLine, position, documentUri);
         return documentLine.Script switch {
@@ -35,7 +36,7 @@ public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
     {
         this.line = line;
         this.position = position;
-        this.documentUri = documentUri;
+        this.documentUri = Uri.UnescapeDataString(documentUri);
     }
 
     private bool IsCursorOver (ILineComponent? content) => line.IsCursorOver(content, position);

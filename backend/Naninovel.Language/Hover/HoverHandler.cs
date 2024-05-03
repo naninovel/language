@@ -16,6 +16,7 @@ public class HoverHandler (IDocumentRegistry registry) : IHoverHandler, IMetadat
 
     public Hover? Hover (string documentUri, Position position)
     {
+        documentUri = Uri.UnescapeDataString(documentUri);
         ResetState(position);
         line = registry.Get(documentUri)[position.Line];
         return line.Script switch {

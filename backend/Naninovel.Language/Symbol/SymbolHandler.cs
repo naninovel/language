@@ -16,6 +16,7 @@ public class SymbolHandler (IDocumentRegistry registry) : ISymbolHandler, IMetad
 
     public IReadOnlyList<Symbol> GetSymbols (string documentUri)
     {
+        documentUri = Uri.UnescapeDataString(documentUri);
         symbols.Clear();
         var document = registry.Get(documentUri);
         for (int i = 0; i < document.LineCount; i++)

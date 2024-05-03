@@ -31,6 +31,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
 
     public IReadOnlyList<CompletionItem> Complete (string documentUri, Position position)
     {
+        documentUri = Uri.UnescapeDataString(documentUri);
         var documentLine = docs.Get(documentUri)[position.Line];
         var scriptName = ToScriptName(documentUri);
         ResetState(documentLine, position, scriptName);

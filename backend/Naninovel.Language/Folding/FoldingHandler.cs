@@ -20,6 +20,7 @@ public class FoldingHandler (IDocumentRegistry registry) : IFoldingHandler
 
     public IReadOnlyList<FoldingRange> GetFoldingRanges (string documentUri)
     {
+        documentUri = Uri.UnescapeDataString(documentUri);
         var doc = registry.Get(documentUri);
         ResetState(documentUri);
         for (; lineIndex < doc.LineCount; lineIndex++)

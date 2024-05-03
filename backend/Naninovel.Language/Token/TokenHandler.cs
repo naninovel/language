@@ -24,6 +24,7 @@ public class TokenHandler (IDocumentRegistry registry) : ITokenHandler, IMetadat
 
     public Tokens GetAllTokens (string documentUri)
     {
+        documentUri = Uri.UnescapeDataString(documentUri);
         var document = registry.Get(documentUri);
         var range = GetFullRange(document);
         return CreateTokens(document, range);
@@ -31,6 +32,7 @@ public class TokenHandler (IDocumentRegistry registry) : ITokenHandler, IMetadat
 
     public Tokens GetTokens (string documentUri, Range range)
     {
+        documentUri = Uri.UnescapeDataString(documentUri);
         var document = registry.Get(documentUri);
         return CreateTokens(document, range);
     }

@@ -41,4 +41,18 @@ public class DocumentHandlerTest
         handler.DeleteDocuments(new DocumentDeleteInfo[] { new("foo") });
         registry.Verify(r => r.Remove("foo"));
     }
+
+    [Fact]
+    public void UnEscapesDocumentUris ()
+    {
+        handler.UpsertDocuments(new DocumentInfo[] { new("%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82", "") });
+        handler.ChangeDocument("%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82", []);
+        handler.RenameDocuments(new DocumentRenameInfo[] { new("%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82", "%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82") });
+        handler.DeleteDocuments(new DocumentDeleteInfo[] { new("%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82") });
+
+        registry.Verify(r => r.Upsert("Скрипт", It.IsAny<Document>()));
+        registry.Verify(r => r.Change("Скрипт", It.IsAny<DocumentChange[]>()));
+        registry.Verify(r => r.Rename("Скрипт", "Скрипт"));
+        registry.Verify(r => r.Remove("Скрипт"));
+    }
 }
