@@ -5,24 +5,15 @@ using static Naninovel.Language.Common;
 
 namespace Naninovel.Language;
 
-public class EndpointRegistry : IEndpointRegistry, IDocumentObserver, IMetadataObserver
+public class EndpointRegistry (IMetadata meta, IDocumentRegistry docs)
+    : IEndpointRegistry, IDocumentObserver
 {
     private readonly HashSet<string> scriptNames = [];
     private readonly Dictionary<LineLocation, string> labels = [];
     private readonly Dictionary<QualifiedLabel, HashSet<LineLocation>> labelLocations = [];
     private readonly Dictionary<LineLocation, QualifiedEndpoint> navigators = [];
     private readonly Dictionary<QualifiedEndpoint, HashSet<LineLocation>> navigatorLocations = [];
-    private readonly MetadataProvider meta = new();
-    private readonly EndpointResolver resolver;
-    private readonly IDocumentRegistry docs;
-
-    public EndpointRegistry (IDocumentRegistry docs)
-    {
-        this.docs = docs;
-        resolver = new(meta);
-    }
-
-    public void HandleMetadataChanged (Project project) => meta.Update(project);
+    private readonly EndpointResolver resolver = new(meta);
 
     public void HandleDocumentAdded (string uri)
     {

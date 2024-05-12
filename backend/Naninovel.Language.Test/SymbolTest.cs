@@ -5,13 +5,13 @@ namespace Naninovel.Language.Test;
 
 public class SymbolTest
 {
+    private readonly MetadataMock meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();
-    private readonly Project meta = new();
     private readonly SymbolHandler handler;
 
     public SymbolTest ()
     {
-        handler = new(docs.Object);
+        handler = new(meta, docs.Object);
     }
 
     [Fact]
@@ -248,8 +248,7 @@ public class SymbolTest
 
     private IReadOnlyList<Symbol> GetSymbols (params string[] lines)
     {
-        docs.SetupScript("@", lines);
-        handler.HandleMetadataChanged(meta);
+        docs.SetupScript(meta, "@", lines);
         return handler.GetSymbols("@");
     }
 

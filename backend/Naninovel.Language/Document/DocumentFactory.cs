@@ -3,24 +3,18 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class DocumentFactory : IMetadataObserver, IDocumentFactory
+public class DocumentFactory : IDocumentFactory
 {
     private readonly ErrorCollector errors = [];
     private readonly RangeMapper mapper = new();
-    private readonly MetadataProvider meta = new();
     private readonly ScriptParser parser;
 
-    public DocumentFactory ()
+    public DocumentFactory (IMetadata meta)
     {
         parser = new(new() {
-            Handlers = new() { ErrorHandler = errors, RangeAssociator = mapper },
-            Syntax = meta.Syntax
+            Syntax = meta.Syntax,
+            Handlers = new() { ErrorHandler = errors, RangeAssociator = mapper }
         });
-    }
-
-    public void HandleMetadataChanged (Project project)
-    {
-        meta.Update(project);
     }
 
     public Document CreateDocument (string scriptText)

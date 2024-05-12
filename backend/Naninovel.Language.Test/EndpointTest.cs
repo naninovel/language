@@ -1,16 +1,16 @@
 ﻿using Moq;
-using Naninovel.Metadata;
 
 namespace Naninovel.Language.Test;
 
 public class EndpointTest
 {
+    private readonly MetadataMock meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();
     private readonly EndpointRegistry registry;
 
     public EndpointTest ()
     {
-        registry = new(docs.Object);
+        registry = new(meta, docs.Object);
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public class EndpointTest
     [Fact]
     public void ResolvesAfterDocumentAdded ()
     {
-        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
         docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentAdded("script1.nani");
@@ -50,7 +50,7 @@ public class EndpointTest
     [Fact]
     public void ResolvesAfterDocumentRemoved ()
     {
-        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
         docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentAdded("script1.nani");
@@ -72,7 +72,7 @@ public class EndpointTest
     [Fact]
     public void ResolvesAfterDocumentChanged ()
     {
-        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
         docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentAdded("script1.nani");
@@ -98,7 +98,7 @@ public class EndpointTest
     [Fact]
     public void ResolvesChangesInSameDocument ()
     {
-        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("script.nani", "# label", "@goto .label");
         registry.HandleDocumentAdded("script.nani");
         registry.HandleDocumentChanging("script.nani", new(1, 1));
@@ -111,7 +111,7 @@ public class EndpointTest
     [Fact]
     public void UpdatesLocationsAfterLinesAdded ()
     {
-        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("script.nani", "# label", "@goto .label");
         registry.HandleDocumentAdded("script.nani");
         registry.HandleDocumentChanging("script.nani", new(0, 3));
@@ -124,7 +124,7 @@ public class EndpointTest
     [Fact]
     public void UpdatesLocationsAfterLinesRemoved ()
     {
-        registry.HandleMetadataChanged(new Project().SetupCommandWithEndpoint("goto"));
+        meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("script.nani", "", "", "# label", "@goto .label");
         registry.HandleDocumentAdded("script.nani");
         registry.HandleDocumentChanging("script.nani", new(0, 3));

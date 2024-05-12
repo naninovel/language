@@ -9,7 +9,8 @@ public class DocumentHandlerTest
 
     public DocumentHandlerTest ()
     {
-        handler = new DocumentHandler(registry.Object, new DocumentFactory());
+        var factory = new DocumentFactory(new MetadataMock());
+        handler = new DocumentHandler(registry.Object, factory);
     }
 
     [Fact]

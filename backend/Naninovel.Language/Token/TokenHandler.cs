@@ -3,19 +3,13 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class TokenHandler (IDocumentRegistry registry) : ITokenHandler, IMetadataObserver
+public class TokenHandler (IMetadata meta, IDocumentRegistry registry) : ITokenHandler
 {
     private readonly TokenBuilder builder = new();
-    private readonly MetadataProvider meta = new();
 
     private DocumentLine line;
     private Range range;
     private int lineIndex;
-
-    public void HandleMetadataChanged (Project project)
-    {
-        meta.Update(project);
-    }
 
     public TokenLegend GetTokenLegend () => new(
         TokenTypes: Enum.GetNames<TokenType>(),

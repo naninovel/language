@@ -4,6 +4,7 @@ using Bootsharp.Inject;
 using Microsoft.Extensions.DependencyInjection;
 using Naninovel.Bindings;
 using Naninovel.Language;
+using Naninovel.Metadata;
 
 [assembly: ExcludeFromCodeCoverage]
 [assembly: JSPreferences(Space = [Space.Pattern, Space.Replacement])]
@@ -28,8 +29,9 @@ public static class Language
     public static void BootServer () => new ServiceCollection()
         // core services
         .AddSingleton<ILogger, JSLogger>()
-        .AddSingleton<ISettingsHandler, SettingsHandler>()
+        .AddSingleton<IMetadata, MetadataProvider>()
         .AddSingleton<IMetadataHandler, MetadataHandler>()
+        .AddSingleton<ISettingsHandler, SettingsHandler>()
         .AddSingleton<IDocumentFactory, DocumentFactory>()
         .AddSingleton<IDocumentRegistry, DocumentRegistry>()
         .AddSingleton<IEndpointRegistry, EndpointRegistry>()

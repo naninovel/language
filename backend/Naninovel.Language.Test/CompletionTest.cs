@@ -6,14 +6,14 @@ namespace Naninovel.Language.Test;
 
 public class CompletionTest
 {
-    private readonly Project meta = new();
+    private readonly MetadataMock meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();
     private readonly Mock<IEndpointRegistry> endpoints = new();
     private readonly CompletionHandler handler;
 
     public CompletionTest ()
     {
-        handler = new(docs.Object, endpoints.Object);
+        handler = new(meta, docs.Object, endpoints.Object);
     }
 
     [Fact]
@@ -136,9 +136,7 @@ public class CompletionTest
     [Fact]
     public void ParametrizeGenericCommandReturnedForInlined ()
     {
-        meta.Syntax = new Syntax {
-            ParametrizeGeneric = "<"
-        };
+        meta.Syntax = new Syntax(parametrizeGeneric: "<");
         meta.Commands = [new Metadata.Command { Id = "@", Alias = "<" }];
         Assert.Equal("<", Complete("[", 1)[0].Label);
     }
@@ -146,9 +144,7 @@ public class CompletionTest
     [Fact]
     public void ParametrizeGenericCommandNotReturnedForCommandLine ()
     {
-        meta.Syntax = new Syntax {
-            ParametrizeGeneric = "<"
-        };
+        meta.Syntax = new Syntax(parametrizeGeneric: "<");
         meta.Commands = [new Metadata.Command { Id = "@", Alias = "<" }];
         Assert.Empty(Complete("@", 1));
     }
@@ -709,7 +705,7 @@ public class CompletionTest
         var foo = new Metadata.Parameter { Id = "foo", ValueType = Metadata.ValueType.Boolean, Nameless = true };
         var bar = new Metadata.Parameter { Id = "bar" };
         meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [foo, bar] }];
-        handler.HandleMetadataChanged(meta);
+        handler.HandleMetadataChanged(meta.AsProject());
         var mapper = new Mock<RangeMapper>();
         docs.Setup(d => d.Get("@")).Returns(new Document([new DocumentLine("@cmd ", new CommandLine(new("cmd")), [], mapper.Object)]));
         Assert.Equal("foo", handler.Complete("@", new Position(0, 5))[0].Label);
@@ -718,8 +714,7 @@ public class CompletionTest
     [Fact]
     public void RespectBooleanLocalization ()
     {
-        meta.Syntax.True = "да";
-        meta.Syntax.False = "нет";
+        meta.Syntax = new Syntax(@true: "да", @false: "нет");
         var param = new Metadata.Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
         meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         var items = Complete("@cmd ", 5);
@@ -731,7 +726,7 @@ public class CompletionTest
     [Fact]
     public void WhenCommandAndParameterIdsAreSameCompletesParameterValues ()
     {
-        meta.Syntax.CommandLine = ":";
+        meta.Syntax = new Syntax(commandLine: ":");
         var param = new Metadata.Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
         meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("cmd", Complete(":", 1)[0].Label);
@@ -740,7 +735,7 @@ public class CompletionTest
 
     private IReadOnlyList<CompletionItem> Complete (string line, int charOffset, string uri = "@")
     {
-        handler.HandleMetadataChanged(meta);
+        handler.HandleMetadataChanged(meta.AsProject());
         docs.SetupScript(meta, uri, line);
         return handler.Complete(uri, new Position(0, charOffset));
     }

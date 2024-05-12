@@ -7,25 +7,25 @@ namespace Naninovel.Language;
 
 public class CompletionHandler : ICompletionHandler, IMetadataObserver
 {
+    private readonly IMetadata meta;
     private readonly IDocumentRegistry docs;
     private readonly CompletionProvider completions = new();
     private readonly CommandCompletionHandler commandHandler;
-    private readonly MetadataProvider meta = new();
 
     private char charBehindCursor => line.GetCharBehindCursor(position);
     private Position position;
     private DocumentLine line;
     private string scriptName = string.Empty;
 
-    public CompletionHandler (IDocumentRegistry docs, IEndpointRegistry endpoints)
+    public CompletionHandler (IMetadata meta, IDocumentRegistry docs, IEndpointRegistry endpoints)
     {
+        this.meta = meta;
         this.docs = docs;
         commandHandler = new CommandCompletionHandler(meta, completions, endpoints);
     }
 
     public void HandleMetadataChanged (Project project)
     {
-        meta.Update(project);
         completions.Update(meta);
     }
 

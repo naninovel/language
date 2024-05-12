@@ -1,6 +1,6 @@
 ﻿using Moq;
 using Naninovel.Metadata;
-using Naninovel.TestUtilities;
+using Naninovel.Parsing;
 
 namespace Naninovel.Language.Test;
 
@@ -21,5 +21,29 @@ public class MetadataTest
         handler.UpdateMetadata(meta);
         notifier.Verify(n => n.HandleMetadataChanged(meta), Times.Once);
         notifier.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void ProviderUpdatesMetadata ()
+    {
+        var provider = new MetadataProvider();
+        provider.HandleMetadataChanged(new() {
+            Commands = [new() { Id = "cmd", Parameters = [new() { Id = "p" }] }],
+            Actors = [new() { Id = "actor" }],
+            Resources = [new() { Path = "res" }],
+            Constants = [new() { Name = "const" }],
+            Variables = ["var"],
+            Functions = ["fn"],
+            Syntax = new Syntax(commentLine: "%")
+        });
+        Assert.Equal("cmd", provider.Commands.First().Id);
+        Assert.Equal("actor", provider.Actors.First().Id);
+        Assert.Equal("res", provider.Resources.First().Path);
+        Assert.Equal("const", provider.Constants.First().Name);
+        Assert.Equal("var", provider.Variables.First());
+        Assert.Equal("fn", provider.Functions.First());
+        Assert.Equal("%", provider.Syntax.CommentLine);
+        Assert.Equal("cmd", provider.FindCommand("cmd")!.Id);
+        Assert.Equal("p", provider.FindParameter("cmd", "p")!.Id);
     }
 }

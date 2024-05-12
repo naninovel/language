@@ -2,7 +2,7 @@
 
 namespace Naninovel.Language;
 
-public class MetadataHandler(IObserverNotifier<IMetadataObserver> notifier) : IMetadataHandler
+public class MetadataHandler (IObserverNotifier<IMetadataObserver> notifier) : IMetadataHandler
 {
     public void UpdateMetadata (Project meta)
     {

@@ -1,17 +1,16 @@
 using Moq;
-using Naninovel.Metadata;
 
 namespace Naninovel.Language.Test;
 
 public class DefinitionTest
 {
+    private readonly MetadataMock meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();
-    private readonly Project meta = new();
     private readonly DefinitionHandler handler;
 
     public DefinitionTest ()
     {
-        handler = new(docs.Object);
+        handler = new(meta, docs.Object);
     }
 
     [Fact]
@@ -62,7 +61,6 @@ public class DefinitionTest
     {
         meta.SetupCommandWithEndpoint("goto");
         docs.SetupScript("/foo.nani", "@goto bar");
-        handler.HandleMetadataChanged(meta);
         Assert.Null(handler.GotoDefinition("/foo.nani", new(0, 7)));
     }
 
@@ -92,7 +90,6 @@ public class DefinitionTest
 
     private LocationLink Goto (string documentUri, Position position)
     {
-        handler.HandleMetadataChanged(meta);
         return handler.GotoDefinition(documentUri, position)![0];
     }
 }

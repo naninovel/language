@@ -5,13 +5,13 @@ namespace Naninovel.Language.Test;
 
 public class HoverTest
 {
+    private readonly MetadataMock meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();
-    private readonly Project meta = new();
     private readonly HoverHandler handler;
 
     public HoverTest ()
     {
-        handler = new(docs.Object);
+        handler = new(meta, docs.Object);
     }
 
     [Fact]
@@ -138,8 +138,7 @@ public class HoverTest
 
     private Hover? HoverNullable (string line, int charOffset)
     {
-        docs.SetupScript("@", line);
-        handler.HandleMetadataChanged(meta);
+        docs.SetupScript(meta, "@", line);
         return handler.Hover("@", new Position(0, charOffset));
     }
 }

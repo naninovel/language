@@ -3,22 +3,13 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
+public class DefinitionHandler (IMetadata meta, IDocumentRegistry registry) : IDefinitionHandler
 {
-    private readonly MetadataProvider meta = new();
-    private readonly EndpointResolver resolver;
-    private readonly IDocumentRegistry registry;
+    private readonly EndpointResolver resolver = new(meta);
+
     private Position position;
     private DocumentLine line;
     private string documentUri = null!;
-
-    public DefinitionHandler (IDocumentRegistry registry)
-    {
-        this.registry = registry;
-        resolver = new(meta);
-    }
-
-    public void HandleMetadataChanged (Project project) => meta.Update(project);
 
     public IReadOnlyList<LocationLink>? GotoDefinition (string documentUri, Position position)
     {

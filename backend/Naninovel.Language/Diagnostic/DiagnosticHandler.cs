@@ -7,12 +7,11 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
 {
     private readonly List<IDiagnoser> diagnosers = [];
     private readonly DiagnosticRegistry registry = new();
-    private readonly MetadataProvider meta = new();
     private readonly IDocumentRegistry docs;
     private readonly IDiagnosticPublisher publisher;
     private readonly IDiagnoserFactory factory;
 
-    public DiagnosticHandler (IDocumentRegistry docs, IEndpointRegistry endpoints,
+    public DiagnosticHandler (IMetadata meta, IDocumentRegistry docs, IEndpointRegistry endpoints,
         IDiagnosticPublisher publisher, IDiagnoserFactory? factory = null)
     {
         this.publisher = publisher;
@@ -56,9 +55,8 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
         Publish();
     }
 
-    public void HandleMetadataChanged (Project project)
+    public void HandleMetadataChanged (Project _)
     {
-        meta.Update(project);
         ReDiagnoseAll();
     }
 

@@ -7,9 +7,14 @@ public class TokenTest
 {
     private record Token (int Line, int Char, int Length, TokenType Type);
 
+    private readonly MetadataMock meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();
-    private readonly Project meta = new();
-    private TokenHandler handler => GetHandler();
+    private readonly TokenHandler handler;
+
+    public TokenTest ()
+    {
+        handler = new(meta, docs.Object);
+    }
 
     [Fact]
     public void LegendModifiersAreEmpty ()
@@ -326,12 +331,5 @@ public class TokenTest
         return data.Select((v, i) => new { index = i, value = v })
             .GroupBy(x => x.index / 5).Select(x => x.Select(v => v.value).ToArray())
             .Select(d => new Token(d[0], d[1], d[2], (TokenType)d[3])).ToArray();
-    }
-
-    private TokenHandler GetHandler ()
-    {
-        var handler = new TokenHandler(docs.Object);
-        handler.HandleMetadataChanged(meta);
-        return handler;
     }
 }

@@ -89,7 +89,8 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void DiagnosticsAreAddedWhenDocumentRemoved ()
     {
-        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Meta.SetupCommandWithEndpoint("goto");
+        SetupHandler();
         Docs.SetupScript("script1.nani", "@goto script2.foo", "@goto script2");
         Docs.SetupScript("script2.nani", "# foo");
         Endpoints.Setup(d => d.ScriptExist("script2")).Returns(true);
@@ -118,7 +119,8 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void UnusedLabelIsDetectedAfterChange ()
     {
-        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Meta.SetupCommandWithEndpoint("goto");
+        SetupHandler();
         Docs.SetupScript("foo.nani", "[goto bar.label]");
         Docs.SetupScript("bar.nani", "# label");
         Endpoints.Setup(d => d.LabelExist(new("bar", "label"))).Returns(true);
@@ -141,7 +143,8 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void UnknownEndpointIsDetectedAfterChange ()
     {
-        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Meta.SetupCommandWithEndpoint("goto");
+        SetupHandler();
         Docs.SetupScript("foo.nani", "@goto bar.label");
         Docs.SetupScript("bar.nani", "# label");
         Endpoints.Setup(d => d.LabelExist(new("bar", "label"))).Returns(true);
@@ -164,7 +167,8 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void UnusedLabelIsClearedAfterChangeInSameScript ()
     {
-        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Meta.SetupCommandWithEndpoint("goto");
+        SetupHandler();
         Docs.SetupScript("script.nani", "# label", "@goto .foo");
         Endpoints.Setup(d => d.LabelExist(new("script", "label"))).Returns(true);
         Endpoints.Setup(d => d.NavigatorExist(new("script", "foo"))).Returns(true);
@@ -186,7 +190,8 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void UnknownEndpointIsClearedAfterChangeInSameScript ()
     {
-        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Meta.SetupCommandWithEndpoint("goto");
+        SetupHandler();
         Docs.SetupScript("script.nani", "# foo", "@goto .label");
         Endpoints.Setup(d => d.LabelExist(new("script", "foo"))).Returns(true);
         Endpoints.Setup(d => d.NavigatorExist(new("script", "label"))).Returns(true);
@@ -208,7 +213,8 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void CanDiagnoseWhenRemovingLines ()
     {
-        SetupHandler(Meta.SetupCommandWithEndpoint("goto"));
+        Meta.SetupCommandWithEndpoint("goto");
+        SetupHandler();
         Docs.SetupScript("foo.nani", "# bar", "@goto .bar", "[@goto .bar]");
         Endpoints.Setup(d => d.LabelExist(new("foo", "bar"))).Returns(true);
         Endpoints.Setup(d => d.NavigatorExist(new("foo", "bar"))).Returns(true);

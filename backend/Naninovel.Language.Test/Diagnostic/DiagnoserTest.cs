@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using Moq;
-using Naninovel.Metadata;
 
 namespace Naninovel.Language.Test;
 
@@ -9,7 +8,7 @@ public abstract class DiagnoserTest
     protected const string DefaultUri = "this.nani";
     protected abstract Settings Settings { get; }
     protected DiagnosticHandler Handler { get; }
-    protected Project Meta { get; } = new();
+    protected MetadataMock Meta { get; } = new();
     protected Mock<IDocumentRegistry> Docs { get; } = new();
     protected Mock<IEndpointRegistry> Endpoints { get; } = new();
     protected Mock<IDiagnosticPublisher> Publisher { get; } = new();
@@ -18,7 +17,7 @@ public abstract class DiagnoserTest
 
     protected DiagnoserTest ()
     {
-        Handler = new(Docs.Object, Endpoints.Object, Publisher.Object);
+        Handler = new(Meta, Docs.Object, Endpoints.Object, Publisher.Object);
         Docs.Setup(d => d.GetAllUris()).Returns(Array.Empty<string>());
         Endpoints.Setup(e => e.GetLabelLocations(It.Ref<QualifiedLabel>.IsAny)).Returns(ImmutableHashSet<LineLocation>.Empty);
         Endpoints.Setup(e => e.GetNavigatorLocations(It.Ref<QualifiedEndpoint>.IsAny)).Returns(ImmutableHashSet<LineLocation>.Empty);
@@ -37,7 +36,7 @@ public abstract class DiagnoserTest
     {
         var doc = new Mock<IDocument>();
         doc.Setup(d => d.LineCount).Returns(5);
-        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory().CreateLine("@"));
+        doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory(Meta).CreateLine("@"));
         Docs.Setup(d => d.GetAllUris()).Returns(["foo.nani"]);
         Docs.Setup(d => d.Get("foo.nani")).Returns(doc.Object);
         Handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
@@ -56,10 +55,10 @@ public abstract class DiagnoserTest
         return published.TryGetValue(uri, out var diags) ? diags : Array.Empty<Diagnostic>();
     }
 
-    protected void SetupHandler (Project meta = null)
+    protected void SetupHandler ()
     {
         Handler.HandleSettingsChanged(Settings);
-        Handler.HandleMetadataChanged(meta ?? Meta);
+        Handler.HandleMetadataChanged(Meta.AsProject());
     }
 
     protected IReadOnlyList<Diagnostic> Diagnose (params string[] lines)

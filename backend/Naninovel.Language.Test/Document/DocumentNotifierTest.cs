@@ -1,5 +1,4 @@
 ﻿using Moq;
-using Naninovel.TestUtilities;
 using static Naninovel.Language.Test.Common;
 
 namespace Naninovel.Language.Test;
@@ -12,7 +11,8 @@ public class DocumentNotifierTest
 
     public DocumentNotifierTest ()
     {
-        registry = new(observers.Object, notifier, new DocumentFactory());
+        var factory = new DocumentFactory(new MetadataMock());
+        registry = new(observers.Object, notifier, factory);
     }
 
     [Fact]

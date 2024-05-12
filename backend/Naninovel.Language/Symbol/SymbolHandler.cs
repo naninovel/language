@@ -3,16 +3,13 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class SymbolHandler (IDocumentRegistry registry) : ISymbolHandler, IMetadataObserver
+public class SymbolHandler (IMetadata meta, IDocumentRegistry registry) : ISymbolHandler
 {
-    private readonly MetadataProvider meta = new();
     private readonly List<Symbol> symbols = [];
 
     private int lineIndex;
     private DocumentLine line;
     private string commandId = "";
-
-    public void HandleMetadataChanged (Project project) => meta.Update(project);
 
     public IReadOnlyList<Symbol> GetSymbols (string documentUri)
     {

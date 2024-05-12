@@ -18,7 +18,7 @@ public class DiagnosticHandlerTest
         factory.Setup(f => f.Create(It.IsAny<DiagnosticContext>()))
             .Callback((DiagnosticContext c) => diagnosers[c] = new Mock<IDiagnoser>())
             .Returns((DiagnosticContext c) => diagnosers[c].Object);
-        handler = new(docs.Object, endpoints.Object, publisher.Object, factory.Object);
+        handler = new(new MetadataMock(), docs.Object, endpoints.Object, publisher.Object, factory.Object);
     }
 
     [Fact]
