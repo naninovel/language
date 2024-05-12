@@ -262,8 +262,8 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void RespectsCompilerLocalizationWhenDiagnosingBoolean ()
     {
-        Meta.Preferences.Identifiers.True = "да";
-        Meta.Preferences.Identifiers.False = "нет";
+        Meta.Syntax.True = "да";
+        Meta.Syntax.False = "нет";
         var parameters = new Parameter[] {
             new() { Id = "p1", ValueType = Metadata.ValueType.Boolean },
             new() { Id = "p2", ValueType = Metadata.ValueType.Boolean },

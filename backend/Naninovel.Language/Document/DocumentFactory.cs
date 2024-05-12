@@ -7,16 +7,20 @@ public class DocumentFactory : IMetadataObserver, IDocumentFactory
 {
     private readonly ErrorCollector errors = [];
     private readonly RangeMapper mapper = new();
-    private ScriptParser parser;
+    private readonly MetadataProvider meta = new();
+    private readonly ScriptParser parser;
 
     public DocumentFactory ()
     {
-        parser = CreateParser(Identifiers.Default);
+        parser = new(new() {
+            Handlers = new() { ErrorHandler = errors, RangeAssociator = mapper },
+            Syntax = meta.Syntax
+        });
     }
 
-    public void HandleMetadataChanged (Project meta)
+    public void HandleMetadataChanged (Project project)
     {
-        parser = CreateParser(meta.Preferences.Identifiers);
+        meta.Update(project);
     }
 
     public Document CreateDocument (string scriptText)
@@ -51,9 +55,4 @@ public class DocumentFactory : IMetadataObserver, IDocumentFactory
         mapper.Clear();
         return lineMapper;
     }
-
-    private ScriptParser CreateParser (Identifiers ids) => new(new() {
-        Handlers = new() { ErrorHandler = errors, RangeAssociator = mapper },
-        Identifiers = ids
-    });
 }

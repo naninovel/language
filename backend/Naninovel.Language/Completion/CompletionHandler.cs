@@ -8,9 +8,9 @@ namespace Naninovel.Language;
 public class CompletionHandler : ICompletionHandler, IMetadataObserver
 {
     private readonly IDocumentRegistry docs;
-    private readonly CompletionProvider provider = new();
+    private readonly CompletionProvider completions = new();
     private readonly CommandCompletionHandler commandHandler;
-    private readonly MetadataProvider metaProvider = new();
+    private readonly MetadataProvider meta = new();
 
     private char charBehindCursor => line.GetCharBehindCursor(position);
     private Position position;
@@ -20,13 +20,13 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     public CompletionHandler (IDocumentRegistry docs, IEndpointRegistry endpoints)
     {
         this.docs = docs;
-        commandHandler = new CommandCompletionHandler(metaProvider, provider, endpoints);
+        commandHandler = new CommandCompletionHandler(meta, completions, endpoints);
     }
 
-    public void HandleMetadataChanged (Project meta)
+    public void HandleMetadataChanged (Project project)
     {
-        metaProvider.Update(meta);
-        provider.Update(metaProvider);
+        meta.Update(project);
+        completions.Update(meta);
     }
 
     public IReadOnlyList<CompletionItem> Complete (string documentUri, Position position)
@@ -54,9 +54,9 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     private CompletionItem[] GetForGenericLine (GenericLine genericLine)
     {
         if (string.IsNullOrEmpty(line.Text) || IsCursorOver(genericLine.Prefix?.Author))
-            return provider.GetActors(CharacterType);
+            return completions.GetActors(CharacterType);
         if (ShouldCompleteAuthorAppearance(genericLine, out var authorId))
-            return provider.GetAppearances(authorId, CharacterType);
+            return completions.GetAppearances(authorId, CharacterType);
         if (genericLine.Content.OfType<InlinedCommand>().FirstOrDefault(IsCursorOver) is { } inlined)
             return commandHandler.Handle(inlined.Command, position, line, scriptName, true);
         if (genericLine.Content.OfType<MixedValue>().FirstOrDefault(IsCursorOver) is { } text)
@@ -68,7 +68,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     {
         authorId = genericLine.Prefix?.Author;
         if (IsCursorOver(genericLine.Prefix?.Appearance)) return true;
-        return charBehindCursor == metaProvider.Preferences.Identifiers.AuthorAppearance[0] &&
+        return charBehindCursor == meta.Syntax.AuthorAppearance[0] &&
                !(authorId = line.Text[..(position.Character - 1)]).Any(char.IsWhiteSpace);
     }
 
@@ -76,8 +76,8 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     {
         if (!text.OfType<Parsing.Expression>().Any(IsCursorOver))
             return [];
-        if (charBehindCursor == metaProvider.Preferences.Identifiers.ExpressionClose[0])
+        if (charBehindCursor == meta.Syntax.ExpressionClose[0])
             return [];
-        return provider.GetExpressions();
+        return completions.GetExpressions();
     }
 }

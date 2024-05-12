@@ -12,17 +12,17 @@ public class EndpointRegistry : IEndpointRegistry, IDocumentObserver, IMetadataO
     private readonly Dictionary<QualifiedLabel, HashSet<LineLocation>> labelLocations = [];
     private readonly Dictionary<LineLocation, QualifiedEndpoint> navigators = [];
     private readonly Dictionary<QualifiedEndpoint, HashSet<LineLocation>> navigatorLocations = [];
-    private readonly MetadataProvider metaProvider = new();
+    private readonly MetadataProvider meta = new();
     private readonly EndpointResolver resolver;
     private readonly IDocumentRegistry docs;
 
     public EndpointRegistry (IDocumentRegistry docs)
     {
         this.docs = docs;
-        resolver = new(metaProvider);
+        resolver = new(meta);
     }
 
-    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
+    public void HandleMetadataChanged (Project project) => meta.Update(project);
 
     public void HandleDocumentAdded (string uri)
     {

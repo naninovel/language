@@ -3,7 +3,7 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvider provider, IEndpointRegistry endpoints)
+internal class CommandCompletionHandler (IMetadata meta, CompletionProvider completions, IEndpointRegistry endpoints)
 {
     private readonly record struct CommandContext (Parsing.Command Model, Metadata.Command Meta);
     private readonly record struct ParameterContext (Parsing.Parameter Model, Metadata.Parameter Meta);
@@ -21,7 +21,7 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
     {
         ResetState(position, line, scriptName);
         if (ShouldCompleteCommandId(command))
-            return inline ? provider.GetInlineCommands() : provider.GetLineCommands();
+            return inline ? completions.GetInlineCommands() : completions.GetLineCommands();
         if (!TryResolveCommandContext(command, out this.command)) return [];
         if (!TryResolveParameterContext(out param)) return GetParameters();
         return GetParameterValues();
@@ -37,7 +37,7 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
 
     private CompletionItem[] GetParameters ()
     {
-        return provider.GetParameters(command.Meta.Id)
+        return completions.GetParameters(command.Meta.Id)
             .Where(item => {
                 var itemId = item.Label;
                 var paramMeta = meta.FindParameter(command.Meta.Id, itemId);
@@ -52,8 +52,8 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
     private bool ShouldCompleteCommandId (Parsing.Command command)
     {
         return IsCursorOver(command.Identifier) || string.IsNullOrEmpty(command.Identifier) &&
-            (charBehindCursor == meta.Preferences.Identifiers.CommandLine[0] ||
-             charBehindCursor == meta.Preferences.Identifiers.InlinedOpen[0]);
+            (charBehindCursor == meta.Syntax.CommandLine[0] ||
+             charBehindCursor == meta.Syntax.InlinedOpen[0]);
     }
 
     private bool TryResolveCommandContext (Parsing.Command model, out CommandContext ctx)
@@ -85,9 +85,9 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
     private CompletionItem[] GetParameterValues ()
     {
         if (ShouldCompleteExpressions())
-            return provider.GetExpressions();
+            return completions.GetExpressions();
         if (param.Meta.ValueType == Metadata.ValueType.Boolean)
-            return provider.GetBooleans();
+            return completions.GetBooleans();
         if (FindValueContext() is { } context)
             return GetContextValues(context);
         return [];
@@ -96,7 +96,7 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
     private bool ShouldCompleteExpressions ()
     {
         return param.Model.Value.OfType<Parsing.Expression>().Any(IsCursorOver) &&
-               charBehindCursor != meta.Preferences.Identifiers.ExpressionClose[0];
+               charBehindCursor != meta.Syntax.ExpressionClose[0];
     }
 
     private ValueContext? FindValueContext ()
@@ -117,13 +117,13 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
     }
 
     private CompletionItem[] GetContextValues (ValueContext ctx) => ctx.Type switch {
-        ValueContextType.Expression => provider.GetExpressions(),
+        ValueContextType.Expression => completions.GetExpressions(),
         ValueContextType.Constant => GetConstantValues(ctx),
         ValueContextType.Endpoint => GetEndpointValues(ctx),
-        ValueContextType.Resource => provider.GetResources(ctx.SubType ?? ""),
-        ValueContextType.Actor => provider.GetActors(ctx.SubType ?? ""),
-        ValueContextType.Appearance when FindActor() is { } actor => provider.GetAppearances(actor.Id, actor.Type),
-        ValueContextType.Appearance when !string.IsNullOrEmpty(ctx.SubType) => provider.GetAppearances(ctx.SubType),
+        ValueContextType.Resource => completions.GetResources(ctx.SubType ?? ""),
+        ValueContextType.Actor => completions.GetActors(ctx.SubType ?? ""),
+        ValueContextType.Appearance when FindActor() is { } actor => completions.GetAppearances(actor.Id, actor.Type),
+        ValueContextType.Appearance when !string.IsNullOrEmpty(ctx.SubType) => completions.GetAppearances(ctx.SubType),
         _ => []
     };
 
@@ -154,7 +154,7 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
     private CompletionItem[] GetConstantValues (ValueContext context)
     {
         var names = ConstantEvaluator.EvaluateNames(context.SubType ?? "", scriptName, GetParamValue);
-        return names.SelectMany(provider.GetConstants).ToArray();
+        return names.SelectMany(completions.GetConstants).ToArray();
 
         string? GetParamValue (string id, int? index)
         {
@@ -170,9 +170,9 @@ internal class CommandCompletionHandler (MetadataProvider meta, CompletionProvid
         if (context.SubType == Constants.EndpointScript)
         {
             var labels = endpoints.GetLabelsInScript(scriptName);
-            return provider.GetScriptEndpoints(endpoints.GetAllScriptNames(), labels.Count > 0);
+            return completions.GetScriptEndpoints(endpoints.GetAllScriptNames(), labels.Count > 0);
         }
         var script = GetNamedValue(param.Model.Value, true) ?? scriptName;
-        return provider.GetLabelEndpoints(endpoints.GetLabelsInScript(script));
+        return completions.GetLabelEndpoints(endpoints.GetLabelsInScript(script));
     }
 }

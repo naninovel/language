@@ -4,7 +4,7 @@ using static Naninovel.Language.Common;
 
 namespace Naninovel.Language;
 
-internal class NavigationDiagnoser(MetadataProvider meta, IDocumentRegistry docs,
+internal class NavigationDiagnoser(IMetadata meta, IDocumentRegistry docs,
     IEndpointRegistry endpoints, DiagnosticRegistry registry) : Diagnoser(docs, registry)
 {
     public override DiagnosticContext Context => DiagnosticContext.Navigation;

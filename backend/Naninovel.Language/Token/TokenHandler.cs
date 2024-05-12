@@ -12,9 +12,9 @@ public class TokenHandler (IDocumentRegistry registry) : ITokenHandler, IMetadat
     private Range range;
     private int lineIndex;
 
-    public void HandleMetadataChanged (Project meta)
+    public void HandleMetadataChanged (Project project)
     {
-        this.meta.Update(meta);
+        meta.Update(project);
     }
 
     public TokenLegend GetTokenLegend () => new(

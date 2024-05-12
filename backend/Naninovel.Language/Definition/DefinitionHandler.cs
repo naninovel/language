@@ -5,7 +5,7 @@ namespace Naninovel.Language;
 
 public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
 {
-    private readonly MetadataProvider metaProvider = new();
+    private readonly MetadataProvider meta = new();
     private readonly EndpointResolver resolver;
     private readonly IDocumentRegistry registry;
     private Position position;
@@ -15,10 +15,10 @@ public class DefinitionHandler : IDefinitionHandler, IMetadataObserver
     public DefinitionHandler (IDocumentRegistry registry)
     {
         this.registry = registry;
-        resolver = new(metaProvider);
+        resolver = new(meta);
     }
 
-    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
+    public void HandleMetadataChanged (Project project) => meta.Update(project);
 
     public IReadOnlyList<LocationLink>? GotoDefinition (string documentUri, Position position)
     {

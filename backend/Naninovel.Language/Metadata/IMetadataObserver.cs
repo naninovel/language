@@ -4,5 +4,5 @@ namespace Naninovel.Language;
 
 public interface IMetadataObserver
 {
-    void HandleMetadataChanged (Project meta);
+    void HandleMetadataChanged (Project project);
 }

@@ -4,10 +4,23 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
-    DiagnosticRegistry registry) : Diagnoser(docs, registry)
+internal class SemanticDiagnoser : Diagnoser
 {
     public override DiagnosticContext Context => DiagnosticContext.Semantic;
+
+    private readonly Parser expParser;
+    private readonly List<ParseDiagnostic> expErrors = [];
+    private readonly IMetadata meta;
+
+    public SemanticDiagnoser (IMetadata meta, IDocumentRegistry docs,
+        DiagnosticRegistry registry) : base(docs, registry)
+    {
+        this.meta = meta;
+        expParser = new Parser(new() {
+            Syntax = meta.Syntax,
+            HandleDiagnostic = expErrors.Add
+        });
+    }
 
     protected override void DiagnoseLine (in DocumentLine line)
     {
@@ -62,20 +75,19 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
 
         if (param.Value.Dynamic || param.Value[0] is not PlainText plain) return;
 
-        var validator = new ValueValidator(meta.Preferences.Identifiers);
+        var validator = new ValueValidator(meta.Syntax);
         if (!validator.Validate(plain, paramMeta.ValueContainerType, paramMeta.ValueType))
             AddInvalidValue(plain, paramMeta);
     }
 
     private void DiagnoseExpression (IValueComponent component, bool assignment)
     {
+        expErrors.Clear();
         var text = component is Parsing.Expression exp ? exp.Body : (PlainText)component;
-        var parser = new Parser(new() {
-            Identifiers = meta.Preferences.Identifiers,
-            HandleDiagnostic = d => AddExpressionError(text, d)
-        });
-        if (assignment) _ = parser.TryParseAssignments(text, []);
-        else _ = parser.TryParse(text, out _);
+        if (assignment) _ = expParser.TryParseAssignments(text, []);
+        else _ = expParser.TryParse(text, out _);
+        foreach (var err in expErrors)
+            AddExpressionError(text, err);
     }
 
     private void AddUnknownCommand (Parsing.Command command)
@@ -104,7 +116,7 @@ internal class SemanticDiagnoser (MetadataProvider meta, IDocumentRegistry docs,
         var range = Line.GetRange(value, LineIndex);
         var msg = $"Invalid value: '{value}' is not a {paramMeta.TypeLabel}.";
         if (paramMeta.ValueType == Metadata.ValueType.Boolean)
-            msg += $" Expected '{meta.Preferences.Identifiers.True}' or '{meta.Preferences.Identifiers.False}'.";
+            msg += $" Expected '{meta.Syntax.True}' or '{meta.Syntax.False}'.";
         AddError(range, msg);
     }
 

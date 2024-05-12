@@ -6,13 +6,13 @@ namespace Naninovel.Language;
 
 public class HoverHandler (IDocumentRegistry registry) : IHoverHandler, IMetadataObserver
 {
-    private readonly MetadataProvider metaProvider = new();
+    private readonly MetadataProvider meta = new();
     private readonly StringBuilder builder = new();
 
     private Position position;
     private DocumentLine line;
 
-    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
+    public void HandleMetadataChanged (Project project) => meta.Update(project);
 
     public Hover? Hover (string documentUri, Position position)
     {
@@ -44,7 +44,7 @@ public class HoverHandler (IDocumentRegistry registry) : IHoverHandler, IMetadat
 
     private Hover? HoverCommand (Parsing.Command command)
     {
-        var commandMeta = metaProvider.FindCommand(command.Identifier);
+        var commandMeta = meta.FindCommand(command.Identifier);
         if (commandMeta is null) return null;
         if (IsCursorOver(command.Identifier))
             return HoverCommandIdentifier(command, commandMeta);
@@ -70,7 +70,7 @@ public class HoverHandler (IDocumentRegistry registry) : IHoverHandler, IMetadat
 
     private Hover? HoverParameter (Metadata.Command commandMeta, Parsing.Parameter param)
     {
-        var paramMeta = metaProvider.FindParameter(commandMeta.Id, param.Identifier);
+        var paramMeta = meta.FindParameter(commandMeta.Id, param.Identifier);
         if (paramMeta is null || string.IsNullOrEmpty(paramMeta.Summary)) return null;
         var range = line.GetRange(param, position.Line);
         return new Hover(paramMeta.Summary, range);

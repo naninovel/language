@@ -136,20 +136,20 @@ public class CompletionTest
     [Fact]
     public void ParametrizeGenericCommandReturnedForInlined ()
     {
-        meta.Preferences = new Preferences {
-            ParametrizeGenericCommandId = "ParametrizeGeneric"
+        meta.Syntax = new Syntax {
+            ParametrizeGeneric = "<"
         };
-        meta.Commands = [new Metadata.Command { Id = "ParametrizeGeneric", Alias = "<" }];
+        meta.Commands = [new Metadata.Command { Id = "@", Alias = "<" }];
         Assert.Equal("<", Complete("[", 1)[0].Label);
     }
 
     [Fact]
     public void ParametrizeGenericCommandNotReturnedForCommandLine ()
     {
-        meta.Preferences = new Preferences {
-            ParametrizeGenericCommandId = "ParametrizeGeneric"
+        meta.Syntax = new Syntax {
+            ParametrizeGeneric = "<"
         };
-        meta.Commands = [new Metadata.Command { Id = "ParametrizeGeneric", Alias = "<" }];
+        meta.Commands = [new Metadata.Command { Id = "@", Alias = "<" }];
         Assert.Empty(Complete("@", 1));
     }
 
@@ -718,8 +718,8 @@ public class CompletionTest
     [Fact]
     public void RespectBooleanLocalization ()
     {
-        meta.Preferences.Identifiers.True = "да";
-        meta.Preferences.Identifiers.False = "нет";
+        meta.Syntax.True = "да";
+        meta.Syntax.False = "нет";
         var param = new Metadata.Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
         meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         var items = Complete("@cmd ", 5);
@@ -731,7 +731,7 @@ public class CompletionTest
     [Fact]
     public void WhenCommandAndParameterIdsAreSameCompletesParameterValues ()
     {
-        meta.Preferences.Identifiers.CommandLine = ":";
+        meta.Syntax.CommandLine = ":";
         var param = new Metadata.Parameter { Id = "id", ValueType = Metadata.ValueType.Boolean };
         meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("cmd", Complete(":", 1)[0].Label);

@@ -5,14 +5,14 @@ namespace Naninovel.Language;
 
 public class SymbolHandler (IDocumentRegistry registry) : ISymbolHandler, IMetadataObserver
 {
-    private readonly MetadataProvider metaProvider = new();
+    private readonly MetadataProvider meta = new();
     private readonly List<Symbol> symbols = [];
 
     private int lineIndex;
     private DocumentLine line;
     private string commandId = "";
 
-    public void HandleMetadataChanged (Project meta) => metaProvider.Update(meta);
+    public void HandleMetadataChanged (Project project) => meta.Update(project);
 
     public IReadOnlyList<Symbol> GetSymbols (string documentUri)
     {
@@ -221,7 +221,7 @@ public class SymbolHandler (IDocumentRegistry registry) : ISymbolHandler, IMetad
 
     private SymbolKind GetParameterValueKind (Parsing.Parameter parameter)
     {
-        var paramMeta = metaProvider.FindParameter(commandId, parameter.Identifier);
+        var paramMeta = meta.FindParameter(commandId, parameter.Identifier);
         if (paramMeta is null || parameter.Value.Dynamic)
             return SymbolKind.String;
         if (paramMeta.ValueContainerType is ValueContainerType.List or ValueContainerType.NamedList)

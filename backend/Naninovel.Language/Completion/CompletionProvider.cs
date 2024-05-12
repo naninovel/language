@@ -15,11 +15,11 @@ internal class CompletionProvider
     private Dictionary<string, CompletionItem[]> constantsByName = [];
     private Dictionary<string, CompletionItem[]> resourcesByType = [];
 
-    public void Update (MetadataProvider meta)
+    public void Update (IMetadata meta)
     {
-        booleans = [CreateBoolean(meta.Preferences.Identifiers.True), CreateBoolean(meta.Preferences.Identifiers.False)];
+        booleans = [CreateBoolean(meta.Syntax.True), CreateBoolean(meta.Syntax.False)];
         inlineCommands = meta.Commands.Select(CreateCommand).ToArray();
-        lineCommands = meta.Commands.Where(c => c.Id != meta.Preferences.ParametrizeGenericCommandId).Select(CreateCommand).ToArray();
+        lineCommands = meta.Commands.Where(c => c.Alias != meta.Syntax.ParametrizeGeneric).Select(CreateCommand).ToArray();
         expressions = meta.Variables.Select(CreateVariable).Concat(meta.Functions.Select(CreateFunction)).ToArray();
         actorsByType = Map(meta.Actors, a => a.Type, CreateActor);
         actorsByType[Constants.WildcardType] = actorsByType.SelectMany(kv => kv.Value).ToArray();

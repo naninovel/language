@@ -101,8 +101,8 @@ public class SyntaxDiagnoserTest : DiagnoserTest
     [Fact]
     public void RespectsCompilerLocalization ()
     {
-        Meta.Preferences.Identifiers.LabelLine = ";";
-        Meta.Preferences.Identifiers.CommentLine = "#";
+        Meta.Syntax.LabelLine = ";";
+        Meta.Syntax.CommentLine = "#";
         Assert.Empty(Diagnose("#"));
     }
 }
