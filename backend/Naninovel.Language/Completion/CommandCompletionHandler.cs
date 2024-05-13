@@ -111,7 +111,8 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     {
         overNamedValue = false;
         if (param.Model.Value.Count == 0 || param.Meta.ValueContainerType != ValueContainerType.Named) return false;
-        var lastDotIndex = line.GetLineRange(param.Model.Value).Start + line.Extract(param.Model.Value).LastIndexOf('.');
+        var lastDotIndex = line.GetLineRange(param.Model.Value).Start +
+                           line.Extract(param.Model.Value).LastIndexOf(meta.Syntax.NamedDelimiter[0]);
         overNamedValue = lastDotIndex >= 0 && cursor > lastDotIndex;
         return true;
     }
@@ -144,7 +145,7 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     private string? GetNamedValue (MixedValue value, bool name)
     {
         var valueText = line.Extract(value);
-        var dotIndex = valueText.LastIndexOf('.');
+        var dotIndex = valueText.LastIndexOf(meta.Syntax.NamedDelimiter[0]);
         if (dotIndex < 0 && name) return valueText;
         if (dotIndex < 0 && !name) return null;
         var result = name ? valueText[..dotIndex] : valueText[(dotIndex + 1)..];

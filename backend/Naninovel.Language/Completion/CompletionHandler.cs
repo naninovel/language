@@ -9,7 +9,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
 {
     private readonly IMetadata meta;
     private readonly IDocumentRegistry docs;
-    private readonly CompletionProvider completions = new();
+    private readonly CompletionProvider completions;
     private readonly CommandCompletionHandler commandHandler;
 
     private char charBehindCursor => line.GetCharBehindCursor(position);
@@ -21,6 +21,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     {
         this.meta = meta;
         this.docs = docs;
+        completions = new CompletionProvider(meta.Syntax);
         commandHandler = new CommandCompletionHandler(meta, completions, endpoints);
     }
 
