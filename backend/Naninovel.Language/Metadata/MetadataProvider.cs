@@ -10,7 +10,7 @@ public class MetadataProvider : IMetadata, IMetadataObserver
     public IReadOnlyCollection<Constant> Constants => provider.Constants;
     public IReadOnlyCollection<Resource> Resources => provider.Resources;
     public IReadOnlyCollection<string> Variables => provider.Variables;
-    public IReadOnlyCollection<string> Functions => provider.Functions;
+    public IReadOnlyCollection<Function> Functions => provider.Functions;
     public ISyntax Syntax => provider.Syntax;
 
     private readonly Naninovel.Metadata.MetadataProvider provider = new();
@@ -28,5 +28,20 @@ public class MetadataProvider : IMetadata, IMetadataObserver
     public Metadata.Parameter? FindParameter (string commandAliasOrId, string paramAliasOrId)
     {
         return provider.FindParameter(commandAliasOrId, paramAliasOrId);
+    }
+
+    public Function? FindFunction (string name)
+    {
+        return provider.FindFunction(name);
+    }
+
+    public FunctionParameter? FindFunctionParameter (string functionName, string paramName)
+    {
+        return provider.FindFunctionParameter(functionName, paramName);
+    }
+
+    public FunctionParameter? FindFunctionParameter (string functionName, int index)
+    {
+        return provider.FindFunctionParameter(functionName, index);
     }
 }

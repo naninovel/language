@@ -33,7 +33,7 @@ public class MetadataTest
             Resources = [new() { Path = "res" }],
             Constants = [new() { Name = "const" }],
             Variables = ["var"],
-            Functions = ["fn"],
+            Functions = [new() { Name = "fn", Parameters = [new() { Name = "p" }] }],
             Syntax = new Syntax(commentLine: "%")
         });
         Assert.Equal("cmd", provider.Commands.First().Id);
@@ -41,9 +41,12 @@ public class MetadataTest
         Assert.Equal("res", provider.Resources.First().Path);
         Assert.Equal("const", provider.Constants.First().Name);
         Assert.Equal("var", provider.Variables.First());
-        Assert.Equal("fn", provider.Functions.First());
+        Assert.Equal("fn", provider.Functions.First().Name);
         Assert.Equal("%", provider.Syntax.CommentLine);
         Assert.Equal("cmd", provider.FindCommand("cmd")!.Id);
         Assert.Equal("p", provider.FindParameter("cmd", "p")!.Id);
+        Assert.Equal("fn", provider.FindFunction("fn")!.Name);
+        Assert.Equal("p", provider.FindFunctionParameter("fn", "p")!.Name);
+        Assert.Equal("p", provider.FindFunctionParameter("fn", 0)!.Name);
     }
 }

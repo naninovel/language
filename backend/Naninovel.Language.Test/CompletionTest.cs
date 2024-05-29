@@ -453,7 +453,7 @@ public class CompletionTest
         var param = new Metadata.Parameter { Id = "ex", ValueContext = [new() { Type = ValueContextType.Expression }] };
         meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Variables = ["foo"];
-        meta.Functions = ["bar"];
+        meta.Functions = [new() { Name = "bar" }];
         var items = Complete("@cmd ex:", 8);
         Assert.Equal(2, items.Count);
         Assert.Equal("foo", items[0].Label);
@@ -575,7 +575,7 @@ public class CompletionTest
         var param = new Metadata.Parameter { Id = "@", Nameless = true, ValueType = Metadata.ValueType.Boolean };
         meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         meta.Variables = ["foo"];
-        meta.Functions = ["bar"];
+        meta.Functions = [new() { Name = "bar" }];
         var expected = new[] { "foo", "bar" };
         Assert.Equal(expected, Complete("@cmd {", 6).Select(i => i.Label));
         Assert.Equal(expected, Complete("@cmd {x", 7).Select(i => i.Label));
@@ -595,7 +595,7 @@ public class CompletionTest
     public void WhenInsideGenericExpressionVariablesAndFunctionsAreReturned ()
     {
         meta.Variables = ["foo"];
-        meta.Functions = ["bar"];
+        meta.Functions = [new() { Name = "bar" }];
         var expected = new[] { "foo", "bar" };
         Assert.Equal(expected, Complete("{", 1).Select(i => i.Label));
         Assert.Equal(expected, Complete("{x", 2).Select(i => i.Label));

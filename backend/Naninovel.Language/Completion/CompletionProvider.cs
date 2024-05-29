@@ -119,8 +119,8 @@ internal class CompletionProvider (ISyntax stx)
         CommitCharacters = [" "]
     };
 
-    private CompletionItem CreateFunction (string func) => new() {
-        Label = func,
+    private CompletionItem CreateFunction (Function func) => new() {
+        Label = func.Name,
         Kind = CompletionItemKind.Method,
         CommitCharacters = [" "],
         InsertText = func + "()"
