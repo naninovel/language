@@ -119,11 +119,11 @@ internal class CompletionProvider (ISyntax stx)
         CommitCharacters = [" "]
     };
 
-    private CompletionItem CreateFunction (Function func) => new() {
-        Label = func.Name,
+    private CompletionItem CreateFunction (Function fn) => new() {
+        Label = fn.Name + "(" + string.Join(", ", fn.Parameters.Select(p => p.Name)) + ")",
         Kind = CompletionItemKind.Method,
         CommitCharacters = [" "],
-        InsertText = func + "()"
+        InsertText = fn.Name + "()"
     };
 
     private CompletionItem CreateEndpointScript (string scriptName) => new() {
