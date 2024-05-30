@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 
@@ -8,6 +9,7 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     private readonly record struct CommandContext (Parsing.Command Model, Metadata.Command Meta);
     private readonly record struct ParameterContext (Parsing.Parameter Model, Metadata.Parameter Meta);
 
+    private readonly ExpressionCompletionHandler expHandler = new(meta, completions, endpoints);
     private int cursor => position.Character;
     private char charBehindCursor;
     private Position position;
@@ -84,19 +86,19 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
 
     private CompletionItem[] GetParameterValues ()
     {
-        if (ShouldCompleteExpressions())
-            return completions.GetExpressions();
+        if (ShouldCompleteExpressions(out var expression))
+            return expHandler.Handle(expression.Body, position, line, scriptName);
         if (param.Meta.ValueType == Metadata.ValueType.Boolean)
             return completions.GetBooleans();
         if (FindValueContext() is { } context)
-            return GetContextValues(context);
+            return GetContextValues(context, param.Model.Value.FirstOrDefault(IsCursorOver));
         return [];
     }
 
-    private bool ShouldCompleteExpressions ()
+    private bool ShouldCompleteExpressions ([NotNullWhen(true)] out Parsing.Expression? expression)
     {
-        return param.Model.Value.OfType<Parsing.Expression>().Any(IsCursorOver) &&
-               charBehindCursor != meta.Syntax.ExpressionClose[0];
+        expression = param.Model.Value.OfType<Parsing.Expression>().FirstOrDefault(IsCursorOver);
+        return expression != null && charBehindCursor != meta.Syntax.ExpressionClose[0];
     }
 
     private ValueContext? FindValueContext ()
@@ -117,8 +119,8 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
         return true;
     }
 
-    private CompletionItem[] GetContextValues (ValueContext ctx) => ctx.Type switch {
-        ValueContextType.Expression => completions.GetExpressions(),
+    private CompletionItem[] GetContextValues (ValueContext ctx, IValueComponent? cmp) => ctx.Type switch {
+        ValueContextType.Expression => expHandler.Handle(cmp as PlainText ?? (cmp as Parsing.Expression)?.Body, position, line, scriptName),
         ValueContextType.Constant => GetConstantValues(ctx),
         ValueContextType.Endpoint => GetEndpointValues(ctx),
         ValueContextType.Resource => completions.GetResources(ctx.SubType ?? ""),

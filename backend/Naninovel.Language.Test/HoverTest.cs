@@ -198,6 +198,20 @@ public class HoverTest
     }
 
     [Fact]
+    public void CanHoverFunctionInsideParameterWithExpressionContextAndBraces ()
+    {
+        meta.Commands = [
+            new Command {
+                Id = "if", Parameters = [
+                    new() { Id = "@", Nameless = true, ValueContext = [new() { Type = ValueContextType.Expression }] }
+                ]
+            }
+        ];
+        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
+        Assert.Contains("foo", Hover("@if x{fn()}x", 6).Contents.Value);
+    }
+
+    [Fact]
     public void DoesntHoverFunctionsInsideInvalidExpressions ()
     {
         meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
