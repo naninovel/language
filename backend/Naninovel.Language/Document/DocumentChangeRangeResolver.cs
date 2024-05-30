@@ -1,6 +1,4 @@
-﻿using Naninovel.Utilities;
-
-namespace Naninovel.Language;
+﻿namespace Naninovel.Language;
 
 internal class DocumentChangeRangeResolver
 {

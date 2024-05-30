@@ -131,6 +131,99 @@ public class HoverTest
         Assert.Contains("alias | string | \n", content);
     }
 
+    [Fact]
+    public void DoesntHoverParametersWithEmptySummary ()
+    {
+        var parameters = new[] { new Parameter { Id = "p", Summary = "" } };
+        meta.Commands = [new Command { Id = "c", Parameters = parameters }];
+        Assert.Null(Hover("@c p:v|id|", 9).Contents.Value);
+    }
+
+    [Fact]
+    public void CanHoverFunctionInsideCommandParameter ()
+    {
+        meta.Commands = [
+            new Command { Id = "c", Parameters = [new() { Id = "p" }] }
+        ];
+        meta.Functions = [
+            new Function {
+                Name = "fn",
+                Summary = "Function summary.",
+                Remarks = "Function remarks.",
+                Example = "Function examples.",
+                Parameters = [
+                    new() { Name = "p1", Type = Metadata.ValueType.String },
+                    new() { Name = "p2", Type = Metadata.ValueType.Decimal }
+                ]
+            }
+        ];
+        var content = Hover("@c p:x{fn()}x", 7).Contents.Value;
+        Assert.Contains(
+            """
+            ## Summary
+            Function summary.
+            ## Remarks
+            Function remarks.
+            ## Parameters
+            Name | Type
+            :--- | :---
+            p1 | string | 
+            p2 | decimal | 
+            ## Examples
+            ```nani
+            Function examples.
+            ```
+            """, content);
+    }
+
+    [Fact]
+    public void CanHoverFunctionInsideGenericText ()
+    {
+        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
+        Assert.Contains("foo", Hover("{fn()}", 2).Contents.Value);
+    }
+
+    [Fact]
+    public void CanHoverFunctionInsideParameterWithExpressionContext ()
+    {
+        meta.Commands = [
+            new Command {
+                Id = "if", Parameters = [
+                    new() { Id = "@", Nameless = true, ValueContext = [new() { Type = ValueContextType.Expression }] }
+                ]
+            }
+        ];
+        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
+        Assert.Contains("foo", Hover("@if fn()", 4).Contents.Value);
+    }
+
+    [Fact]
+    public void DoesntHoverFunctionsInsideInvalidExpressions ()
+    {
+        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
+        Assert.Null(Hover("{fn(}", 2).Contents.Value);
+    }
+
+    [Fact]
+    public void DoesntHoverUnhoveredFunctions ()
+    {
+        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
+        Assert.Null(Hover("{1+1+fn()}", 2).Contents.Value);
+    }
+
+    [Fact]
+    public void DoesntHoverUnknownFunctions ()
+    {
+        Assert.Null(Hover("{fn()}", 2).Contents.Value);
+    }
+
+    [Fact]
+    public void DoesntHoverUnknownFunctionsWithEmptySummary ()
+    {
+        meta.Functions = [new Function { Name = "fn", Summary = "" }];
+        Assert.Null(Hover("{fn()}", 2).Contents.Value);
+    }
+
     private Hover Hover (string line, int charOffset)
     {
         return HoverNullable(line, charOffset) ?? default;

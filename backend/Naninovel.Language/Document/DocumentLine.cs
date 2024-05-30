@@ -1,3 +1,4 @@
+using Naninovel.Expression;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
@@ -25,6 +26,13 @@ public readonly record struct DocumentLine
         return mapper.TryResolve(component, out range);
     }
 
+    public bool TryResolve (PlainText expressionBody, ExpressionRange expressionRange, out InlineRange range)
+    {
+        var resolved = TryResolve(expressionBody, out var expRange);
+        range = new InlineRange(expRange.Start + expressionRange.Index, expressionRange.Length);
+        return resolved;
+    }
+
     public string Extract (in InlineRange range)
     {
         if (range.Length <= 0 || (range.Start + range.Length) > Text.Length) return "";
@@ -40,6 +48,11 @@ public readonly record struct DocumentLine
     public bool IsCursorOver (ILineComponent? content, in Position cursor)
     {
         if (content is null || !mapper.TryResolve(content, out var range)) return false;
+        return IsCursorOver(range, cursor);
+    }
+
+    public bool IsCursorOver (in InlineRange range, in Position cursor)
+    {
         return cursor.Character >= range.Start &&
                cursor.Character <= range.End + 1;
     }
@@ -66,10 +79,15 @@ public readonly record struct DocumentLine
 
     public Range GetRange (ILineComponent? content, int lineIndex)
     {
-        if (content is null || !mapper.TryResolve(content, out var range))
+        if (content is null || !mapper.TryResolve(content, out var inline))
             return Language.Range.Empty;
-        var start = new Position(lineIndex, range.Start);
-        var end = new Position(lineIndex, range.End + 1);
+        return GetRange(inline, lineIndex);
+    }
+
+    public Range GetRange (InlineRange inline, int lineIndex)
+    {
+        var start = new Position(lineIndex, inline.Start);
+        var end = new Position(lineIndex, inline.End + 1);
         return new Range(start, end);
     }
 }
