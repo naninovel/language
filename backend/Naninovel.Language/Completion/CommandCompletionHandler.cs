@@ -9,7 +9,7 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     private readonly record struct CommandContext (Parsing.Command Model, Metadata.Command Meta);
     private readonly record struct ParameterContext (Parsing.Parameter Model, Metadata.Parameter Meta);
 
-    private readonly ExpressionCompletionHandler expHandler = new(meta, completions, endpoints);
+    private readonly ExpressionCompletionHandler expHandler = new(meta, endpoints, completions);
     private int cursor => position.Character;
     private char charBehindCursor;
     private Position position;

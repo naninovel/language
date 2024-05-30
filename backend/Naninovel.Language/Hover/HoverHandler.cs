@@ -1,27 +1,16 @@
 using System.Text;
-using Naninovel.Expression;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-public class HoverHandler : IHoverHandler
+public class HoverHandler (IMetadata meta, IDocumentRegistry registry) : IHoverHandler
 {
-    private readonly IMetadata meta;
-    private readonly IDocumentRegistry registry;
     private readonly StringBuilder builder = new();
-    private readonly List<ExpressionRange> expRanges = [];
-    private readonly Parser expParser;
+    private readonly FunctionResolver fnResolver = new(meta);
 
     private Position position;
     private DocumentLine line;
-
-    public HoverHandler (IMetadata meta, IDocumentRegistry registry)
-    {
-        this.meta = meta;
-        this.registry = registry;
-        expParser = new(new() { Syntax = meta.Syntax, HandleRange = expRanges.Add });
-    }
 
     public Hover? Hover (string documentUri, Position position)
     {
@@ -94,22 +83,10 @@ public class HoverHandler : IHoverHandler
 
     private Hover? HoverExpression (PlainText expBody)
     {
-        expRanges.Clear();
-        var text = line.Extract(expBody);
-        if (!expParser.TryParse(text, out _)) return null;
-
-        foreach (var range in expRanges)
-        {
-            if (range.Expression is not Expression.Function fn) continue;
-            line.TryResolve(expBody, range, out var fnRange);
-            if (!line.IsCursorOver(fnRange, position)) continue;
-            if (meta.FindFunction(fn.Name) is not { } fnMeta) return null;
-            if (string.IsNullOrEmpty(fnMeta.Summary)) return null;
-            AppendFunction(fnMeta);
-            return new Hover(builder.ToString(), line.GetRange(fnRange, position.Line));
-        }
-
-        return null;
+        if (!fnResolver.TryResolve(line, position, expBody, out var fn, out var fnRange, out _)) return null;
+        if (string.IsNullOrEmpty(fn.Summary)) return null;
+        AppendFunction(fn);
+        return new Hover(builder.ToString(), line.GetRange(fnRange, position.Line));
     }
 
     private void AppendCommand (Metadata.Command cmd)
@@ -146,7 +123,7 @@ public class HoverHandler : IHoverHandler
         builder.Append('\n');
     }
 
-    private void AppendFunction (Metadata.Function fn)
+    private void AppendFunction (Function fn)
     {
         if (!string.IsNullOrEmpty(fn.Summary))
             builder.Append($"## Summary\n{fn.Summary}\n");
