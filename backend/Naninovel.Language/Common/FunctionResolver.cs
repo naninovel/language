@@ -7,9 +7,12 @@ namespace Naninovel.Language;
 
 internal class FunctionResolver
 {
+    private readonly Parser parser;
     private readonly IMetadata meta;
     private readonly List<ExpressionRange> ranges = [];
-    private readonly Parser parser;
+    private readonly List<ResolvedFunction> resolved = [];
+    private DocumentLine line;
+    private PlainText body = null!;
 
     public FunctionResolver (IMetadata meta)
     {
@@ -17,33 +20,40 @@ internal class FunctionResolver
         parser = new(new() { Syntax = meta.Syntax, HandleRange = ranges.Add });
     }
 
-    public bool TryResolve (
-        DocumentLine line,
-        Position position,
-        PlainText expressionBody,
-        [NotNullWhen(true)] out Metadata.Function? functionMeta,
-        out InlineRange functionRange,
-        out Span<(string Value, InlineRange Range, FunctionParameter Meta)> parameters
-    )
+    public bool TryResolve (PlainText expressionBody, DocumentLine line, out ResolvedFunction[] resolved)
+    {
+        resolved = [];
+        ResetState(expressionBody, line);
+        if (!parser.TryParse(line.Extract(expressionBody), out _)) return false;
+        foreach (var range in ranges)
+            if (TryFunction(range, out var fn))
+                this.resolved.Add(fn);
+        if (this.resolved.Count == 0) return false;
+        resolved = this.resolved.ToArray();
+        return true;
+    }
+
+    private void ResetState (PlainText body, DocumentLine line)
     {
         ranges.Clear();
-        functionMeta = default;
-        functionRange = default;
-        parameters = default;
+        resolved.Clear();
+        this.line = line;
+        this.body = body;
+    }
 
-        if (!parser.TryParse(line.Extract(expressionBody), out _))
-            return false;
+    private bool TryFunction (ExpressionRange expRange, [NotNullWhen(true)] out ResolvedFunction? resolved)
+    {
+        resolved = default;
+        if (expRange.Expression is not Expression.Function fn) return false;
+        if (meta.FindFunction(fn.Name) is not { } fnMeta) return false;
+        line.TryResolve(body, expRange, out var fnRange);
+        resolved = new ResolvedFunction(fnMeta, fnRange, []);
+        return true;
+    }
 
-        foreach (var expRange in ranges)
-        {
-            if (expRange.Expression is not Expression.Function fn) continue;
-            line.TryResolve(expressionBody, expRange, out functionRange);
-            if (!line.IsCursorOver(functionRange, position)) continue;
-            if ((functionMeta = meta.FindFunction(fn.Name)) is null) return false;
-            // TODO: Resolve parameters.
-            return true;
-        }
-
+    private bool TryParameter ([NotNullWhen(true)] out ResolvedFunctionParameter? param)
+    {
+        param = default;
         return false;
     }
 }

@@ -9,13 +9,22 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
     private readonly IEndpointRegistry endpoints = endpoints;
     private readonly FunctionResolver fnResolver = new(meta);
 
-    public CompletionItem[] Handle (PlainText? expBody, in Position position,
+    public CompletionItem[] Handle (PlainText? expBody, in Position pos,
         in DocumentLine line, string scriptName)
     {
-        if (expBody is null || !fnResolver.TryResolve(line, position, expBody,
-                out var fn, out var fnRange, out var parameters))
+        if (GetFunctionOverCursor(expBody, pos, line) is not { } fn)
             return completions.GetExpressions();
 
         return completions.GetExpressions();
+    }
+
+    private ResolvedFunction? GetFunctionOverCursor (PlainText? body, in Position pos, in DocumentLine line)
+    {
+        if (body is null) return null;
+        if (!fnResolver.TryResolve(body, line, out var fns)) return null;
+        foreach (var fn in fns)
+            if (line.IsCursorOver(fn.Range, pos))
+                return fn;
+        return null;
     }
 }
