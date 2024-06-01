@@ -733,6 +733,172 @@ public class CompletionTest
         Assert.Equal("true", Complete(":cmd id:", 8)[0].Label);
     }
 
+    [Fact]
+    public void FunctionParametersWithConstantContextAreCompleted ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Constant, SubType = "const" } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        meta.Constants = [new() { Name = "const", Values = ["a", "b"] }];
+        Assert.Contains(Complete("{foo(}", 5), c => c.Label == "\"a\"");
+    }
+
+    [Fact]
+    public void FunctionParametersWithoutContextAreNotCompleted ()
+    {
+        var param = new FunctionParameter { Name = "x" };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        meta.Constants = [new() { Name = "const", Values = ["a", "b"] }];
+        Assert.DoesNotContain(Complete("{foo(}", 5), c => c.Label == "\"a\"");
+    }
+
+    [Fact]
+    public void FunctionParametersWithoutMetadataAreNotCompleted ()
+    {
+        Assert.Empty(Complete("{foo(}", 5));
+    }
+
+    [Fact]
+    public void WhenExpressionDoesntContainFunctionParametersAreNotCompleted ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Constant, SubType = "const" } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        meta.Constants = [new() { Name = "const", Values = ["a", "b"] }];
+        Assert.DoesNotContain(Complete("{foo}", 4), c => c.Label == "\"a\"");
+    }
+
+    [Fact]
+    public void FunctionOutsideCursorIsNotCompleted ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Constant, SubType = "const" } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        meta.Constants = [new() { Name = "const", Values = ["a", "b"] }];
+        Assert.DoesNotContain(Complete("{foo() }", 7), c => c.Label == "\"a\"");
+    }
+
+    [Fact]
+    public void FunctionParametersWithActorContextAreCompleted ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Actor, SubType = "Characters" } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        meta.Actors = [new() { Id = "Ai", Type = "Characters" }];
+        Assert.Contains(Complete("""{foo("}""", 6), c => c.Label == "\"Ai\"");
+    }
+
+    [Fact]
+    public void FunctionParametersWithAppearanceContextAreCompleted ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Appearance, SubType = "Ai" } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        meta.Actors = [new() { Id = "Ai", Type = "Characters", Appearances = ["Happy"] }];
+        Assert.Contains(Complete("""{foo("}""", 6), c => c.Label == "\"Happy\"");
+    }
+
+    [Fact]
+    public void FunctionParametersWithAppearanceContextAndActorInOtherParameterAreCompleted ()
+    {
+        var param1 = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Actor } };
+        var param2 = new FunctionParameter { Name = "y", Context = new() { Type = ValueContextType.Appearance } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param1, param2] }];
+        meta.Actors = [new() { Id = "Ai", Type = "Characters", Appearances = ["Happy"] }];
+        Assert.Contains(Complete("""{foo("Ai", }""", 11), c => c.Label == "\"Happy\"");
+    }
+
+    [Fact]
+    public void CanCompleteScriptsInFunctionParameter ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Endpoint, SubType = Constants.EndpointScript } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string>());
+        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string> { "ScriptA" });
+        Assert.Contains(Complete("{foo(}", 5), c => c.Label == "\"ScriptA\"");
+        Assert.DoesNotContain(Complete("{foo(}", 5), c => c.Label == "\"(this)\"");
+    }
+
+    [Fact]
+    public void WhenCompletingEndpointFunctionParameterIncludesEmptyEndpointWhenLabelsExist ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Endpoint, SubType = Constants.EndpointScript } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string> { "foo" });
+        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string> { "ScriptA" });
+        Assert.Contains(Complete("{foo(}", 5), c => c.Label == "\"ScriptA\"");
+        Assert.Contains(Complete("{foo(}", 5), c => c.Label == "\"(this)\"" && c.InsertText == "\".\"");
+    }
+
+    [Fact]
+    public void CanCompleteScriptLabelsInFunctionParameter ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Endpoint } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string> { "LabelA" });
+        Assert.Contains(Complete("{foo(}", 5), c => c.Label == "\"LabelA\"");
+    }
+
+    [Fact]
+    public void WhenCompletingLabelFunctionParameterCanResolveScriptInNamed ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Endpoint } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        endpoints.Setup(e => e.GetLabelsInScript("ScriptB")).Returns(new HashSet<string> { "LabelA" });
+        Assert.Contains(Complete("""{ foo("ScriptB.}""", 15), c => c.Label == "\"LabelA\"");
+    }
+
+    [Fact]
+    public void CanCompleteResourcesInFunctionParameter ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Resource, SubType = "Audio" } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        meta.Resources = [new() { Path = "Music1", Type = "Audio" }];
+        Assert.Contains(Complete("{foo(}", 5), c => c.Label == "\"Music1\"");
+    }
+
+    [Fact]
+    public void CanCompleteConstantExpressionInFunctionParameter ()
+    {
+        var param = new FunctionParameter {
+            Name = "path",
+            Context = new() { Type = ValueContextType.Constant, SubType = "Labels/{:path[0]??$Script}+Test" }
+        };
+        meta.Functions = [new Function { Name = "foo", Parameters = [param] }];
+        meta.Constants = [
+            new Constant { Name = "Labels/Script001", Values = ["Label1"] },
+            new Constant { Name = "Test", Values = ["Label2"] }
+        ];
+
+        Assert.DoesNotContain(Complete("""{ foo(".}""", 8), c => c.Label == "\"Label1\"");
+        Assert.Contains(Complete("""{ foo(".}""", 8), c => c.Label == "\"Label2\"");
+
+        Assert.Contains(Complete("""{ foo(".}""", 8, "root/Script001.nani"), c => c.Label == "\"Label1\"");
+        Assert.Contains(Complete("""{ foo(".}""", 8, "root/Script001.nani"), c => c.Label == "\"Label2\"");
+
+        Assert.Contains(Complete("""{ foo("Script001.}""", 17), c => c.Label == "\"Label1\"");
+        Assert.Contains(Complete("""{ foo("Script001.}""", 17), c => c.Label == "\"Label2\"");
+    }
+
+    [Fact]
+    public void CanCompleteConstantExpressionUsingOtherParameterInFunctionParameter ()
+    {
+        var param1 = new FunctionParameter {
+            Name = "label",
+            Context = new() { Type = ValueContextType.Constant, SubType = "Labels/{:script}" }
+        };
+        var param2 = new FunctionParameter {
+            Name = "script",
+            Context = new() { Type = ValueContextType.Resource, SubType = "Scripts" }
+        };
+        meta.Functions = [new Function { Name = "foo", Parameters = [param1, param2] }];
+        meta.Constants = [new Constant { Name = "Labels/Script001", Values = ["Label1"] }];
+        Assert.Contains(Complete("""{ foo("","Script001"}""", 7), c => c.Label == "\"Label1\"");
+    }
+
+    [Fact]
+    public void FunctionParametersWithExpressionContextAreCompletedAsExpressions ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Expression } };
+        meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        Assert.Single(Complete("{foo(}", 5));
+    }
+
     private IReadOnlyList<CompletionItem> Complete (string line, int charOffset, string uri = "@")
     {
         handler.HandleMetadataChanged(meta.AsProject());

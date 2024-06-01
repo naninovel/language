@@ -11,8 +11,9 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     private readonly IDocumentRegistry docs;
     private readonly CompletionProvider completions;
     private readonly CommandCompletionHandler commandHandler;
+    private readonly ExpressionCompletionHandler expHandler;
 
-    private char charBehindCursor => line.GetCharBehindCursor(position);
+    private char charBehindCursor;
     private Position position;
     private DocumentLine line;
     private string scriptName = string.Empty;
@@ -23,6 +24,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
         this.docs = docs;
         completions = new CompletionProvider(meta.Syntax);
         commandHandler = new CommandCompletionHandler(meta, completions, endpoints);
+        expHandler = new ExpressionCompletionHandler(meta, endpoints, completions);
     }
 
     public void HandleMetadataChanged (Project project)
@@ -48,6 +50,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
         this.line = line;
         this.position = position;
         this.scriptName = scriptName;
+        charBehindCursor = line.GetCharBehindCursor(position);
     }
 
     private bool IsCursorOver (ILineComponent? content) => line.IsCursorOver(content, position);
@@ -75,10 +78,10 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
 
     private CompletionItem[] GetForGenericText (MixedValue text)
     {
-        if (!text.OfType<Parsing.Expression>().Any(IsCursorOver))
+        if (text.OfType<Parsing.Expression>().FirstOrDefault(IsCursorOver) is not { } exp)
             return [];
         if (charBehindCursor == meta.Syntax.ExpressionClose[0])
             return [];
-        return completions.GetExpressions();
+        return expHandler.Handle(exp.Body, position, line, scriptName);
     }
 }

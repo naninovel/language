@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Naninovel.Expression;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
@@ -24,13 +23,11 @@ internal class FunctionResolver
     {
         resolved = [];
         ResetState(expressionBody, line);
-        if (!parser.TryParse(line.Extract(expressionBody), out _)) return false;
+        _ = parser.TryParse(line.Extract(expressionBody), out _);
         foreach (var range in ranges)
             if (TryFunction(range, out var fn))
                 this.resolved.Add(fn);
-        if (this.resolved.Count == 0) return false;
-        resolved = this.resolved.ToArray();
-        return true;
+        return (resolved = this.resolved.ToArray()).Length > 0;
     }
 
     private void ResetState (PlainText body, DocumentLine line)
@@ -47,13 +44,26 @@ internal class FunctionResolver
         if (expRange.Expression is not Expression.Function fn) return false;
         if (meta.FindFunction(fn.Name) is not { } fnMeta) return false;
         line.TryResolve(body, expRange, out var fnRange);
-        resolved = new ResolvedFunction(fnMeta, fnRange, []);
+        resolved = new ResolvedFunction(fnMeta, fnRange, ResolveParameters(fn, fnMeta));
         return true;
     }
 
-    private bool TryParameter ([NotNullWhen(true)] out ResolvedFunctionParameter? param)
+    private ResolvedFunctionParameter[] ResolveParameters (Expression.Function fn, Metadata.Function fnMeta)
     {
-        param = default;
-        return false;
+        if (fnMeta.Parameters is []) return [];
+        var resolved = new ResolvedFunctionParameter[fnMeta.Parameters.Length];
+        for (var i = 0; i < fnMeta.Parameters.Length; i++)
+            resolved[i] = ResolveParameter(fn.Parameters.ElementAtOrDefault(i), fnMeta.Parameters.ElementAtOrDefault(i));
+        return resolved;
+    }
+
+    private ResolvedFunctionParameter ResolveParameter (IExpression? exp, FunctionParameter? paramMeta)
+    {
+        var expRange = ranges.FirstOrDefault(r => r.Expression == exp);
+        if (expRange.Length == 0) return new(null, default, paramMeta);
+        line.TryResolve(body, expRange, out var range);
+        var content = line.Extract(range);
+        var value = content.Length >= 2 ? content.Substring(1, content.Length - 2) : content;
+        return new(value, range, paramMeta);
     }
 }

@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Naninovel.Metadata;
 using Naninovel.Parsing;
 
@@ -10,6 +9,7 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     private readonly record struct ParameterContext (Parsing.Parameter Model, Metadata.Parameter Meta);
 
     private readonly ExpressionCompletionHandler expHandler = new(meta, endpoints, completions);
+    private readonly NamedValueParser namedParser = new(meta.Syntax);
     private int cursor => position.Character;
     private char charBehindCursor;
     private Position position;
@@ -147,11 +147,8 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     private string? GetNamedValue (MixedValue value, bool name)
     {
         var valueText = line.Extract(value);
-        var dotIndex = valueText.LastIndexOf(meta.Syntax.NamedDelimiter[0]);
-        if (dotIndex < 0 && name) return valueText;
-        if (dotIndex < 0 && !name) return null;
-        var result = name ? valueText[..dotIndex] : valueText[(dotIndex + 1)..];
-        return string.IsNullOrEmpty(result) ? null : result;
+        var parsed = namedParser.Parse(valueText);
+        return name ? parsed.Name : parsed.Value;
     }
 
     private CompletionItem[] GetConstantValues (ValueContext context)

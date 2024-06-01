@@ -212,13 +212,6 @@ public class HoverTest
     }
 
     [Fact]
-    public void DoesntHoverFunctionsInsideInvalidExpressions ()
-    {
-        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
-        Assert.Null(Hover("{fn(}", 2).Contents.Value);
-    }
-
-    [Fact]
     public void DoesntHoverUnhoveredFunctions ()
     {
         meta.Functions = [new Function { Name = "fn", Summary = "foo" }];

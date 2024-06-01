@@ -9,6 +9,12 @@ internal record ResolvedFunctionParameter
     /// Null when argument is not a value, but an expression.
     /// </summary>
     string? Value,
+    /// <summary>
+    /// Null when argument is not a value, but an expression.
+    /// </summary>
     InlineRange Range,
-    FunctionParameter Meta
+    /// <summary>
+    /// Null when function meta doesn't include this parameter.
+    /// </summary>
+    FunctionParameter? Meta
 );
