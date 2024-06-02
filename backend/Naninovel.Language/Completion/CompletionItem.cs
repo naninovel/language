@@ -10,4 +10,5 @@ public readonly record struct CompletionItem
     public MarkupContent? Documentation { get; init; }
     public string[]? CommitCharacters { get; init; }
     public string? InsertText { get; init; }
+    public InsertTextFormat? InsertTextFormat { get; init; }
 }

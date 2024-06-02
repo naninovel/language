@@ -758,6 +758,20 @@ public class CompletionTest
     }
 
     [Fact]
+    public void WhenFunctionHaveParametersCursorMovedInsideParenthesis ()
+    {
+        meta.Functions = [new() { Name = "foo", Parameters = [new() { Name = "x" }] }];
+        Assert.Contains(Complete("{foo}", 4), c => c.InsertText == "foo($0)");
+    }
+
+    [Fact]
+    public void WhenFunctionDoesntHaveParametersCursorIsNotMovedInsideParenthesis ()
+    {
+        meta.Functions = [new() { Name = "foo", Parameters = [] }];
+        Assert.Contains(Complete("{foo}", 4), c => c.InsertText == "foo()");
+    }
+
+    [Fact]
     public void WhenExpressionDoesntContainFunctionParametersAreNotCompleted ()
     {
         var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Constant, SubType = "const" } };

@@ -123,7 +123,8 @@ internal class CompletionProvider (ISyntax stx)
         Label = fn.Name + "(" + string.Join(", ", fn.Parameters.Select(p => p.Name)) + ")",
         Kind = CompletionItemKind.Method,
         CommitCharacters = [" "],
-        InsertText = fn.Name + "()"
+        InsertText = fn.Name + (fn.Parameters.Length > 0 ? "($0)" : "()"),
+        InsertTextFormat = fn.Parameters.Length > 0 ? InsertTextFormat.Snippet : null
     };
 
     private CompletionItem CreateEndpointScript (string scriptName) => new() {

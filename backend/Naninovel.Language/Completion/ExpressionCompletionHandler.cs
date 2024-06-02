@@ -19,7 +19,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
         Reset(fn, position, line, scriptName);
         for (var i = fn.Parameters.Count - 1; i >= 0; i--)
             if (fn.Parameters[i].Meta?.Context is { } ctx && IsParameterOverCursor(i))
-                return [..GetForContext(ctx, fn.Parameters[i]).Select(WrapInQuotes), ..completions.GetExpressions()];
+                return [..GetForContext(ctx, fn.Parameters[i]).Select(AsParamCompletion), ..completions.GetExpressions()];
         return completions.GetExpressions();
     }
 
@@ -93,8 +93,9 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
         return completions.GetLabelEndpoints(endpoints.GetLabelsInScript(script));
     }
 
-    private CompletionItem WrapInQuotes (CompletionItem item)
-    {
-        return item with { Label = $"\"{item.Label}\"", InsertText = item.InsertText is null ? null : $"\"{item.InsertText}\"" };
-    }
+    private CompletionItem AsParamCompletion (CompletionItem item) => item with {
+        Label = $"\"{item.Label}\"",
+        InsertText = item.InsertText is null ? null : $"\"{item.InsertText}\"",
+        CommitCharacters = [","]
+    };
 }
