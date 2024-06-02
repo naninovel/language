@@ -10,6 +10,8 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
     private readonly IDocumentRegistry docs;
     private readonly IDiagnosticPublisher publisher;
     private readonly IDiagnoserFactory factory;
+    private TimeSpan debounceDelay = TimeSpan.Zero;
+    private DateTime lastPublishTime = DateTime.MinValue;
 
     public DiagnosticHandler (IMetadata meta, IDocumentRegistry docs, IEndpointRegistry endpoints,
         IDiagnosticPublisher publisher, IDiagnoserFactory? factory = null)
@@ -21,6 +23,7 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
 
     public void HandleSettingsChanged (Settings settings)
     {
+        debounceDelay = TimeSpan.FromMilliseconds(settings.DebounceDelay);
         diagnosers.Clear();
         if (settings.DiagnoseSyntax) diagnosers.Add(factory.Create(Syntax));
         if (settings.DiagnoseSemantics) diagnosers.Add(factory.Create(Semantic));
@@ -32,14 +35,14 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
     {
         foreach (var diagnoser in diagnosers)
             diagnoser.HandleDocumentAdded(uri);
-        Publish();
+        PublishDelayed();
     }
 
     public void HandleDocumentRemoved (string uri)
     {
         foreach (var diagnoser in diagnosers)
             diagnoser.HandleDocumentRemoved(uri);
-        Publish();
+        PublishDelayed();
     }
 
     public void HandleDocumentChanging (string uri, LineRange range)
@@ -52,7 +55,7 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
     {
         foreach (var diagnoser in diagnosers)
             diagnoser.HandleDocumentChanged(uri, range);
-        Publish();
+        PublishDelayed();
     }
 
     public void HandleMetadataChanged (Project _)
@@ -69,7 +72,20 @@ public class DiagnosticHandler : IDiagnosticHandler, ISettingsObserver, IDocumen
             diagnoser.HandleDocumentRemoved(uri);
             diagnoser.HandleDocumentAdded(uri);
         }
-        Publish();
+        PublishDelayed();
+    }
+
+    private async void PublishDelayed ()
+    {
+        if (debounceDelay == TimeSpan.Zero)
+        {
+            Publish();
+            return;
+        }
+        var now = DateTime.Now;
+        lastPublishTime = now;
+        await Task.Delay(debounceDelay);
+        if (now == lastPublishTime) Publish();
     }
 
     private void Publish ()

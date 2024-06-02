@@ -65,4 +65,29 @@ public class DiagnosticHandlerTest
         handler.HandleDocumentChanged("this.nani", new());
         publisher.Verify(p => p.PublishDiagnostics("this.nani", It.IsAny<IReadOnlyList<Diagnostic>>()), Times.Exactly(5));
     }
+
+    [Fact]
+    public async Task WhenDebounceEnabledDelaysPublishing ()
+    {
+        docs.SetupScript("this.nani", "#");
+        handler.HandleSettingsChanged(new() { DebounceDelay = 1, DiagnoseSyntax = true });
+        publisher.VerifyNoOtherCalls();
+        await Task.Delay(2);
+        publisher.Verify(p => p.PublishDiagnostics("this.nani", It.IsAny<IReadOnlyList<Diagnostic>>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MultiplePublishesAccumulatesUnderDebounce ()
+    {
+        docs.SetupScript("this.nani", "#");
+        handler.HandleSettingsChanged(new() { DebounceDelay = 10, DiagnoseSyntax = true });
+        await Task.Delay(2);
+        handler.HandleDocumentChanged("this.nani", new(0, 0));
+        await Task.Delay(2);
+        handler.HandleDocumentChanged("this.nani", new(0, 0));
+        await Task.Delay(2);
+        publisher.VerifyNoOtherCalls();
+        await Task.Delay(10);
+        publisher.Verify(p => p.PublishDiagnostics("this.nani", It.IsAny<IReadOnlyList<Diagnostic>>()), Times.Once);
+    }
 }
