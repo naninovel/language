@@ -3,18 +3,11 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
+/// <param name="Meta">Null when function meta doesn't include this parameter.</param>
 internal record ResolvedFunctionParameter
 (
-    /// <summary>
-    /// Null when argument is not a value, but an expression.
-    /// </summary>
-    string? Value,
-    /// <summary>
-    /// Null when argument is not a value, but an expression.
-    /// </summary>
+    string Value,
     InlineRange Range,
-    /// <summary>
-    /// Null when function meta doesn't include this parameter.
-    /// </summary>
-    FunctionParameter? Meta
+    FunctionParameter? Meta,
+    bool IsOperand
 );

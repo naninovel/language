@@ -238,6 +238,7 @@ public class HoverTest
             new Function { Name = "fn", Summary = "foo", Parameters = [new() { Name = "x" }] },
             new Function { Name = "fn", Summary = "bar", Parameters = [] }
         ];
+        Assert.Contains("foo", Hover("""{fn("x")}""", 2).Contents.Value);
         Assert.Contains("bar", Hover("{fn()}", 2).Contents.Value);
     }
 
@@ -257,7 +258,28 @@ public class HoverTest
                 ]
             }
         ];
+        Assert.Contains("foo", Hover("""{fn("x")}""", 2).Contents.Value);
         Assert.Contains("bar", Hover("""{fn("x","y")}""", 2).Contents.Value);
+    }
+
+    [Fact]
+    public void ResolvesOverloadedVariadicFunction ()
+    {
+        meta.Functions = [
+            new Function {
+                Name = "random", Summary = "foo", Parameters = [
+                    new() { Name = "min", Type = Metadata.ValueType.Integer },
+                    new() { Name = "max", Type = Metadata.ValueType.Integer }
+                ]
+            },
+            new Function {
+                Name = "random", Summary = "bar", Parameters = [
+                    new() { Name = "x", Type = Metadata.ValueType.String, Variadic = true }
+                ]
+            }
+        ];
+        Assert.Contains("foo", Hover("{random(1,2)}", 2).Contents.Value);
+        Assert.Contains("bar", Hover("""{random("x","y")}""", 2).Contents.Value);
     }
 
     [Fact]
@@ -289,6 +311,8 @@ public class HoverTest
                 ]
             }
         ];
+        Assert.Contains("foo", Hover("{fn(true, false, 0.1, 1)}", 2).Contents.Value);
+        Assert.Contains("bar", Hover("""{fn(false, "x", 1, 1)}""", 2).Contents.Value);
         Assert.Contains("baz", Hover("""{fn(false, "x", 0.1, 1)}""", 2).Contents.Value);
     }
 

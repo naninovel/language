@@ -272,4 +272,82 @@ public class SemanticDiagnoserTest : DiagnoserTest
         Meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Empty(Diagnose("@c p1:да p2:нет p3! !p4"));
     }
+
+    [Fact]
+    public void ErrWhenUnknownFunction ()
+    {
+        var diags = Diagnose("{foo()}");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 1), new(0, 6)), DiagnosticSeverity.Error,
+            "Unknown function."), diags[0]);
+    }
+
+    [Fact]
+    public void ErrWhenMissingFunctionParameter ()
+    {
+        Meta.Functions = [new() { Name = "foo", Parameters = [new() { Name = "x" }] }];
+        var diags = Diagnose("{foo()}");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 1), new(0, 6)), DiagnosticSeverity.Error,
+            "Missing 'x' parameter."), diags[0]);
+    }
+
+    [Fact]
+    public void ErrWhenExtraFunctionParameter ()
+    {
+        Meta.Functions = [new() { Name = "foo", Parameters = [new() { Name = "x" }] }];
+        var diags = Diagnose("""{foo("x","y")}""");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 9), new(0, 12)), DiagnosticSeverity.Error,
+            "Unknown parameter."), diags[0]);
+    }
+
+    [Fact]
+    public void DoesntErrWhenExtraFunctionParameterIsVariadic ()
+    {
+        Meta.Functions = [new() { Name = "foo", Parameters = [new() { Name = "x", Variadic = true }] }];
+        Assert.Empty(Diagnose("""{foo("x","y")}"""));
+    }
+
+    [Fact]
+    public void ErrWhenFunctionParameterHasInvalidValue ()
+    {
+        Meta.Functions = [new() { Name = "foo", Parameters = [new() { Name = "x", Type = Metadata.ValueType.Integer }] }];
+        var diags = Diagnose("{foo(0.1)}");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 5), new(0, 8)), DiagnosticSeverity.Error,
+            "Invalid value: '0.1' is not a integer."), diags[0]);
+    }
+
+    [Fact]
+    public void ErrWhenFunctionParameterHasInvalidConstantValue ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Constant, SubType = "@" } };
+        Meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        Meta.Constants = [new() { Name = "@", Values = ["foo"] }];
+        var diags = Diagnose("""{foo("bar")}""");
+        Assert.Single(diags);
+        Assert.Equal(new(new(new(0, 5), new(0, 10)), DiagnosticSeverity.Error,
+            "Invalid constant value. Expected to be one of '@'."), diags[0]);
+    }
+
+    [Fact]
+    public void DoesntErrWhenFunctionParameterHasValidConstantValue ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Constant, SubType = "@" } };
+        Meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        Meta.Constants = [new() { Name = "@", Values = ["foo"] }];
+        Assert.Empty(Diagnose("""{foo("foo")}"""));
+    }
+
+    [Fact]
+    public void DoesntErrWhenFunctionParameterIsAnExpression ()
+    {
+        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Constant, SubType = "@" } };
+        Meta.Functions = [new() { Name = "foo", Parameters = [param] }];
+        Meta.Constants = [new() { Name = "@", Values = ["foo"] }];
+        Assert.Empty(Diagnose("{foo(x)}"));
+        Assert.Empty(Diagnose("{foo(x+y)}"));
+        Assert.Empty(Diagnose("""{foo(foo("foo"))}"""));
+    }
 }

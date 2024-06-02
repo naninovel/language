@@ -1,6 +1,8 @@
-﻿namespace Naninovel.Language;
+﻿global using static Naninovel.Language.Global;
 
-internal static class Common
+namespace Naninovel.Language;
+
+internal static class Global
 {
     public static string ToScriptName (string uriOrName)
     {

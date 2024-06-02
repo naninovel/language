@@ -7,6 +7,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
 {
     private readonly FunctionResolver fnResolver = new(meta);
     private readonly NamedValueParser namedParser = new(meta.Syntax);
+    private readonly FunctionConstantEvaluator fnConstEval = new(meta.Syntax);
     private DocumentLine line;
     private Position position;
     private ResolvedFunction fn = null!;
@@ -51,7 +52,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
     }
 
     private CompletionItem[] GetForContext (ValueContext ctx, ResolvedFunctionParameter param) => ctx.Type switch {
-        ValueContextType.Constant => GetConstantValues(ctx),
+        ValueContextType.Constant => fnConstEval.EvaluateNames(scriptName, ctx, fn).SelectMany(completions.GetConstants).ToArray(),
         ValueContextType.Endpoint => GetEndpointValues(ctx, param.Value ?? ""),
         ValueContextType.Resource => completions.GetResources(ctx.SubType ?? ""),
         ValueContextType.Actor => completions.GetActors(ctx.SubType ?? ""),
@@ -66,18 +67,6 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
             if (param.Meta is { Context.Type: ValueContextType.Actor })
                 return (param.Value, param.Meta.Context.SubType);
         return null;
-    }
-
-    private CompletionItem[] GetConstantValues (ValueContext context)
-    {
-        var names = ConstantEvaluator.EvaluateNames(context.SubType ?? "", scriptName,
-            (name, idx) => {
-                var value = fn.Parameters.FirstOrDefault(p => string.Equals(p.Meta?.Name, name, StringComparison.OrdinalIgnoreCase))?.Value;
-                if (!idx.HasValue) return value;
-                var parsed = namedParser.Parse(value ?? "");
-                return idx == 0 ? parsed.Name : parsed.Value;
-            });
-        return names.SelectMany(completions.GetConstants).ToArray();
     }
 
     private CompletionItem[] GetEndpointValues (ValueContext context, string value)

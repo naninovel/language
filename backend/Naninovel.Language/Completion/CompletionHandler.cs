@@ -1,6 +1,5 @@
 using Naninovel.Metadata;
 using Naninovel.Parsing;
-using static Naninovel.Language.Common;
 using static Naninovel.Metadata.Constants;
 
 namespace Naninovel.Language;

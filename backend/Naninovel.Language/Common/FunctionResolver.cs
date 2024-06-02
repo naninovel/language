@@ -92,8 +92,9 @@ internal class FunctionResolver
 
     private ResolvedFunctionParameter[] ResolveParameters (Expression.Function fn, Metadata.Function fnMeta)
     {
-        var resolved = new ResolvedFunctionParameter[fnMeta.Parameters.Length];
-        for (var i = 0; i < fnMeta.Parameters.Length; i++)
+        var paramCount = Math.Max(fn.Parameters.Count, fnMeta.Parameters.Length);
+        var resolved = new ResolvedFunctionParameter[paramCount];
+        for (var i = 0; i < paramCount; i++)
             resolved[i] = ResolveParameter(fn.Parameters.ElementAtOrDefault(i), fnMeta.Parameters.ElementAtOrDefault(i));
         return resolved;
     }
@@ -101,10 +102,11 @@ internal class FunctionResolver
     private ResolvedFunctionParameter ResolveParameter (IExpression? exp, FunctionParameter? paramMeta)
     {
         var expRange = ranges.FirstOrDefault(r => r.Expression == exp);
-        if (expRange.Length == 0) return new(null, default, paramMeta);
         line.TryResolve(body, expRange, out var range);
-        var content = line.Extract(range);
-        var value = content.Length >= 2 ? content.Substring(1, content.Length - 2) : content;
-        return new(value, range, paramMeta);
+        var value = line.Extract(range);
+        if (exp is Expression.String && value.Length >= 2)
+            value = value.Substring(1, value.Length - 2);
+        else if (exp != null && exp is not IOperand) value = "imlazy";
+        return new(value, range, paramMeta, exp is IOperand);
     }
 }

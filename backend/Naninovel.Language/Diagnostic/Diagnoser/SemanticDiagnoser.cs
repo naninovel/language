@@ -11,6 +11,8 @@ internal class SemanticDiagnoser : Diagnoser
     private readonly Parser expParser;
     private readonly FunctionResolver fnResolver;
     private readonly List<ParseDiagnostic> expErrors = [];
+    private readonly FunctionConstantEvaluator fnConstEval;
+    private readonly ValueValidator valueValidator;
     private readonly IMetadata meta;
 
     public SemanticDiagnoser (IMetadata meta, IDocumentRegistry docs,
@@ -22,6 +24,8 @@ internal class SemanticDiagnoser : Diagnoser
             HandleDiagnostic = expErrors.Add
         });
         fnResolver = new FunctionResolver(meta);
+        fnConstEval = new FunctionConstantEvaluator(meta.Syntax);
+        valueValidator = new(meta.Syntax);
     }
 
     protected override void DiagnoseLine (in DocumentLine line)
@@ -37,6 +41,10 @@ internal class SemanticDiagnoser : Diagnoser
         foreach (var content in line.Content)
             if (content is InlinedCommand inlined)
                 DiagnoseCommand(inlined.Command);
+            else if (content is MixedValue mixed)
+                foreach (var cmp in mixed)
+                    if (cmp is Parsing.Expression exp)
+                        DiagnoseExpression(exp, false);
     }
 
     private void DiagnoseCommand (Parsing.Command command)
@@ -77,8 +85,7 @@ internal class SemanticDiagnoser : Diagnoser
 
         if (param.Value.Dynamic || param.Value[0] is not PlainText plain) return;
 
-        var validator = new ValueValidator(meta.Syntax);
-        if (!validator.Validate(plain, paramMeta.ValueContainerType, paramMeta.ValueType))
+        if (!valueValidator.Validate(plain, paramMeta.ValueContainerType, paramMeta.ValueType))
             AddInvalidValue(plain, paramMeta);
     }
 
@@ -105,17 +112,25 @@ internal class SemanticDiagnoser : Diagnoser
         }
 
         for (var i = 0; i < fnMeta.Parameters.Length; i++)
-            if (fn.Parameters.ElementAtOrDefault(i) is not { } param)
+            if (fn.Parameters.ElementAtOrDefault(i) is not { Value.Length: > 0 } param)
                 AddError(fnRange, $"Missing '{fnMeta.Parameters[i].Name}' parameter.");
-            else DiagnoseFunctionParameter(param);
+            else DiagnoseFunctionParameter(fn, param);
 
-        for (var i = fnMeta.Parameters.Length - 1; i < fn.Parameters.Count; i++)
-            AddError(Line.GetRange(fn.Parameters[i].Range, LineIndex), "Unknown parameter.");
+        if (fnMeta.Parameters.LastOrDefault() is not { Variadic: true })
+            for (var i = fn.Parameters.Count - 1; i >= fnMeta.Parameters.Length; i--)
+                AddError(Line.GetRange(fn.Parameters[i].Range, LineIndex), "Unknown parameter.");
     }
 
-    private void DiagnoseFunctionParameter (ResolvedFunctionParameter param)
+    private void DiagnoseFunctionParameter (ResolvedFunction fn, ResolvedFunctionParameter param)
     {
-        
+        if (!param.IsOperand || param.Meta is not { } paramMeta) return;
+        var paramRange = Line.GetRange(param.Range, LineIndex);
+        if (paramMeta.Context is { Type: ValueContextType.Constant } ctx &&
+            fnConstEval.EvaluateNames(ToScriptName(Uri), ctx, fn) is [..] names &&
+            !meta.Constants.Where(c => names.Contains(c.Name)).Any(c => c.Values.Contains(param.Value, StringComparer.OrdinalIgnoreCase)))
+            AddError(paramRange, $"Invalid constant value. Expected to be one of '{string.Join(", ", names)}'.");
+        else if (!valueValidator.Validate(param.Value, ValueContainerType.Single, paramMeta.Type))
+            AddError(paramRange, $"Invalid value: '{param.Value}' is not a {paramMeta.Type.ToString().FirstToLower()}.");
     }
 
     private void AddUnknownCommand (Parsing.Command command)
