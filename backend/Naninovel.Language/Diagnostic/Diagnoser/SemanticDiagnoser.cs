@@ -9,6 +9,7 @@ internal class SemanticDiagnoser : Diagnoser
     public override DiagnosticContext Context => DiagnosticContext.Semantic;
 
     private readonly Parser expParser;
+    private readonly FunctionResolver fnResolver;
     private readonly List<ParseDiagnostic> expErrors = [];
     private readonly IMetadata meta;
 
@@ -20,6 +21,7 @@ internal class SemanticDiagnoser : Diagnoser
             Syntax = meta.Syntax,
             HandleDiagnostic = expErrors.Add
         });
+        fnResolver = new FunctionResolver(meta);
     }
 
     protected override void DiagnoseLine (in DocumentLine line)
@@ -83,11 +85,37 @@ internal class SemanticDiagnoser : Diagnoser
     private void DiagnoseExpression (IValueComponent component, bool assignment)
     {
         expErrors.Clear();
-        var text = component is Parsing.Expression exp ? exp.Body : (PlainText)component;
-        if (assignment) _ = expParser.TryParseAssignments(text, []);
-        else _ = expParser.TryParse(text, out _);
+        var body = component is Parsing.Expression exp ? exp.Body : (PlainText)component;
+        if (assignment) _ = expParser.TryParseAssignments(body, []);
+        else _ = expParser.TryParse(body, out _);
         foreach (var err in expErrors)
-            AddExpressionError(text, err);
+            AddExpressionError(body, err);
+        foreach (var fn in fnResolver.Resolve(body, Line))
+            DiagnoseFunction(fn);
+    }
+
+    private void DiagnoseFunction (ResolvedFunction fn)
+    {
+        var fnRange = Line.GetRange(fn.Range, LineIndex);
+
+        if (fn.Meta is not { } fnMeta)
+        {
+            AddError(fnRange, "Unknown function.");
+            return;
+        }
+
+        for (var i = 0; i < fnMeta.Parameters.Length; i++)
+            if (fn.Parameters.ElementAtOrDefault(i) is not { } param)
+                AddError(fnRange, $"Missing '{fnMeta.Parameters[i].Name}' parameter.");
+            else DiagnoseFunctionParameter(param);
+
+        for (var i = fnMeta.Parameters.Length - 1; i < fn.Parameters.Count; i++)
+            AddError(Line.GetRange(fn.Parameters[i].Range, LineIndex), "Unknown parameter.");
+    }
+
+    private void DiagnoseFunctionParameter (ResolvedFunctionParameter param)
+    {
+        
     }
 
     private void AddUnknownCommand (Parsing.Command command)

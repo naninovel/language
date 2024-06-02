@@ -45,8 +45,8 @@ public class MetadataTest
         Assert.Equal("%", provider.Syntax.CommentLine);
         Assert.Equal("cmd", provider.FindCommand("cmd")!.Id);
         Assert.Equal("p", provider.FindParameter("cmd", "p")!.Id);
-        Assert.Equal("fn", provider.FindFunction("fn")!.Name);
-        Assert.Equal("p", provider.FindFunctionParameter("fn", "p")!.Name);
-        Assert.Equal("p", provider.FindFunctionParameter("fn", 0)!.Name);
+        var fns = new List<Function>();
+        provider.FindFunctions("fn", fns);
+        Assert.Equal("fn", fns[0].Name);
     }
 }

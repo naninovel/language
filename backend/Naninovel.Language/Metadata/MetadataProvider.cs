@@ -30,18 +30,8 @@ public class MetadataProvider : IMetadata, IMetadataObserver
         return provider.FindParameter(commandAliasOrId, paramAliasOrId);
     }
 
-    public Function? FindFunction (string name)
+    public bool FindFunctions (string name, ICollection<Function> result)
     {
-        return provider.FindFunction(name);
-    }
-
-    public FunctionParameter? FindFunctionParameter (string functionName, string paramName)
-    {
-        return provider.FindFunctionParameter(functionName, paramName);
-    }
-
-    public FunctionParameter? FindFunctionParameter (string functionName, int index)
-    {
-        return provider.FindFunctionParameter(functionName, index);
+        return provider.FindFunctions(name, result);
     }
 }

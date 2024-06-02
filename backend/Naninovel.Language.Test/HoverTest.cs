@@ -231,6 +231,67 @@ public class HoverTest
         Assert.Null(Hover("{fn()}", 2).Contents.Value);
     }
 
+    [Fact]
+    public void ResolvesOverloadedFunction ()
+    {
+        meta.Functions = [
+            new Function { Name = "fn", Summary = "foo", Parameters = [new() { Name = "x" }] },
+            new Function { Name = "fn", Summary = "bar", Parameters = [] }
+        ];
+        Assert.Contains("bar", Hover("{fn()}", 2).Contents.Value);
+    }
+
+    [Fact]
+    public void ResolvesFunctionOverloadedByParameterCount ()
+    {
+        meta.Functions = [
+            new Function {
+                Name = "fn", Summary = "foo", Parameters = [
+                    new() { Name = "x", Type = Metadata.ValueType.String }
+                ]
+            },
+            new Function {
+                Name = "fn", Summary = "bar", Parameters = [
+                    new() { Name = "x", Type = Metadata.ValueType.String },
+                    new() { Name = "y", Type = Metadata.ValueType.String }
+                ]
+            }
+        ];
+        Assert.Contains("bar", Hover("""{fn("x","y")}""", 2).Contents.Value);
+    }
+
+    [Fact]
+    public void ResolvesFunctionOverloadedByParameterType ()
+    {
+        meta.Functions = [
+            new Function {
+                Name = "fn", Summary = "foo", Parameters = [
+                    new() { Name = "x", Type = Metadata.ValueType.Boolean },
+                    new() { Name = "y", Type = Metadata.ValueType.Boolean },
+                    new() { Name = "z", Type = Metadata.ValueType.Decimal },
+                    new() { Name = "w", Type = Metadata.ValueType.Integer }
+                ]
+            },
+            new Function {
+                Name = "fn", Summary = "bar", Parameters = [
+                    new() { Name = "x", Type = Metadata.ValueType.Boolean },
+                    new() { Name = "y", Type = Metadata.ValueType.String },
+                    new() { Name = "z", Type = Metadata.ValueType.Integer },
+                    new() { Name = "w", Type = Metadata.ValueType.Integer }
+                ]
+            },
+            new Function {
+                Name = "fn", Summary = "baz", Parameters = [
+                    new() { Name = "x", Type = Metadata.ValueType.Boolean },
+                    new() { Name = "y", Type = Metadata.ValueType.String },
+                    new() { Name = "z", Type = Metadata.ValueType.Decimal },
+                    new() { Name = "w", Type = Metadata.ValueType.Integer }
+                ]
+            }
+        ];
+        Assert.Contains("baz", Hover("""{fn(false, "x", 0.1, 1)}""", 2).Contents.Value);
+    }
+
     private Hover Hover (string line, int charOffset)
     {
         return HoverNullable(line, charOffset) ?? default;

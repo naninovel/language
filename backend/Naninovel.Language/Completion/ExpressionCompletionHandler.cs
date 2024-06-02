@@ -33,8 +33,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
 
     private ResolvedFunction? GetFunctionOverCursor (PlainText body, in Position pos, in DocumentLine line)
     {
-        if (!fnResolver.TryResolve(body, line, out var fns)) return null;
-        foreach (var fn in fns)
+        foreach (var fn in fnResolver.Resolve(body, line))
             if (line.IsCursorOver(fn.Range, pos))
                 return fn;
         return null;
