@@ -38,7 +38,7 @@ internal class FunctionResolver
         this.body = body;
     }
 
-    private bool TryFunction (ExpressionRange expRange, [NotNullWhen(true)] out ResolvedFunction? resolved)
+    private bool TryFunction (ExpressionRange expRange, out ResolvedFunction resolved)
     {
         resolved = default;
         if (expRange.Expression is not Expression.Function fn) return false;

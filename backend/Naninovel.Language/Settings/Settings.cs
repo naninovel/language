@@ -1,6 +1,6 @@
 ﻿namespace Naninovel.Language;
 
-public record Settings
+public readonly record struct Settings
 {
     public bool DiagnoseSyntax { get; init; }
     public bool DiagnoseSemantics { get; init; }

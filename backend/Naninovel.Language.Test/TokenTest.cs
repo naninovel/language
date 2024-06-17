@@ -5,7 +5,7 @@ namespace Naninovel.Language.Test;
 
 public class TokenTest
 {
-    private record Token (int Line, int Char, int Length, TokenType Type);
+    private readonly record struct Token (int Line, int Char, int Length, TokenType Type);
 
     private readonly MetadataMock meta = new();
     private readonly Mock<IDocumentRegistry> docs = new();

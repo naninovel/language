@@ -10,7 +10,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
     private readonly FunctionConstantEvaluator fnConstEval = new(meta.Syntax);
     private DocumentLine line;
     private Position position;
-    private ResolvedFunction fn = null!;
+    private ResolvedFunction fn;
     private string scriptName = null!;
 
     public CompletionItem[] Handle (PlainText? expBody, in Position position, in DocumentLine line, string scriptName)
@@ -53,7 +53,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
 
     private CompletionItem[] GetForContext (ValueContext ctx, ResolvedFunctionParameter param) => ctx.Type switch {
         ValueContextType.Constant => fnConstEval.EvaluateNames(scriptName, ctx, fn).SelectMany(completions.GetConstants).ToArray(),
-        ValueContextType.Endpoint => GetEndpointValues(ctx, param.Value ?? ""),
+        ValueContextType.Endpoint => GetEndpointValues(ctx, param.Value),
         ValueContextType.Resource => completions.GetResources(ctx.SubType ?? ""),
         ValueContextType.Actor => completions.GetActors(ctx.SubType ?? ""),
         ValueContextType.Appearance when FindActor() is { } actor => completions.GetAppearances(actor.Id, actor.Type),

@@ -4,7 +4,7 @@ using Naninovel.Parsing;
 namespace Naninovel.Language;
 
 /// <param name="Meta">Null when function meta doesn't include this parameter.</param>
-internal record ResolvedFunctionParameter
+internal readonly record struct ResolvedFunctionParameter
 (
     string Value,
     InlineRange Range,

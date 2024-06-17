@@ -84,7 +84,7 @@ public class HoverHandler (IMetadata meta, IDocumentRegistry registry) : IHoverH
     private Hover? HoverExpression (PlainText expBody)
     {
         var fns = fnResolver.Resolve(expBody, line);
-        if (fns.FirstOrDefault(fn => line.IsCursorOver(fn.Range, position)) is not { } fn) return null;
+        if (fns.FirstOrNull(fn => line.IsCursorOver(fn.Range, position)) is not { } fn) return null;
         if (string.IsNullOrEmpty(fn.Meta?.Summary)) return null;
         AppendFunction(fn.Meta);
         return new Hover(builder.ToString(), line.GetRange(fn.Range, position.Line));

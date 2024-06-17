@@ -6,7 +6,7 @@ namespace Naninovel.Language;
 internal class FunctionConstantEvaluator (ISyntax stx)
 {
     private readonly NamedValueParser namedParser = new(stx);
-    private ResolvedFunction fn = null!;
+    private ResolvedFunction fn;
 
     public IReadOnlyList<string> EvaluateNames (string scriptName, ValueContext ctx, ResolvedFunction fn)
     {
@@ -16,7 +16,7 @@ internal class FunctionConstantEvaluator (ISyntax stx)
 
     private string? GetParamValue (string name, int? idx)
     {
-        var value = fn.Parameters.FirstOrDefault(p =>
+        var value = fn.Parameters.FirstOrNull(p =>
             string.Equals(p.Meta?.Name, name, StringComparison.OrdinalIgnoreCase))?.Value;
         if (!idx.HasValue) return value;
         var parsed = namedParser.Parse(value ?? "");
