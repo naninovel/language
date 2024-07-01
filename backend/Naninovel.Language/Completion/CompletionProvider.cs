@@ -76,7 +76,7 @@ internal class CompletionProvider (ISyntax stx)
     private CompletionItem CreateCommand (Metadata.Command command) => new() {
         Label = command.Label,
         Kind = CompletionItemKind.Function,
-        Documentation = new MarkupContent(command.Summary ?? ""),
+        Documentation = new MarkupContent(command.Documentation?.Summary ?? ""),
         CommitCharacters = [" "]
     };
 
@@ -84,7 +84,7 @@ internal class CompletionProvider (ISyntax stx)
         Label = param.Label,
         Kind = CompletionItemKind.Field,
         Detail = string.IsNullOrEmpty(param.DefaultValue) ? "" : $"Default value: {param.DefaultValue}",
-        Documentation = new MarkupContent(param.Summary ?? ""),
+        Documentation = new MarkupContent(param.Documentation?.Summary ?? ""),
         CommitCharacters = [stx.ParameterAssign]
     };
 

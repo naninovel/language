@@ -207,9 +207,9 @@ internal class SemanticDiagnoser : Diagnoser
         var nextLine = doc.LineCount == (LineIndex + 1) ? default : doc[LineIndex + 1];
         var hasNested = nextLine != default && nextLine.Script.Indent > Line.Script.Indent;
 
-        if (!commandMeta.NestedHost && hasNested)
+        if (commandMeta.Nest is null && hasNested)
             AddWarning(Line.GetRange(command, LineIndex), "This command doesn't support nesting.");
-        if (commandMeta.RequiresNested && !hasNested)
+        if (commandMeta.Nest is { Required: true } && !hasNested)
             AddError(Line.GetRange(command, LineIndex), "This command requires nested lines.");
     }
 }

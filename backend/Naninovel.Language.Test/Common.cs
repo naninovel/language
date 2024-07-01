@@ -45,7 +45,7 @@ internal static class Common
                 new ValueContext { Type = ValueContextType.Endpoint, SubType = Constants.EndpointLabel }
             ]
         };
-        var command = new Command { Id = commandId, Parameters = [parameter] };
+        var command = new Command { Id = commandId, Parameters = [parameter], Branch = new() { Traits = BranchTraits.Endpoint } };
         meta.Commands = meta.Commands.Append(command).ToList();
     }
 }

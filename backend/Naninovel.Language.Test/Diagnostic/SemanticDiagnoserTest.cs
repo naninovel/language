@@ -149,7 +149,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void ErrsWhenMissingRequiredNested ()
     {
-        Meta.Commands = [new Command { Id = "c", NestedHost = true, RequiresNested = true }];
+        Meta.Commands = [new Command { Id = "c", Nest = new() { Required = true } }];
         Assert.Equal(new(new(new(0, 1), new(0, 2)), DiagnosticSeverity.Error,
             "This command requires nested lines."), Diagnose("@c")[0]);
         Assert.Equal(new(new(new(0, 1), new(0, 2)), DiagnosticSeverity.Error,
@@ -159,14 +159,14 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void DoesntErrWhenHasRequiredNested ()
     {
-        Meta.Commands = [new Command { Id = "c", NestedHost = true, RequiresNested = true }];
+        Meta.Commands = [new Command { Id = "c", Nest = new() { Required = true } }];
         Assert.Empty(Diagnose("@c", "    ..."));
     }
 
     [Fact]
     public void DoesntErrWhenMissingNestedButNestedAreNotRequired ()
     {
-        Meta.Commands = [new Command { Id = "c", NestedHost = true, RequiresNested = false }];
+        Meta.Commands = [new Command { Id = "c", Nest = new() { Required = false } }];
         Assert.Empty(Diagnose("@c"));
         Assert.Empty(Diagnose("@c", "..."));
     }
@@ -174,14 +174,14 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void DoesntErrWhenHasNestedWhichAreNotRequired ()
     {
-        Meta.Commands = [new Command { Id = "c", NestedHost = true, RequiresNested = false }];
+        Meta.Commands = [new Command { Id = "c", Nest = new() { Required = false } }];
         Assert.Empty(Diagnose("@c", "    ..."));
     }
 
     [Fact]
     public void WarnsWhenHasNestedWhileTheCommandIsNotNestedHost ()
     {
-        Meta.Commands = [new Command { Id = "c", NestedHost = false }];
+        Meta.Commands = [new Command { Id = "c", Nest = null }];
         Assert.Equal(new(new(new(0, 1), new(0, 2)), DiagnosticSeverity.Warning,
             "This command doesn't support nesting."), Diagnose("@c", "    ...")[0]);
     }

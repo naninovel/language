@@ -25,7 +25,7 @@ public class MetadataProvider : IMetadata, IMetadataObserver
         return provider.FindCommand(aliasOrId);
     }
 
-    public Metadata.Parameter? FindParameter (string commandAliasOrId, string paramAliasOrId)
+    public Metadata.Parameter? FindParameter (string commandAliasOrId, string? paramAliasOrId)
     {
         return provider.FindParameter(commandAliasOrId, paramAliasOrId);
     }

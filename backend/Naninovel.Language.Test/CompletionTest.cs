@@ -152,7 +152,7 @@ public class CompletionTest
     [Fact]
     public void CommandSummaryIsAssignedToDocumentation ()
     {
-        meta.Commands = [new Metadata.Command { Id = "cmd", Summary = "foo" }];
+        meta.Commands = [new Metadata.Command { Id = "cmd", Documentation = new() { Summary = "foo" } }];
         Assert.Equal("foo", Complete("[", 1)[0].Documentation?.Value);
     }
 
@@ -231,7 +231,7 @@ public class CompletionTest
     [Fact]
     public void ParameterSummaryIsAssignedToDocumentation ()
     {
-        var param = new Metadata.Parameter { Id = "foo", Summary = "bar" };
+        var param = new Metadata.Parameter { Id = "foo", Documentation = new() { Summary = "bar" } };
         meta.Commands = [new Metadata.Command { Id = "cmd", Parameters = [param] }];
         Assert.Equal("bar", Complete("@cmd ", 5)[0].Documentation?.Value);
     }

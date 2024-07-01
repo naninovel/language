@@ -45,7 +45,7 @@ public class HoverTest
     [Fact]
     public void WhenOverCommandIdentifierHoverContainSummary ()
     {
-        meta.Commands = [new Command { Id = "c", Summary = "foo" }];
+        meta.Commands = [new Command { Id = "c", Documentation = new() { Summary = "foo" } }];
         Assert.Contains("foo", Hover("@c p:v", 1).Contents.Value);
         Assert.Contains("foo", Hover("[c p:v]", 1).Contents.Value);
     }
@@ -53,7 +53,7 @@ public class HoverTest
     [Fact]
     public void WhenOverParameterHoverContentIsEqualToSummary ()
     {
-        var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
+        var parameters = new[] { new Parameter { Id = "p", Documentation = new() { Summary = "foo" } } };
         meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal("foo", Hover("@c p:v", 4).Contents.Value);
         Assert.Equal("foo", Hover("[c p:v]", 4).Contents.Value);
@@ -62,14 +62,14 @@ public class HoverTest
     [Fact]
     public void CommandIdentifierHoverRangeIsEqualToContentRange ()
     {
-        meta.Commands = [new Command { Id = "c", Summary = "" }];
+        meta.Commands = [new Command { Id = "c", Documentation = new() { Summary = "" } }];
         Assert.Equal(new Range(new(0, 1), new(0, 2)), Hover("@c p:v", 1).Range);
     }
 
     [Fact]
     public void ParameterHoverRangeIsEqualToContentRange ()
     {
-        var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
+        var parameters = new[] { new Parameter { Id = "p", Documentation = new() { Summary = "foo" } } };
         meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal(new Range(new(0, 3), new(0, 6)), Hover("@c p:v", 5).Range);
     }
@@ -77,7 +77,7 @@ public class HoverTest
     [Fact]
     public void ParameterWithTextIdHoverRangeIsEqualToContentRange ()
     {
-        var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
+        var parameters = new[] { new Parameter { Id = "p", Documentation = new() { Summary = "foo" } } };
         meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal(new Range(new(0, 3), new(0, 10)), Hover("@c p:v|id|", 5).Range);
     }
@@ -85,7 +85,7 @@ public class HoverTest
     [Fact]
     public void TextIdHoverRangeIsEqualToParameterContentRange ()
     {
-        var parameters = new[] { new Parameter { Id = "p", Summary = "foo" } };
+        var parameters = new[] { new Parameter { Id = "p", Documentation = new() { Summary = "foo" } } };
         meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Equal(new Range(new(0, 3), new(0, 10)), Hover("@c p:v|id|", 9).Range);
     }
@@ -93,21 +93,21 @@ public class HoverTest
     [Fact]
     public void CommandSummaryHasCorrectMarkup ()
     {
-        meta.Commands = [new Command { Id = "c", Summary = "foo" }];
+        meta.Commands = [new Command { Id = "c", Documentation = new() { Summary = "foo" } }];
         Assert.Contains("## Summary\nfoo", Hover("@c", 1).Contents.Value);
     }
 
     [Fact]
     public void CommandRemarksHaveCorrectMarkup ()
     {
-        meta.Commands = [new Command { Id = "c", Remarks = "foo" }];
+        meta.Commands = [new Command { Id = "c", Documentation = new() { Remarks = "foo" } }];
         Assert.Contains("## Remarks\nfoo", Hover("@c", 1).Contents.Value);
     }
 
     [Fact]
     public void CommandExamplesHaveCorrectMarkup ()
     {
-        meta.Commands = [new Command { Id = "c", Examples = "foo" }];
+        meta.Commands = [new Command { Id = "c", Documentation = new() { Examples = "foo" } }];
         Assert.Contains("## Examples\n```nani\nfoo\n```", Hover("@c", 1).Contents.Value);
     }
 
@@ -118,7 +118,7 @@ public class HoverTest
             new Parameter { Id = "Nameless", Nameless = true },
             new Parameter { Id = "Required", Required = true },
             new Parameter { Id = "NamelessAndRequired", Nameless = true, Required = true },
-            new Parameter { Id = "WithSummary", Summary = "foo" },
+            new Parameter { Id = "WithSummary", Documentation = new() { Summary = "foo" } },
             new Parameter { Id = "WithAlias", Alias = "Alias" }
         };
         meta.Commands = [new Command { Id = "c", Parameters = parameters }];
@@ -134,7 +134,7 @@ public class HoverTest
     [Fact]
     public void DoesntHoverParametersWithEmptySummary ()
     {
-        var parameters = new[] { new Parameter { Id = "p", Summary = "" } };
+        var parameters = new[] { new Parameter { Id = "p", Documentation = new() { Summary = "" } } };
         meta.Commands = [new Command { Id = "c", Parameters = parameters }];
         Assert.Null(Hover("@c p:v|id|", 9).Contents.Value);
     }
@@ -148,9 +148,11 @@ public class HoverTest
         meta.Functions = [
             new Function {
                 Name = "fn",
-                Summary = "Function summary.",
-                Remarks = "Function remarks.",
-                Example = "Function examples.",
+                Documentation = new() {
+                    Summary = "Function summary.",
+                    Remarks = "Function remarks.",
+                    Examples = "Function examples.",
+                },
                 Parameters = [
                     new() { Name = "p1", Type = Metadata.ValueType.String },
                     new() { Name = "p2", Type = Metadata.ValueType.Decimal }
@@ -179,7 +181,7 @@ public class HoverTest
     [Fact]
     public void CanHoverFunctionInsideGenericText ()
     {
-        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
+        meta.Functions = [new Function { Name = "fn", Documentation = new() { Summary = "foo" } }];
         Assert.Contains("foo", Hover("{fn()}", 2).Contents.Value);
     }
 
@@ -193,7 +195,7 @@ public class HoverTest
                 ]
             }
         ];
-        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
+        meta.Functions = [new Function { Name = "fn", Documentation = new() { Summary = "foo" } }];
         Assert.Contains("foo", Hover("@if fn()", 4).Contents.Value);
     }
 
@@ -207,14 +209,14 @@ public class HoverTest
                 ]
             }
         ];
-        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
+        meta.Functions = [new Function { Name = "fn", Documentation = new() { Summary = "foo" } }];
         Assert.Contains("foo", Hover("@if x{fn()}x", 6).Contents.Value);
     }
 
     [Fact]
     public void DoesntHoverUnhoveredFunctions ()
     {
-        meta.Functions = [new Function { Name = "fn", Summary = "foo" }];
+        meta.Functions = [new Function { Name = "fn", Documentation = new() { Summary = "foo" } }];
         Assert.Null(Hover("{1+1+fn()}", 2).Contents.Value);
     }
 
@@ -227,7 +229,7 @@ public class HoverTest
     [Fact]
     public void DoesntHoverUnknownFunctionsWithEmptySummary ()
     {
-        meta.Functions = [new Function { Name = "fn", Summary = "" }];
+        meta.Functions = [new Function { Name = "fn", Documentation = new() { Summary = "" } }];
         Assert.Null(Hover("{fn()}", 2).Contents.Value);
     }
 
@@ -235,8 +237,8 @@ public class HoverTest
     public void ResolvesOverloadedFunction ()
     {
         meta.Functions = [
-            new Function { Name = "fn", Summary = "foo", Parameters = [new() { Name = "x" }] },
-            new Function { Name = "fn", Summary = "bar", Parameters = [] }
+            new Function { Name = "fn", Documentation = new() { Summary = "foo" }, Parameters = [new() { Name = "x" }] },
+            new Function { Name = "fn", Documentation = new() { Summary = "bar" }, Parameters = [] }
         ];
         Assert.Contains("foo", Hover("""{fn("x")}""", 2).Contents.Value);
         Assert.Contains("bar", Hover("{fn()}", 2).Contents.Value);
@@ -247,12 +249,12 @@ public class HoverTest
     {
         meta.Functions = [
             new Function {
-                Name = "fn", Summary = "foo", Parameters = [
+                Name = "fn", Documentation = new() { Summary = "foo" }, Parameters = [
                     new() { Name = "x", Type = Metadata.ValueType.String }
                 ]
             },
             new Function {
-                Name = "fn", Summary = "bar", Parameters = [
+                Name = "fn", Documentation = new() { Summary = "bar" }, Parameters = [
                     new() { Name = "x", Type = Metadata.ValueType.String },
                     new() { Name = "y", Type = Metadata.ValueType.String }
                 ]
@@ -267,13 +269,13 @@ public class HoverTest
     {
         meta.Functions = [
             new Function {
-                Name = "random", Summary = "foo", Parameters = [
+                Name = "random", Documentation = new() { Summary = "foo" }, Parameters = [
                     new() { Name = "min", Type = Metadata.ValueType.Integer },
                     new() { Name = "max", Type = Metadata.ValueType.Integer }
                 ]
             },
             new Function {
-                Name = "random", Summary = "bar", Parameters = [
+                Name = "random", Documentation = new() { Summary = "bar" }, Parameters = [
                     new() { Name = "x", Type = Metadata.ValueType.String, Variadic = true }
                 ]
             }
@@ -287,7 +289,7 @@ public class HoverTest
     {
         meta.Functions = [
             new Function {
-                Name = "fn", Summary = "foo", Parameters = [
+                Name = "fn", Documentation = new() { Summary = "foo" }, Parameters = [
                     new() { Name = "x", Type = Metadata.ValueType.Boolean },
                     new() { Name = "y", Type = Metadata.ValueType.Boolean },
                     new() { Name = "z", Type = Metadata.ValueType.Decimal },
@@ -295,7 +297,7 @@ public class HoverTest
                 ]
             },
             new Function {
-                Name = "fn", Summary = "bar", Parameters = [
+                Name = "fn", Documentation = new() { Summary = "bar" }, Parameters = [
                     new() { Name = "x", Type = Metadata.ValueType.Boolean },
                     new() { Name = "y", Type = Metadata.ValueType.String },
                     new() { Name = "z", Type = Metadata.ValueType.Integer },
@@ -303,7 +305,7 @@ public class HoverTest
                 ]
             },
             new Function {
-                Name = "fn", Summary = "baz", Parameters = [
+                Name = "fn", Documentation = new() { Summary = "baz" }, Parameters = [
                     new() { Name = "x", Type = Metadata.ValueType.Boolean },
                     new() { Name = "y", Type = Metadata.ValueType.String },
                     new() { Name = "z", Type = Metadata.ValueType.Decimal },

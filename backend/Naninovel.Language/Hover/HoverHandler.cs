@@ -76,30 +76,30 @@ public class HoverHandler (IMetadata meta, IDocumentRegistry registry) : IHoverH
             else if (isExpCtx && cmp is PlainText text)
                 return HoverExpression(text);
 
-        if (string.IsNullOrEmpty(paramMeta.Summary)) return null;
+        if (string.IsNullOrEmpty(paramMeta.Documentation?.Summary)) return null;
         var range = line.GetRange(param, position.Line);
-        return new Hover(paramMeta.Summary, range);
+        return new Hover(paramMeta.Documentation.Summary, range);
     }
 
     private Hover? HoverExpression (PlainText expBody)
     {
         var fns = fnResolver.Resolve(expBody, line);
         if (fns.FirstOrNull(fn => line.IsCursorOver(fn.Range, position)) is not { } fn) return null;
-        if (string.IsNullOrEmpty(fn.Meta?.Summary)) return null;
+        if (string.IsNullOrEmpty(fn.Meta?.Documentation?.Summary)) return null;
         AppendFunction(fn.Meta);
         return new Hover(builder.ToString(), line.GetRange(fn.Range, position.Line));
     }
 
     private void AppendCommand (Metadata.Command cmd)
     {
-        if (!string.IsNullOrEmpty(cmd.Summary))
-            builder.Append($"## Summary\n{cmd.Summary}\n");
-        if (!string.IsNullOrEmpty(cmd.Remarks))
-            builder.Append($"## Remarks\n{cmd.Remarks}\n");
+        if (!string.IsNullOrEmpty(cmd.Documentation?.Summary))
+            builder.Append($"## Summary\n{cmd.Documentation.Summary}\n");
+        if (!string.IsNullOrEmpty(cmd.Documentation?.Remarks))
+            builder.Append($"## Remarks\n{cmd.Documentation.Remarks}\n");
         if (cmd.Parameters.Length > 0)
             AppendParameters(cmd.Parameters);
-        if (!string.IsNullOrEmpty(cmd.Examples))
-            builder.Append($"## Examples\n```nani\n{cmd.Examples}\n```");
+        if (!string.IsNullOrEmpty(cmd.Documentation?.Examples))
+            builder.Append($"## Examples\n```nani\n{cmd.Documentation.Examples}\n```");
     }
 
     private void AppendParameters (Metadata.Parameter[] parameters)
@@ -119,21 +119,21 @@ public class HoverHandler (IMetadata meta, IDocumentRegistry registry) : IHoverH
         builder.Append(" | ");
         builder.Append(param.TypeLabel);
         builder.Append(" | ");
-        if (!string.IsNullOrEmpty(param.Summary))
-            builder.Append(param.Summary);
+        if (!string.IsNullOrEmpty(param.Documentation?.Summary))
+            builder.Append(param.Documentation.Summary);
         builder.Append('\n');
     }
 
     private void AppendFunction (Function fn)
     {
-        if (!string.IsNullOrEmpty(fn.Summary))
-            builder.Append($"## Summary\n{fn.Summary}\n");
-        if (!string.IsNullOrEmpty(fn.Remarks))
-            builder.Append($"## Remarks\n{fn.Remarks}\n");
+        if (!string.IsNullOrEmpty(fn.Documentation?.Summary))
+            builder.Append($"## Summary\n{fn.Documentation.Summary}\n");
+        if (!string.IsNullOrEmpty(fn.Documentation?.Remarks))
+            builder.Append($"## Remarks\n{fn.Documentation.Remarks}\n");
         if (fn.Parameters.Length > 0)
             AppendFunctionsParameters(fn.Parameters);
-        if (!string.IsNullOrEmpty(fn.Example))
-            builder.Append($"## Examples\n```nani\n{fn.Example}\n```");
+        if (!string.IsNullOrEmpty(fn.Documentation?.Examples))
+            builder.Append($"## Examples\n```nani\n{fn.Documentation.Examples}\n```");
     }
 
     private void AppendFunctionsParameters (FunctionParameter[] parameters)
