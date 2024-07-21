@@ -99,7 +99,7 @@ public class HoverHandler (IMetadata meta, IDocumentRegistry registry) : IHoverH
         if (cmd.Parameters.Length > 0)
             AppendParameters(cmd.Parameters);
         if (!string.IsNullOrEmpty(cmd.Documentation?.Examples))
-            builder.Append($"## Examples\n```nani\n{cmd.Documentation.Examples}\n```");
+            builder.Append($"## Examples\n```naniscript\n{cmd.Documentation.Examples}\n```");
     }
 
     private void AppendParameters (Metadata.Parameter[] parameters)
@@ -133,7 +133,7 @@ public class HoverHandler (IMetadata meta, IDocumentRegistry registry) : IHoverH
         if (fn.Parameters.Length > 0)
             AppendFunctionsParameters(fn.Parameters);
         if (!string.IsNullOrEmpty(fn.Documentation?.Examples))
-            builder.Append($"## Examples\n```nani\n{fn.Documentation.Examples}\n```");
+            builder.Append($"## Examples\n```naniscript\n{fn.Documentation.Examples}\n```");
     }
 
     private void AppendFunctionsParameters (FunctionParameter[] parameters)

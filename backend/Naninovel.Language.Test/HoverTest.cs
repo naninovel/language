@@ -108,7 +108,7 @@ public class HoverTest
     public void CommandExamplesHaveCorrectMarkup ()
     {
         meta.Commands = [new Command { Id = "c", Documentation = new() { Examples = "foo" } }];
-        Assert.Contains("## Examples\n```nani\nfoo\n```", Hover("@c", 1).Contents.Value);
+        Assert.Contains("## Examples\n```naniscript\nfoo\n```", Hover("@c", 1).Contents.Value);
     }
 
     [Fact]
@@ -172,7 +172,7 @@ public class HoverTest
             p1 | string | 
             p2 | decimal | 
             ## Examples
-            ```nani
+            ```naniscript
             Function examples.
             ```
             """, content);
