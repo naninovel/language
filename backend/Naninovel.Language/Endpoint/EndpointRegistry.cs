@@ -16,7 +16,7 @@ public class EndpointRegistry (IMetadata meta, IDocumentRegistry docs)
 
     public void HandleDocumentAdded (string uri)
     {
-        var name = ToScriptName(uri);
+        var name = PathUtil.ResolveScriptName(uri);
         var doc = docs.Get(uri);
         scriptNames.Add(name);
         HandleLinesAdded(uri, name, doc, new(0, doc.LineCount - 1));
@@ -24,19 +24,19 @@ public class EndpointRegistry (IMetadata meta, IDocumentRegistry docs)
 
     public void HandleDocumentRemoved (string uri)
     {
-        var name = ToScriptName(uri);
+        var name = PathUtil.ResolveScriptName(uri);
         scriptNames.Remove(name);
         HandleLinesRemoved(uri, name, new(0, docs.Get(uri).LineCount - 1));
     }
 
     public void HandleDocumentChanging (string uri, LineRange range)
     {
-        HandleLinesRemoved(uri, ToScriptName(uri), range);
+        HandleLinesRemoved(uri, PathUtil.ResolveScriptName(uri), range);
     }
 
     public void HandleDocumentChanged (string uri, LineRange range)
     {
-        HandleLinesAdded(uri, ToScriptName(uri), docs.Get(uri), range);
+        HandleLinesAdded(uri, PathUtil.ResolveScriptName(uri), docs.Get(uri), range);
     }
 
     public bool ScriptExist (string scriptName)
@@ -70,7 +70,7 @@ public class EndpointRegistry (IMetadata meta, IDocumentRegistry docs)
     {
         var result = new HashSet<string>();
         foreach (var (loc, label) in labels)
-            if (ToScriptName(loc.DocumentUri).Equals(scriptName, StringComparison.Ordinal))
+            if (PathUtil.ResolveScriptName(loc.DocumentUri).Equals(scriptName, StringComparison.Ordinal))
                 result.Add(label);
         return result;
     }

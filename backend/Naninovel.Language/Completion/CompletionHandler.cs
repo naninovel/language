@@ -35,7 +35,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     {
         documentUri = Uri.UnescapeDataString(documentUri);
         var documentLine = docs.Get(documentUri)[position.Line];
-        var scriptName = ToScriptName(documentUri);
+        var scriptName = PathUtil.ResolveScriptName(documentUri);
         ResetState(documentLine, position, scriptName);
         return documentLine.Script switch {
             GenericLine line => GetForGenericLine(line),

@@ -3,7 +3,7 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class NavigationDiagnoser(IMetadata meta, IDocumentRegistry docs,
+internal class NavigationDiagnoser (IMetadata meta, IDocumentRegistry docs,
     IEndpointRegistry endpoints, DiagnosticRegistry registry) : Diagnoser(docs, registry)
 {
     public override DiagnosticContext Context => DiagnosticContext.Navigation;
@@ -22,7 +22,7 @@ internal class NavigationDiagnoser(IMetadata meta, IDocumentRegistry docs,
     public override void HandleDocumentRemoved (string uri)
     {
         Remove(uri);
-        var name = ToScriptName(uri);
+        var name = PathUtil.ResolveScriptName(uri);
         var doc = Docs.Get(uri);
         foreach (var location in endpoints.GetNavigatorLocations(new(name)))
             Rediagnose(location);
@@ -32,7 +32,7 @@ internal class NavigationDiagnoser(IMetadata meta, IDocumentRegistry docs,
 
     public override void HandleDocumentChanging (string uri, LineRange range)
     {
-        var name = ToScriptName(uri);
+        var name = PathUtil.ResolveScriptName(uri);
         var doc = Docs.Get(uri);
         Remove(uri, range);
         for (int i = range.Start; i <= range.End; i++)
@@ -41,7 +41,7 @@ internal class NavigationDiagnoser(IMetadata meta, IDocumentRegistry docs,
 
     public override void HandleDocumentChanged (string uri, LineRange range)
     {
-        var name = ToScriptName(uri);
+        var name = PathUtil.ResolveScriptName(uri);
         var doc = Docs.Get(uri);
         for (int i = range.Start; i <= range.End; i++)
             HandleLineRemoved(doc[i].Script, name);
@@ -60,7 +60,7 @@ internal class NavigationDiagnoser(IMetadata meta, IDocumentRegistry docs,
 
     private void DiagnoseLabelLine (LabelLine line)
     {
-        if (!endpoints.NavigatorExist(new(ToScriptName(Uri), line.Label)))
+        if (!endpoints.NavigatorExist(new(PathUtil.ResolveScriptName(Uri), line.Label)))
             AddUnusedLabel(line.Label);
     }
 
@@ -85,7 +85,7 @@ internal class NavigationDiagnoser(IMetadata meta, IDocumentRegistry docs,
 
     private bool IsEndpointUnknown (Endpoint point)
     {
-        var name = point.Script ?? ToScriptName(Uri);
+        var name = point.Script ?? PathUtil.ResolveScriptName(Uri);
         if (point.Label is null) return !endpoints.ScriptExist(name);
         return !endpoints.LabelExist(new(name, point.Label));
     }
