@@ -9,7 +9,7 @@
         <Authors>Elringus</Authors>
         <Company>ReWaffle LLC</Company>
         <Description>Language server protocol implementation for Naninovel scenario scripting language.</Description>
-        <RepositoryUrl>https://github.com/Naninovel/Language</RepositoryUrl>
+        <RepositoryUrl>https://github.com/naninovel/language</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Naninovel.Common.Modern" Version="2024.7.23.2027"/>
+        <PackageReference Include="Naninovel.Common.Modern" Version="2024.8.2.1639"/>
     </ItemGroup>
 
 </Project>
