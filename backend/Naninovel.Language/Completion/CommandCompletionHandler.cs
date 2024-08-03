@@ -170,7 +170,7 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
         if (context.SubType == Constants.EndpointScript)
         {
             var labels = endpoints.GetLabelsInScript(scriptName);
-            return completions.GetScriptEndpoints(endpoints.GetAllScriptNames(), labels.Count > 0);
+            return completions.GetScriptEndpoints(endpoints.GetAllScriptPaths(), labels.Count > 0);
         }
         var script = GetNamedValue(param.Model.Value, true) ?? scriptName;
         return completions.GetLabelEndpoints(endpoints.GetLabelsInScript(script));

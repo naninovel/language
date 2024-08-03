@@ -74,7 +74,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
         if (context.SubType == Constants.EndpointScript)
         {
             var labels = endpoints.GetLabelsInScript(scriptName);
-            return completions.GetScriptEndpoints(endpoints.GetAllScriptNames(), labels.Count > 0);
+            return completions.GetScriptEndpoints(endpoints.GetAllScriptPaths(), labels.Count > 0);
         }
         var parsed = namedParser.Parse(value);
         var script = parsed.Name ?? scriptName;

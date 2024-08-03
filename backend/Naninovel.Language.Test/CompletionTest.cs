@@ -623,7 +623,7 @@ public class CompletionTest
     {
         meta.SetupCommandWithEndpoint("goto");
         endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string>());
-        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string>());
+        endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string>());
         Assert.Empty(Complete("@goto ", 6));
     }
 
@@ -632,7 +632,7 @@ public class CompletionTest
     {
         meta.SetupCommandWithEndpoint("goto");
         endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string> { "foo" });
-        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string>());
+        endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string>());
         Assert.Single(Complete("@goto ", 6));
         Assert.Equal("(this)", Complete("@goto ", 6)[0].Label);
     }
@@ -642,7 +642,7 @@ public class CompletionTest
     {
         meta.SetupCommandWithEndpoint("goto");
         endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string>());
-        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string> { "ScriptA", "ScriptB" });
+        endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string> { "ScriptA", "ScriptB" });
         Assert.Equal(2, Complete("@goto ", 6).Count);
         Assert.Equal("ScriptA", Complete("@goto ", 6)[0].Label);
         Assert.Equal("ScriptB", Complete("@goto ", 6)[1].Label);
@@ -653,7 +653,7 @@ public class CompletionTest
     {
         meta.SetupCommandWithEndpoint("goto");
         endpoints.Setup(e => e.GetLabelsInScript("@")).Returns(new HashSet<string> { "foo" });
-        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string> { "ScriptA", "ScriptB" });
+        endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string> { "ScriptA", "ScriptB" });
         Assert.Equal(3, Complete("@goto ", 6).Count);
         Assert.Equal("(this)", Complete("@goto ", 6)[0].Label);
         Assert.Equal("ScriptA", Complete("@goto ", 6)[1].Label);
@@ -667,7 +667,7 @@ public class CompletionTest
         endpoints.Setup(e => e.GetLabelsInScript("@")).Returns(new HashSet<string>());
         endpoints.Setup(e => e.GetLabelsInScript("ScriptA")).Returns(new HashSet<string> { "foo" });
         endpoints.Setup(e => e.GetLabelsInScript("ScriptB")).Returns(new HashSet<string> { "foo", "bar" });
-        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string> { "ScriptA", "ScriptB" });
+        endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string> { "ScriptA", "ScriptB" });
         Assert.Equal(2, Complete("@goto ", 6).Count);
         Assert.Equal("ScriptA", Complete("@goto ", 6)[0].Label);
         Assert.Equal("ScriptB", Complete("@goto ", 6)[1].Label);
@@ -823,7 +823,7 @@ public class CompletionTest
         var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Endpoint, SubType = Constants.EndpointScript } };
         meta.Functions = [new() { Name = "foo", Parameters = [param] }];
         endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string>());
-        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string> { "ScriptA" });
+        endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string> { "ScriptA" });
         Assert.Contains(Complete("{foo(}", 5), c => c.Label == "\"ScriptA\"");
         Assert.DoesNotContain(Complete("{foo(}", 5), c => c.Label == "\"(this)\"");
     }
@@ -834,7 +834,7 @@ public class CompletionTest
         var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Endpoint, SubType = Constants.EndpointScript } };
         meta.Functions = [new() { Name = "foo", Parameters = [param] }];
         endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string> { "foo" });
-        endpoints.Setup(e => e.GetAllScriptNames()).Returns(new HashSet<string> { "ScriptA" });
+        endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string> { "ScriptA" });
         Assert.Contains(Complete("{foo(}", 5), c => c.Label == "\"ScriptA\"");
         Assert.Contains(Complete("{foo(}", 5), c => c.Label == "\"(this)\"" && c.InsertText == "\".\"");
     }

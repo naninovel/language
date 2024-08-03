@@ -126,7 +126,7 @@ internal class SemanticDiagnoser : Diagnoser
         if (!param.IsOperand || param.Meta is not { } paramMeta) return;
         var paramRange = Line.GetRange(param.Range, LineIndex);
         if (paramMeta.Context is { Type: ValueContextType.Constant } ctx &&
-            fnConstEval.EvaluateNames(PathUtil.ResolveScriptName(Uri), ctx, fn) is [..] names &&
+            fnConstEval.EvaluateNames(Docs.ResolvePath(Uri), ctx, fn) is [..] names &&
             !meta.Constants.Where(c => names.Contains(c.Name)).Any(c => c.Values.Contains(param.Value, StringComparer.OrdinalIgnoreCase)))
             AddError(paramRange, $"Invalid constant value. Expected to be one of '{string.Join(", ", names)}'.");
         else if (!valueValidator.Validate(param.Value, ValueContainerType.Single, paramMeta.Type))

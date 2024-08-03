@@ -15,7 +15,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     private char charBehindCursor;
     private Position position;
     private DocumentLine line;
-    private string scriptName = string.Empty;
+    private string scriptPath = string.Empty;
 
     public CompletionHandler (IMetadata meta, IDocumentRegistry docs, IEndpointRegistry endpoints)
     {
@@ -35,20 +35,20 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
     {
         documentUri = Uri.UnescapeDataString(documentUri);
         var documentLine = docs.Get(documentUri)[position.Line];
-        var scriptName = PathUtil.ResolveScriptName(documentUri);
-        ResetState(documentLine, position, scriptName);
+        var scriptPath = docs.ResolvePath(documentUri);
+        ResetState(documentLine, position, scriptPath);
         return documentLine.Script switch {
             GenericLine line => GetForGenericLine(line),
-            CommandLine line => commandHandler.Handle(line.Command, position, documentLine, scriptName, false),
+            CommandLine line => commandHandler.Handle(line.Command, position, documentLine, scriptPath, false),
             _ => []
         };
     }
 
-    private void ResetState (in DocumentLine line, in Position position, string scriptName)
+    private void ResetState (in DocumentLine line, in Position position, string scriptPath)
     {
         this.line = line;
         this.position = position;
-        this.scriptName = scriptName;
+        this.scriptPath = scriptPath;
         charBehindCursor = line.GetCharBehindCursor(position);
     }
 
@@ -61,7 +61,7 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
         if (ShouldCompleteAuthorAppearance(genericLine, out var authorId))
             return completions.GetAppearances(authorId, CharacterType);
         if (genericLine.Content.OfType<InlinedCommand>().FirstOrDefault(IsCursorOver) is { } inlined)
-            return commandHandler.Handle(inlined.Command, position, line, scriptName, true);
+            return commandHandler.Handle(inlined.Command, position, line, scriptPath, true);
         if (genericLine.Content.OfType<MixedValue>().FirstOrDefault(IsCursorOver) is { } text)
             return GetForGenericText(text);
         return [];
@@ -81,6 +81,6 @@ public class CompletionHandler : ICompletionHandler, IMetadataObserver
             return [];
         if (charBehindCursor == meta.Syntax.ExpressionClose[0])
             return [];
-        return expHandler.Handle(exp.Body, position, line, scriptName);
+        return expHandler.Handle(exp.Body, position, line, scriptPath);
     }
 }

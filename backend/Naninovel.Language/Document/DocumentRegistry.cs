@@ -1,9 +1,13 @@
-﻿namespace Naninovel.Language;
+﻿using Naninovel.Metadata;
 
-public class DocumentRegistry : IDocumentRegistry
+namespace Naninovel.Language;
+
+public class DocumentRegistry : IDocumentRegistry, ISettingsObserver, IMetadataObserver
 {
-    private readonly Dictionary<string, Document> map = new();
+    private readonly Dictionary<string, Document> map = [];
+    private readonly Dictionary<string, string?> scriptIdByPath = [];
     private readonly DocumentChangeRangeResolver rangeResolver = new();
+    private readonly ScriptPathResolver pathResolver = new();
     private readonly IObserverNotifier<IDocumentObserver> notifier;
     private readonly DocumentChanger changer;
 
@@ -15,12 +19,36 @@ public class DocumentRegistry : IDocumentRegistry
         changer = new(factory);
     }
 
+    public void HandleSettingsChanged (Settings settings)
+    {
+        pathResolver.RootUri = settings.ScriptRootUri;
+    }
+
+    public void HandleMetadataChanged (Project project)
+    {
+        scriptIdByPath.Clear();
+        foreach (var resource in project.Resources)
+            if (resource.Type.Equals(Constants.ScriptsType, StringComparison.Ordinal))
+                scriptIdByPath[resource.Path] = resource.AssetId;
+    }
+
     public IReadOnlyCollection<string> GetAllUris () => map.Keys;
 
     public IDocument Get (string uri)
     {
         EnsureDocumentAvailable(uri);
         return map[uri];
+    }
+
+    public string ResolvePath (string uri)
+    {
+        return pathResolver.Resolve(uri);
+    }
+
+    public string? ResolveId (string uri)
+    {
+        var path = ResolvePath(uri);
+        return scriptIdByPath.GetValueOrDefault(path);
     }
 
     public bool Contains (string uri)

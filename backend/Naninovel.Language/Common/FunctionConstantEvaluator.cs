@@ -8,10 +8,10 @@ internal class FunctionConstantEvaluator (ISyntax stx)
     private readonly NamedValueParser namedParser = new(stx);
     private ResolvedFunction fn;
 
-    public IReadOnlyList<string> EvaluateNames (string scriptId, ValueContext ctx, ResolvedFunction fn)
+    public IReadOnlyList<string> EvaluateNames (string scriptPath, ValueContext ctx, ResolvedFunction fn)
     {
         this.fn = fn;
-        return ConstantEvaluator.EvaluateNames(ctx.SubType ?? "", scriptId, GetParamValue);
+        return ConstantEvaluator.EvaluateNames(ctx.SubType ?? "", scriptPath, GetParamValue);
     }
 
     private string? GetParamValue (string name, int? idx)

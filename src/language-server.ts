@@ -34,17 +34,17 @@ function establishConnection(reader: Emitter<Message>, writer: Emitter<Message>)
     connection.listen();
 }
 
-function attachHandlers(connection: Connection) {
-    cs.DiagnosticPublisher.publishDiagnostics = (uri, diags) => connection.sendDiagnostics({ uri: uri, diagnostics: diags as never });
-    connection.onDidOpenTextDocument(p => upsertDocuments([{ uri: p.textDocument.uri, text: p.textDocument.text }]));
-    connection.onDidChangeTextDocument(p => cs.DocumentHandler.changeDocument(p.textDocument.uri, p.contentChanges as never));
-    connection.workspace.onDidRenameFiles(p => cs.DocumentHandler.renameDocuments(p.files));
-    connection.workspace.onDidDeleteFiles(p => cs.DocumentHandler.deleteDocuments(p.files));
-    connection.onCompletion(p => cs.CompletionHandler.complete(p.textDocument.uri, p.position) as never);
-    connection.onDocumentSymbol(p => cs.SymbolHandler.getSymbols(p.textDocument.uri) as never);
-    connection.onRequest("textDocument/semanticTokens/full", p => cs.TokenHandler.getAllTokens(p.textDocument.uri));
-    connection.onRequest("textDocument/semanticTokens/range", p => cs.TokenHandler.getTokens(p.textDocument.uri, p.range));
-    connection.onHover(p => cs.HoverHandler.hover(p.textDocument.uri, p.position) as never);
-    connection.onFoldingRanges(p => cs.FoldingHandler.getFoldingRanges(p.textDocument.uri));
-    connection.onDefinition(p => cs.DefinitionHandler.gotoDefinition(p.textDocument.uri, p.position));
+function attachHandlers(c: Connection) {
+    cs.DiagnosticPublisher.publishDiagnostics = (uri, diags) => c.sendDiagnostics({ uri: uri, diagnostics: diags as never });
+    c.onDidOpenTextDocument(p => upsertDocuments([{ uri: p.textDocument.uri, text: p.textDocument.text }]));
+    c.onDidChangeTextDocument(p => cs.DocumentHandler.changeDocument(p.textDocument.uri, p.contentChanges as never));
+    c.workspace.onDidRenameFiles(p => cs.DocumentHandler.renameDocuments(p.files));
+    c.workspace.onDidDeleteFiles(p => cs.DocumentHandler.deleteDocuments(p.files));
+    c.onCompletion(p => cs.CompletionHandler.complete(p.textDocument.uri, p.position) as never);
+    c.onDocumentSymbol(p => cs.SymbolHandler.getSymbols(p.textDocument.uri) as never);
+    c.onRequest("textDocument/semanticTokens/full", p => cs.TokenHandler.getAllTokens(p.textDocument.uri));
+    c.onRequest("textDocument/semanticTokens/range", p => cs.TokenHandler.getTokens(p.textDocument.uri, p.range));
+    c.onHover(p => cs.HoverHandler.hover(p.textDocument.uri, p.position) as never);
+    c.onFoldingRanges(p => cs.FoldingHandler.getFoldingRanges(p.textDocument.uri));
+    c.onDefinition(p => cs.DefinitionHandler.gotoDefinition(p.textDocument.uri, p.position));
 }
