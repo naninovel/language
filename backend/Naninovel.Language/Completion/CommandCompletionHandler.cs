@@ -130,17 +130,17 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
         _ => []
     };
 
-    private (string? Id, string? Type)? FindActor ()
+    private (string Id, string? Type)? FindActor ()
     {
         foreach (var param in command.Model.Parameters)
             if (meta.FindParameter(command.Meta.Id, param.Identifier) is not { } paramMeta) continue;
             else if (paramMeta.ValueContext is null) continue;
             else if (paramMeta.ValueContext.ElementAtOrDefault(0)?.Type == ValueContextType.Actor)
                 return paramMeta.ValueContainerType == ValueContainerType.Named
-                    ? (GetNamedValue(param.Value, true), paramMeta.ValueContext[0]!.SubType)
+                    ? (GetNamedValue(param.Value, true)!, paramMeta.ValueContext[0]!.SubType)
                     : (line.Extract(param.Value), paramMeta.ValueContext[0]!.SubType);
             else if (paramMeta.ValueContext.ElementAtOrDefault(1)?.Type == ValueContextType.Actor)
-                return (GetNamedValue(param.Value, false), paramMeta.ValueContext[1]!.SubType);
+                return (GetNamedValue(param.Value, false)!, paramMeta.ValueContext[1]!.SubType);
         return null;
     }
 

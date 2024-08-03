@@ -61,7 +61,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
         _ => []
     };
 
-    private (string? Id, string? Type)? FindActor ()
+    private (string Id, string? Type)? FindActor ()
     {
         foreach (var param in fn.Parameters)
             if (param.Meta is { Context.Type: ValueContextType.Actor })
