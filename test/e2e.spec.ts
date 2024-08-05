@@ -23,6 +23,8 @@ test("can boot", async () => {
 
 test("can be configured", async () => {
     expect(() => configure({
+        scriptRootUri: "foo",
+        debounceDelay: 100,
         diagnoseSyntax: true,
         diagnoseSemantics: true,
         diagnoseNavigation: true
@@ -70,6 +72,8 @@ test("can autocomplete", async () => {
 test("can publish diagnostics", async () => {
     await openScript("# label");
     expect(() => configure({
+        scriptRootUri: "foo",
+        debounceDelay: 100,
         diagnoseSyntax: true,
         diagnoseSemantics: true,
         diagnoseNavigation: true

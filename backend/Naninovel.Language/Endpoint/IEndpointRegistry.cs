@@ -11,11 +11,11 @@
 /// </remarks>
 public interface IEndpointRegistry
 {
-    bool ScriptExist (string scriptName);
+    bool ScriptExist (string scriptPath);
     bool LabelExist (in QualifiedLabel label);
     bool NavigatorExist (in QualifiedEndpoint endpoint);
     IReadOnlySet<LineLocation> GetLabelLocations (in QualifiedLabel label);
     IReadOnlySet<LineLocation> GetNavigatorLocations (in QualifiedEndpoint endpoint);
-    IReadOnlySet<string> GetAllScriptNames ();
-    IReadOnlySet<string> GetLabelsInScript (string scriptName);
+    IReadOnlySet<string> GetAllScriptPaths ();
+    IReadOnlySet<string> GetLabelsInScript (string scriptPath);
 }

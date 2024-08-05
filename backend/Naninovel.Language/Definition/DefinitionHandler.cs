@@ -42,17 +42,17 @@ public class DefinitionHandler (IMetadata meta, IDocumentRegistry registry) : ID
     private LocationLink[]? FromCommand (Parsing.Command command)
     {
         if (!resolver.TryResolve(command, out var point)) return null;
-        var uri = point.Script != null ? FindDocumentUriByName(point.Script) : documentUri;
+        var uri = point.ScriptPath != null ? FindDocumentUriByPath(point.ScriptPath) : documentUri;
         if (uri is null) return null;
         var document = registry.Get(uri);
         var (range, selection) = GetRanges(document, point.Label);
         return [new LocationLink(null, uri, range, selection)];
     }
 
-    private string? FindDocumentUriByName (string name)
+    private string? FindDocumentUriByPath (string path)
     {
         foreach (var uri in registry.GetAllUris())
-            if (uri.EndsWith(name + ".nani"))
+            if (uri.EndsWith(path + ".nani"))
                 return uri;
         return null;
     }

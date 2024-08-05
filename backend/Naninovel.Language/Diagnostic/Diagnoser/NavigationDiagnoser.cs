@@ -22,29 +22,29 @@ internal class NavigationDiagnoser (IMetadata meta, IDocumentRegistry docs,
     public override void HandleDocumentRemoved (string uri)
     {
         Remove(uri);
-        var name = PathUtil.ResolveScriptName(uri);
+        var path = Docs.ResolvePath(uri);
         var doc = Docs.Get(uri);
-        foreach (var location in endpoints.GetNavigatorLocations(new(name)))
+        foreach (var location in endpoints.GetNavigatorLocations(new(path)))
             Rediagnose(location);
         for (int i = 0; i < doc.LineCount; i++)
-            HandleLineRemoved(doc[i].Script, name);
+            HandleLineRemoved(doc[i].Script, path);
     }
 
     public override void HandleDocumentChanging (string uri, LineRange range)
     {
-        var name = PathUtil.ResolveScriptName(uri);
+        var path = Docs.ResolvePath(uri);
         var doc = Docs.Get(uri);
         Remove(uri, range);
         for (int i = range.Start; i <= range.End; i++)
-            HandleLineRemoved(doc[i].Script, name);
+            HandleLineRemoved(doc[i].Script, path);
     }
 
     public override void HandleDocumentChanged (string uri, LineRange range)
     {
-        var name = PathUtil.ResolveScriptName(uri);
+        var path = Docs.ResolvePath(uri);
         var doc = Docs.Get(uri);
         for (int i = range.Start; i <= range.End; i++)
-            HandleLineRemoved(doc[i].Script, name);
+            HandleLineRemoved(doc[i].Script, path);
         Diagnose(uri, range);
     }
 
@@ -60,7 +60,7 @@ internal class NavigationDiagnoser (IMetadata meta, IDocumentRegistry docs,
 
     private void DiagnoseLabelLine (LabelLine line)
     {
-        if (!endpoints.NavigatorExist(new(PathUtil.ResolveScriptName(Uri), line.Label)))
+        if (!endpoints.NavigatorExist(new(Docs.ResolvePath(Uri), line.Label)))
             AddUnusedLabel(line.Label);
     }
 
@@ -85,9 +85,9 @@ internal class NavigationDiagnoser (IMetadata meta, IDocumentRegistry docs,
 
     private bool IsEndpointUnknown (Endpoint point)
     {
-        var name = point.Script ?? PathUtil.ResolveScriptName(Uri);
-        if (point.Label is null) return !endpoints.ScriptExist(name);
-        return !endpoints.LabelExist(new(name, point.Label));
+        var path = point.ScriptPath ?? Docs.ResolvePath(Uri);
+        if (point.Label is null) return !endpoints.ScriptExist(path);
+        return !endpoints.LabelExist(new(path, point.Label));
     }
 
     private void AddUnknownEndpoint (Parsing.Parameter param)
@@ -102,7 +102,7 @@ internal class NavigationDiagnoser (IMetadata meta, IDocumentRegistry docs,
         AddUnnecessary(range, "Unused label.");
     }
 
-    private void HandleLineRemoved (IScriptLine line, string scriptName)
+    private void HandleLineRemoved (IScriptLine line, string scriptPath)
     {
         if (line is LabelLine labelLine)
             HandleLabelRemoved(labelLine);
@@ -115,20 +115,20 @@ internal class NavigationDiagnoser (IMetadata meta, IDocumentRegistry docs,
 
         void HandleLabelRemoved (LabelLine labelLine)
         {
-            foreach (var location in endpoints.GetNavigatorLocations(new(scriptName, labelLine.Label)))
+            foreach (var location in endpoints.GetNavigatorLocations(new(scriptPath, labelLine.Label)))
                 Rediagnose(location);
         }
 
         void HandleCommandRemoved (Parsing.Command command)
         {
             if (resolver.TryResolve(command, out var point))
-                HandleNavigatorRemoved(new(point.Script ?? scriptName, point.Label));
+                HandleNavigatorRemoved(new(point.ScriptPath ?? scriptPath, point.Label));
         }
 
         void HandleNavigatorRemoved (in QualifiedEndpoint endpoint)
         {
             if (endpoint.Label is null) return;
-            foreach (var location in endpoints.GetLabelLocations(new(endpoint.ScriptName, endpoint.Label)))
+            foreach (var location in endpoints.GetLabelLocations(new(endpoint.ScriptPath, endpoint.Label)))
                 Rediagnose(location);
         }
     }

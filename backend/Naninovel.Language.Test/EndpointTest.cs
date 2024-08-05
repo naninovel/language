@@ -23,7 +23,7 @@ public class EndpointTest
         Assert.Empty(registry.GetLabelLocations(new("foo", "bar")));
         Assert.Empty(registry.GetNavigatorLocations(new("foo")));
         Assert.Empty(registry.GetNavigatorLocations(new("foo", "bar")));
-        Assert.Empty(registry.GetAllScriptNames());
+        Assert.Empty(registry.GetAllScriptPaths());
         Assert.Empty(registry.GetLabelsInScript("foo"));
     }
 
@@ -42,7 +42,7 @@ public class EndpointTest
         AssertNavigatorLocations(new("script1", "label1"), new LineLocation("script1.nani", 2), new("script1.nani", 3));
         AssertNavigatorLocations(new("script2"), new LineLocation("script1.nani", 4));
         AssertNavigatorLocations(new("script2", "label1"), new LineLocation("script2.nani", 4));
-        Assert.Equal(["script1", "script2"], registry.GetAllScriptNames());
+        Assert.Equal(["script1", "script2"], registry.GetAllScriptPaths());
         Assert.Equal(["label1", "label2"], registry.GetLabelsInScript("script1"));
         Assert.Equal(["label1"], registry.GetLabelsInScript("script2"));
     }
@@ -64,7 +64,7 @@ public class EndpointTest
         AssertNavigatorDoesntExist(new("script1", "label1"));
         AssertNavigatorDoesntExist(new("script2"));
         AssertNavigatorLocations(new("script2", "label1"), new LineLocation("script2.nani", 4));
-        Assert.Equal(["script2"], registry.GetAllScriptNames());
+        Assert.Equal(["script2"], registry.GetAllScriptPaths());
         Assert.Empty(registry.GetLabelsInScript("script1"));
         Assert.Equal(["label1"], registry.GetLabelsInScript("script2"));
     }
@@ -90,7 +90,7 @@ public class EndpointTest
         AssertNavigatorLocations(new("script1", "label1"), new LineLocation("script1.nani", 1));
         AssertNavigatorLocations(new("script2"), new LineLocation("script1.nani", 0), new("script1.nani", 2));
         AssertNavigatorLocations(new("script2", "label1"), new LineLocation("script2.nani", 2));
-        Assert.Equal(["script1", "script2"], registry.GetAllScriptNames());
+        Assert.Equal(["script1", "script2"], registry.GetAllScriptPaths());
         Assert.Empty(registry.GetLabelsInScript("script1"));
         Assert.Equal(["label1"], registry.GetLabelsInScript("script2"));
     }
@@ -134,17 +134,17 @@ public class EndpointTest
         AssertNavigatorLocations(new("script", "label"), new LineLocation("script.nani", 1));
     }
 
-    private void AssertLabelLocations (string scriptName, string label, params LineLocation[] locations)
+    private void AssertLabelLocations (string scriptPath, string label, params LineLocation[] locations)
     {
-        Assert.True(registry.ScriptExist(scriptName));
-        Assert.True(registry.LabelExist(new(scriptName, label)));
-        Assert.Equal(locations, registry.GetLabelLocations(new(scriptName, label)));
+        Assert.True(registry.ScriptExist(scriptPath));
+        Assert.True(registry.LabelExist(new(scriptPath, label)));
+        Assert.Equal(locations, registry.GetLabelLocations(new(scriptPath, label)));
     }
 
-    private void AssertLabelDoesntExist (string scriptName, string label)
+    private void AssertLabelDoesntExist (string scriptPath, string label)
     {
-        Assert.False(registry.LabelExist(new(scriptName, label)));
-        Assert.Empty(registry.GetLabelLocations(new(scriptName, label)));
+        Assert.False(registry.LabelExist(new(scriptPath, label)));
+        Assert.Empty(registry.GetLabelLocations(new(scriptPath, label)));
     }
 
     private void AssertNavigatorLocations (QualifiedEndpoint endpoint, params LineLocation[] locations)

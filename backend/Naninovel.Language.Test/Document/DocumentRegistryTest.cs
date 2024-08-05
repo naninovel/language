@@ -79,4 +79,19 @@ public class DocumentRegistryTest
         Assert.True(registry.Contains("bar"));
         Assert.Equal(doc, registry.Get("bar"));
     }
+
+    [Fact]
+    public void CanResolveScriptPath ()
+    {
+        Assert.Equal("foo/bar", registry.ResolvePath("/foo/bar.nani"));
+    }
+
+    [Fact]
+    public void RespectsScriptRootSettingWhenResolvingScriptPath ()
+    {
+        registry.HandleSettingsChanged(new() { ScriptRootUri = "foo" });
+        Assert.Equal("bar/nya", registry.ResolvePath("/foo/bar/nya.nani"));
+        registry.HandleSettingsChanged(new() { ScriptRootUri = "bar" });
+        Assert.Equal("nya", registry.ResolvePath("/foo/bar/nya.nani"));
+    }
 }

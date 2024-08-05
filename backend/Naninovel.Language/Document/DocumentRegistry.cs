@@ -1,9 +1,12 @@
-﻿namespace Naninovel.Language;
+﻿using Naninovel.Metadata;
 
-public class DocumentRegistry : IDocumentRegistry
+namespace Naninovel.Language;
+
+public class DocumentRegistry : IDocumentRegistry, ISettingsObserver
 {
-    private readonly Dictionary<string, Document> map = new();
+    private readonly Dictionary<string, Document> map = [];
     private readonly DocumentChangeRangeResolver rangeResolver = new();
+    private readonly ScriptPathResolver pathResolver = new();
     private readonly IObserverNotifier<IDocumentObserver> notifier;
     private readonly DocumentChanger changer;
 
@@ -15,12 +18,22 @@ public class DocumentRegistry : IDocumentRegistry
         changer = new(factory);
     }
 
+    public void HandleSettingsChanged (Settings settings)
+    {
+        pathResolver.RootUri = settings.ScriptRootUri;
+    }
+
     public IReadOnlyCollection<string> GetAllUris () => map.Keys;
 
     public IDocument Get (string uri)
     {
         EnsureDocumentAvailable(uri);
         return map[uri];
+    }
+
+    public string ResolvePath (string uri)
+    {
+        return pathResolver.Resolve(uri);
     }
 
     public bool Contains (string uri)

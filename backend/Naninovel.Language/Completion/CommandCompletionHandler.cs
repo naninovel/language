@@ -16,12 +16,12 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     private DocumentLine line;
     private CommandContext command;
     private ParameterContext param;
-    private string scriptName = string.Empty;
+    private string scriptPath = string.Empty;
 
     public CompletionItem[] Handle (Parsing.Command command, in Position position,
-        in DocumentLine line, string scriptName, bool inline)
+        in DocumentLine line, string scriptPath, bool inline)
     {
-        ResetState(position, line, scriptName);
+        ResetState(position, line, scriptPath);
         if (ShouldCompleteCommandId(command))
             return inline ? completions.GetInlineCommands() : completions.GetLineCommands();
         if (!TryResolveCommandContext(command, out this.command)) return [];
@@ -29,11 +29,11 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
         return GetParameterValues();
     }
 
-    private void ResetState (in Position position, in DocumentLine line, string scriptName)
+    private void ResetState (in Position position, in DocumentLine line, string scriptPath)
     {
         this.line = line;
         this.position = position;
-        this.scriptName = scriptName;
+        this.scriptPath = scriptPath;
         charBehindCursor = line.GetCharBehindCursor(position);
     }
 
@@ -87,7 +87,7 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     private CompletionItem[] GetParameterValues ()
     {
         if (ShouldCompleteExpressions(out var expression))
-            return expHandler.Handle(expression.Body, position, line, scriptName);
+            return expHandler.Handle(expression.Body, position, line, scriptPath);
         if (param.Meta.ValueType == Metadata.ValueType.Boolean)
             return completions.GetBooleans();
         if (FindValueContext() is { } context)
@@ -120,7 +120,7 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     }
 
     private CompletionItem[] GetContextValues (ValueContext ctx, IValueComponent? cmp) => ctx.Type switch {
-        ValueContextType.Expression => expHandler.Handle(cmp as PlainText ?? (cmp as Parsing.Expression)?.Body, position, line, scriptName),
+        ValueContextType.Expression => expHandler.Handle(cmp as PlainText ?? (cmp as Parsing.Expression)?.Body, position, line, scriptPath),
         ValueContextType.Constant => GetConstantValues(ctx),
         ValueContextType.Endpoint => GetEndpointValues(ctx),
         ValueContextType.Resource => completions.GetResources(ctx.SubType ?? ""),
@@ -130,17 +130,17 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
         _ => []
     };
 
-    private (string? Id, string? Type)? FindActor ()
+    private (string Id, string? Type)? FindActor ()
     {
         foreach (var param in command.Model.Parameters)
             if (meta.FindParameter(command.Meta.Id, param.Identifier) is not { } paramMeta) continue;
             else if (paramMeta.ValueContext is null) continue;
             else if (paramMeta.ValueContext.ElementAtOrDefault(0)?.Type == ValueContextType.Actor)
                 return paramMeta.ValueContainerType == ValueContainerType.Named
-                    ? (GetNamedValue(param.Value, true), paramMeta.ValueContext[0]!.SubType)
+                    ? (GetNamedValue(param.Value, true)!, paramMeta.ValueContext[0]!.SubType)
                     : (line.Extract(param.Value), paramMeta.ValueContext[0]!.SubType);
             else if (paramMeta.ValueContext.ElementAtOrDefault(1)?.Type == ValueContextType.Actor)
-                return (GetNamedValue(param.Value, false), paramMeta.ValueContext[1]!.SubType);
+                return (GetNamedValue(param.Value, false)!, paramMeta.ValueContext[1]!.SubType);
         return null;
     }
 
@@ -153,7 +153,7 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
 
     private CompletionItem[] GetConstantValues (ValueContext context)
     {
-        var names = ConstantEvaluator.EvaluateNames(context.SubType ?? "", scriptName, GetParamValue);
+        var names = ConstantEvaluator.EvaluateNames(context.SubType ?? "", scriptPath, GetParamValue);
         return names.SelectMany(completions.GetConstants).ToArray();
 
         string? GetParamValue (string id, int? index)
@@ -169,10 +169,10 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     {
         if (context.SubType == Constants.EndpointScript)
         {
-            var labels = endpoints.GetLabelsInScript(scriptName);
-            return completions.GetScriptEndpoints(endpoints.GetAllScriptNames(), labels.Count > 0);
+            var labels = endpoints.GetLabelsInScript(scriptPath);
+            return completions.GetScriptEndpoints(endpoints.GetAllScriptPaths(), labels.Count > 0);
         }
-        var script = GetNamedValue(param.Model.Value, true) ?? scriptName;
+        var script = GetNamedValue(param.Model.Value, true) ?? scriptPath;
         return completions.GetLabelEndpoints(endpoints.GetLabelsInScript(script));
     }
 }
