@@ -134,17 +134,17 @@ public class EndpointTest
         AssertNavigatorLocations(new("script", "label"), new LineLocation("script.nani", 1));
     }
 
-    private void AssertLabelLocations (string scriptName, string label, params LineLocation[] locations)
+    private void AssertLabelLocations (string scriptPath, string label, params LineLocation[] locations)
     {
-        Assert.True(registry.ScriptExist(scriptName));
-        Assert.True(registry.LabelExist(new(scriptName, label)));
-        Assert.Equal(locations, registry.GetLabelLocations(new(scriptName, label)));
+        Assert.True(registry.ScriptExist(scriptPath));
+        Assert.True(registry.LabelExist(new(scriptPath, label)));
+        Assert.Equal(locations, registry.GetLabelLocations(new(scriptPath, label)));
     }
 
-    private void AssertLabelDoesntExist (string scriptName, string label)
+    private void AssertLabelDoesntExist (string scriptPath, string label)
     {
-        Assert.False(registry.LabelExist(new(scriptName, label)));
-        Assert.Empty(registry.GetLabelLocations(new(scriptName, label)));
+        Assert.False(registry.LabelExist(new(scriptPath, label)));
+        Assert.Empty(registry.GetLabelLocations(new(scriptPath, label)));
     }
 
     private void AssertNavigatorLocations (QualifiedEndpoint endpoint, params LineLocation[] locations)

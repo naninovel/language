@@ -138,11 +138,11 @@ public class EndpointRegistry (IMetadata meta, IDocumentRegistry docs)
 
     private HashSet<LineLocation> GetOrAddLabelLocations (in QualifiedLabel key)
     {
-        return labelLocations.TryGetValue(key, out var locs) ? locs : labelLocations[key] = new();
+        return labelLocations.TryGetValue(key, out var locs) ? locs : labelLocations[key] = [];
     }
 
     private HashSet<LineLocation> GetOrAddNavigatorLocations (in QualifiedEndpoint key)
     {
-        return navigatorLocations.TryGetValue(key, out var locs) ? locs : navigatorLocations[key] = new();
+        return navigatorLocations.TryGetValue(key, out var locs) ? locs : navigatorLocations[key] = [];
     }
 }

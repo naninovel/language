@@ -11,25 +11,25 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
     private DocumentLine line;
     private Position position;
     private ResolvedFunction fn;
-    private string scriptName = null!;
+    private string scriptPath = null!;
 
-    public CompletionItem[] Handle (PlainText? expBody, in Position position, in DocumentLine line, string scriptName)
+    public CompletionItem[] Handle (PlainText? expBody, in Position position, in DocumentLine line, string scriptPath)
     {
         if (expBody is null || GetFunctionOverCursor(expBody, position, line) is not { } fn)
             return completions.GetExpressions();
-        Reset(fn, position, line, scriptName);
+        Reset(fn, position, line, scriptPath);
         for (var i = fn.Parameters.Count - 1; i >= 0; i--)
             if (fn.Parameters[i].Meta?.Context is { } ctx && IsParameterOverCursor(i))
                 return [..GetForContext(ctx, fn.Parameters[i]).Select(AsParamCompletion), ..completions.GetExpressions()];
         return completions.GetExpressions();
     }
 
-    private void Reset (ResolvedFunction fn, in Position position, in DocumentLine line, string scriptName)
+    private void Reset (ResolvedFunction fn, in Position position, in DocumentLine line, string scriptPath)
     {
         this.fn = fn;
         this.position = position;
         this.line = line;
-        this.scriptName = scriptName;
+        this.scriptPath = scriptPath;
     }
 
     private ResolvedFunction? GetFunctionOverCursor (PlainText body, in Position pos, in DocumentLine line)
@@ -52,7 +52,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
     }
 
     private CompletionItem[] GetForContext (ValueContext ctx, ResolvedFunctionParameter param) => ctx.Type switch {
-        ValueContextType.Constant => fnConstEval.EvaluateNames(scriptName, ctx, fn).SelectMany(completions.GetConstants).ToArray(),
+        ValueContextType.Constant => fnConstEval.EvaluateNames(scriptPath, ctx, fn).SelectMany(completions.GetConstants).ToArray(),
         ValueContextType.Endpoint => GetEndpointValues(ctx, param.Value),
         ValueContextType.Resource => completions.GetResources(ctx.SubType ?? ""),
         ValueContextType.Actor => completions.GetActors(ctx.SubType ?? ""),
@@ -73,11 +73,11 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
     {
         if (context.SubType == Constants.EndpointScript)
         {
-            var labels = endpoints.GetLabelsInScript(scriptName);
+            var labels = endpoints.GetLabelsInScript(scriptPath);
             return completions.GetScriptEndpoints(endpoints.GetAllScriptPaths(), labels.Count > 0);
         }
         var parsed = namedParser.Parse(value);
-        var script = parsed.Name ?? scriptName;
+        var script = parsed.Name ?? scriptPath;
         return completions.GetLabelEndpoints(endpoints.GetLabelsInScript(script));
     }
 

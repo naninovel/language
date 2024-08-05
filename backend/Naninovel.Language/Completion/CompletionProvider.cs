@@ -42,9 +42,9 @@ internal class CompletionProvider (ISyntax stx)
     public CompletionItem[] GetConstants (string name) => GetOrEmpty(constantsByName, name);
     public CompletionItem[] GetResources (string type) => GetOrEmpty(resourcesByType, type);
 
-    public CompletionItem[] GetScriptEndpoints (IEnumerable<string> scriptNames, bool withEmpty) => withEmpty
-        ? scriptNames.Select(CreateEndpointScript).Prepend(CreateEndpointScript("")).ToArray()
-        : scriptNames.Select(CreateEndpointScript).ToArray();
+    public CompletionItem[] GetScriptEndpoints (IEnumerable<string> scriptPaths, bool withEmpty) => withEmpty
+        ? scriptPaths.Select(CreateEndpointScript).Prepend(CreateEndpointScript("")).ToArray()
+        : scriptPaths.Select(CreateEndpointScript).ToArray();
 
     public CompletionItem[] GetLabelEndpoints (IEnumerable<string> labels) =>
         labels.Select(CreateEndpointLabel).ToArray();
@@ -127,12 +127,12 @@ internal class CompletionProvider (ISyntax stx)
         InsertTextFormat = fn.Parameters.Length > 0 ? InsertTextFormat.Snippet : null
     };
 
-    private CompletionItem CreateEndpointScript (string scriptName) => new() {
-        Label = scriptName == "" ? "(this)" : scriptName,
-        InsertText = scriptName == "" ? stx.NamedDelimiter : scriptName,
-        Kind = scriptName == "" ? CompletionItemKind.Constant : CompletionItemKind.EnumMember,
-        Detail = scriptName == "" ? "Shortcut for current script." : null,
-        CommitCharacters = scriptName == "" ? [" "] : [" ", stx.NamedDelimiter]
+    private CompletionItem CreateEndpointScript (string scriptPath) => new() {
+        Label = scriptPath == "" ? "(this)" : scriptPath,
+        InsertText = scriptPath == "" ? stx.NamedDelimiter : scriptPath,
+        Kind = scriptPath == "" ? CompletionItemKind.Constant : CompletionItemKind.EnumMember,
+        Detail = scriptPath == "" ? "Shortcut for current script." : null,
+        CommitCharacters = scriptPath == "" ? [" "] : [" ", stx.NamedDelimiter]
     };
 
     private CompletionItem CreateEndpointLabel (string label) => new() {
