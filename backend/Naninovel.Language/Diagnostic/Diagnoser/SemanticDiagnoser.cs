@@ -166,7 +166,11 @@ internal class SemanticDiagnoser : Diagnoser
     private void AddPreventingPreload (MixedValue value)
     {
         var range = Line.GetRange(value, LineIndex);
-        AddWarning(range, "Expression in this parameter value prevents resolving associated resources ahead of time, which may result in degraded runtime performance and inefficient asset bundle packaging. Consider using custom command instead.");
+        const string msg =
+            "Expression in this parameter value prevents resolving associated resources ahead of time, " +
+            "which may result in degraded runtime performance and inefficient asset bundle packaging. " +
+            "Consider using custom command instead.";
+        AddWarning(range, msg);
     }
 
     private void AddExpressionError (PlainText text, ParseDiagnostic diagnostic)
