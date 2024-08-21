@@ -64,7 +64,7 @@ public class DocumentNotifierTest
     public void NotifiesAboutChangedDocument ()
     {
         registry.Upsert("foo", CreateDocument("a"));
-        registry.Change("foo", new[] { new DocumentChange(new(new(0, 0), new(0, 1)), "b") });
+        registry.Change("foo", [new DocumentChange(new(new(0, 0), new(0, 1)), "b")]);
         notifier.Verify(d => d.HandleDocumentAdded("foo"), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(0, 0)), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(0, 0)), Times.Once);
@@ -75,7 +75,7 @@ public class DocumentNotifierTest
     public void ChangedRangeIncludesAllLinesAfterDeleted ()
     {
         registry.Upsert("foo", CreateDocument("0", "1", "2", "3"));
-        registry.Change("foo", new[] { new DocumentChange(new(new(1, 0), new(2, 1)), "12") });
+        registry.Change("foo", [new DocumentChange(new(new(1, 0), new(2, 1)), "12")]);
         notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(1, 3)), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(1, 2)), Times.Once);
     }
@@ -84,7 +84,7 @@ public class DocumentNotifierTest
     public void ChangedRangeIncludesAllLinesAfterInserted ()
     {
         registry.Upsert("foo", CreateDocument("0", "1234", "5"));
-        registry.Change("foo", new[] { new DocumentChange(new(new(1, 0), new(1, 4)), "1\r2\n3\r\n4") });
+        registry.Change("foo", [new DocumentChange(new(new(1, 0), new(1, 4)), "1\r2\n3\r\n4")]);
         notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(1, 2)), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(1, 5)), Times.Once);
     }
@@ -93,7 +93,7 @@ public class DocumentNotifierTest
     public void ChangedRangeDoesntIncludesAllLinesWhenNotInsertingOrDeletingLines ()
     {
         registry.Upsert("foo", CreateDocument("0", "1", "2"));
-        registry.Change("foo", new[] { new DocumentChange(new(new(1, 0), new(1, 1)), "") });
+        registry.Change("foo", [new DocumentChange(new(new(1, 0), new(1, 1)), "")]);
         notifier.Verify(d => d.HandleDocumentChanging("foo", new LineRange(1, 1)), Times.Once);
         notifier.Verify(d => d.HandleDocumentChanged("foo", new LineRange(1, 1)), Times.Once);
     }

@@ -16,7 +16,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
         Assert.Equal(new(new(0, 2), new(0, 7)), diags[0].Range);
         Assert.Equal(DiagnosticSeverity.Information, diags[0].Severity);
         Assert.Equal("Unused label.", diags[0].Message);
-        Assert.Equal(new[] { DiagnosticTag.Unnecessary }, diags[0].Tags);
+        Assert.Equal([DiagnosticTag.Unnecessary], diags[0].Tags);
     }
 
     [Fact]

@@ -38,7 +38,7 @@ public class SymbolHandler (IMetadata meta, IDocumentRegistry registry) : ISymbo
         Kind = (int)SymbolKind.Namespace,
         Range = line.GetRange(lineIndex),
         SelectionRange = line.GetRange(lineIndex),
-        Children = new[] { CreateForLabelText(labelLine.Label) }
+        Children = [CreateForLabelText(labelLine.Label)]
     };
 
     private Symbol CreateForCommentLine (CommentLine commentLine) => new() {
@@ -46,7 +46,7 @@ public class SymbolHandler (IMetadata meta, IDocumentRegistry registry) : ISymbo
         Kind = (int)SymbolKind.String,
         Range = line.GetRange(lineIndex),
         SelectionRange = line.GetRange(lineIndex),
-        Children = new[] { CreateForCommentText(commentLine.Comment) }
+        Children = [CreateForCommentText(commentLine.Comment)]
     };
 
     private Symbol CreateForCommandLine (CommandLine commandLine) => new() {
@@ -54,7 +54,7 @@ public class SymbolHandler (IMetadata meta, IDocumentRegistry registry) : ISymbo
         Kind = (int)SymbolKind.Struct,
         Range = line.GetRange(lineIndex),
         SelectionRange = line.GetRange(lineIndex),
-        Children = new[] { CreateForCommand(commandLine.Command) }
+        Children = [CreateForCommand(commandLine.Command)]
     };
 
     private Symbol CreateForGenericLine (GenericLine genericLine) => new() {
@@ -141,7 +141,7 @@ public class SymbolHandler (IMetadata meta, IDocumentRegistry registry) : ISymbo
         Kind = (int)SymbolKind.Struct,
         Range = line.GetRange(inlined, lineIndex),
         SelectionRange = line.GetRange(inlined, lineIndex),
-        Children = new[] { CreateForCommand(inlined.Command) }
+        Children = [CreateForCommand(inlined.Command)]
     };
 
     private Symbol CreateForGenericText (MixedValue text) => new() {

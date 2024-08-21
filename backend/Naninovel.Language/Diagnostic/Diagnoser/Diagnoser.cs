@@ -10,7 +10,7 @@ internal abstract class Diagnoser (IDocumentRegistry docs, DiagnosticRegistry re
     protected DocumentLine Line { get; private set; }
     protected int LineIndex { get; private set; }
 
-    private static readonly IReadOnlyList<DiagnosticTag> unnecessary = new[] { DiagnosticTag.Unnecessary };
+    private static readonly IReadOnlyList<DiagnosticTag> unnecessary = [DiagnosticTag.Unnecessary];
 
     public virtual void HandleDocumentAdded (string uri) => Diagnose(uri);
     public virtual void HandleDocumentRemoved (string uri) => Remove(uri);
@@ -23,6 +23,7 @@ internal abstract class Diagnoser (IDocumentRegistry docs, DiagnosticRegistry re
     protected void AddWarning (in Range range, string message) =>
         AddDiagnostic(new(range, DiagnosticSeverity.Warning, message));
 
+    [ExcludeFromCodeCoverage] // TODO: Remove the attribute when/if we start using info diags.
     protected void AddInfo (in Range range, string message) =>
         AddDiagnostic(new(range, DiagnosticSeverity.Information, message));
 
