@@ -168,7 +168,7 @@ internal class SemanticDiagnoser : Diagnoser
         var range = Line.GetRange(value, LineIndex);
         const string msg =
             "Expression in this parameter value prevents resolving associated resources ahead of time, " +
-            "which may result in degraded runtime performance and inefficient asset bundle packaging. " +
+            "which may result in a degraded runtime performance and inefficient asset bundle packaging. " +
             "Consider using custom command instead.";
         AddWarning(range, msg);
     }

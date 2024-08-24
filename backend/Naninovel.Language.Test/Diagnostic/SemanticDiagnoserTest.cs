@@ -139,7 +139,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
         var diags = Diagnose("@c p1:{} p2:x{}x p3:\"x { x } x\" p4:{} p5:{}");
         const string msg =
             "Expression in this parameter value prevents resolving associated resources ahead of time, " +
-            "which may result in degraded runtime performance and inefficient asset bundle packaging. " +
+            "which may result in a degraded runtime performance and inefficient asset bundle packaging. " +
             "Consider using custom command instead.";
         Assert.Equal(3, diags.Count);
         Assert.Equal(new(new(new(0, 6), new(0, 8)), DiagnosticSeverity.Warning, msg), diags[0]);
