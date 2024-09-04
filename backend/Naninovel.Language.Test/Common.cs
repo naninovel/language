@@ -36,20 +36,4 @@ internal static class Common
         docs.Setup(d => d.GetAllUris()).Returns(uris);
         docs.Setup(d => d.ResolvePath(It.IsAny<string>())).Returns(pathResolver.Resolve);
     }
-
-    public static void SetupCommandWithEndpoint (this MetadataMock meta, string commandId)
-    {
-        var parameter = new Parameter {
-            Id = "Path",
-            Nameless = true,
-            ValueType = Metadata.ValueType.String,
-            ValueContainerType = ValueContainerType.Named,
-            ValueContext = [
-                new ValueContext { Type = ValueContextType.Endpoint, SubType = Constants.EndpointScript },
-                new ValueContext { Type = ValueContextType.Endpoint, SubType = Constants.EndpointLabel }
-            ]
-        };
-        var command = new Command { Id = commandId, Parameters = [parameter], Branch = new() { Traits = BranchTraits.Endpoint } };
-        meta.Commands = meta.Commands.Append(command).ToList();
-    }
 }

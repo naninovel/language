@@ -1,15 +1,13 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Bootsharp;
+﻿using Bootsharp;
 using Bootsharp.Inject;
 using Microsoft.Extensions.DependencyInjection;
 using Naninovel.Bindings;
 using Naninovel.Language;
 using Naninovel.Metadata;
 
-[assembly: ExcludeFromCodeCoverage]
 [assembly: JSPreferences(Space = [Space.Pattern, Space.Replacement])]
 [assembly: JSImport(typeof(IDiagnosticPublisher))]
-[assembly: JSExport([
+[assembly: JSExport(
     typeof(ISettingsHandler),
     typeof(IMetadataHandler),
     typeof(IDocumentHandler),
@@ -18,8 +16,8 @@ using Naninovel.Metadata;
     typeof(IFoldingHandler),
     typeof(ISymbolHandler),
     typeof(ITokenHandler),
-    typeof(IHoverHandler)
-])]
+    typeof(IHoverHandler))
+]
 
 namespace Naninovel.Language.Bindings;
 
