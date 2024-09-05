@@ -30,7 +30,7 @@ public class EndpointTest
     [Fact]
     public void ResolvesAfterDocumentAdded ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
         docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentAdded("script1.nani");
@@ -50,7 +50,7 @@ public class EndpointTest
     [Fact]
     public void ResolvesAfterDocumentRemoved ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
         docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentAdded("script1.nani");
@@ -72,7 +72,7 @@ public class EndpointTest
     [Fact]
     public void ResolvesAfterDocumentChanged ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("script1.nani", "# label1", "# label2", "@goto script1.label1", "@goto .label1", "@goto script2");
         docs.SetupScript("script2.nani", "# label1", "# label1", "[goto script1]", "[goto script1]", "[goto script2.label1]");
         registry.HandleDocumentAdded("script1.nani");
@@ -98,7 +98,7 @@ public class EndpointTest
     [Fact]
     public void ResolvesChangesInSameDocument ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("script.nani", "# label", "@goto .label");
         registry.HandleDocumentAdded("script.nani");
         registry.HandleDocumentChanging("script.nani", new(1, 1));
@@ -111,7 +111,7 @@ public class EndpointTest
     [Fact]
     public void UpdatesLocationsAfterLinesAdded ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("script.nani", "# label", "@goto .label");
         registry.HandleDocumentAdded("script.nani");
         registry.HandleDocumentChanging("script.nani", new(0, 3));
@@ -124,7 +124,7 @@ public class EndpointTest
     [Fact]
     public void UpdatesLocationsAfterLinesRemoved ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("script.nani", "", "", "# label", "@goto .label");
         registry.HandleDocumentAdded("script.nani");
         registry.HandleDocumentChanging("script.nani", new(0, 3));

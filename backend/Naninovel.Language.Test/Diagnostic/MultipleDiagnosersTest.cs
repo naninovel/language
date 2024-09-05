@@ -8,7 +8,7 @@ public class MultipleDiagnosersTest : DiagnoserTest
     public void DoesntRemoveDiagnosticsOfOtherContexts ()
     {
         Docs.SetupScript("other.nani", "#");
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         Assert.Equal(2, Diagnose("@goto other.label p:").Count);
         Assert.Single(Diagnose("@goto other.label p:v"));
         Handler.HandleDocumentRemoved(DefaultUri);

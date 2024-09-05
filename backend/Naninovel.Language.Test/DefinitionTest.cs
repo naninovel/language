@@ -34,7 +34,7 @@ public class DefinitionTest
     [Fact]
     public void CanNavigateToScript ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("/foo.nani",
             "text",
             "more text",
@@ -47,7 +47,7 @@ public class DefinitionTest
     [Fact]
     public void CanNavigateToLabel ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("/foo.nani",
             "text",
             "# start",
@@ -59,7 +59,7 @@ public class DefinitionTest
     [Fact]
     public void WhenCantFindDocumentReturnsNull ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("/foo.nani", "@goto bar");
         Assert.Null(handler.GotoDefinition("/foo.nani", new(0, 7)));
     }
@@ -67,7 +67,7 @@ public class DefinitionTest
     [Fact]
     public void WhenCantFindLabelNavigatesToFirstLine ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("/foo.nani",
             "text",
             "# foo",
@@ -79,7 +79,7 @@ public class DefinitionTest
     [Fact]
     public void WhenNoNextLabelsSelectsWholeScript ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         docs.SetupScript("/foo.nani",
             "text",
             "more text",

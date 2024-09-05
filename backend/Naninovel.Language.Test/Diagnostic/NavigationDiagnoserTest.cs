@@ -29,7 +29,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenUnknownEndpointScriptWarningIsDiagnosed ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         Endpoints.Setup(d => d.ScriptExist("other")).Returns(false);
         var diags = Diagnose("@goto other");
         Assert.Single(diags);
@@ -40,7 +40,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenUnknownEndpointWarningIsDiagnosed ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         Endpoints.Setup(d => d.LabelExist(new("this", "label"))).Returns(false);
         var diags = Diagnose("@goto .label");
         Assert.Single(diags);
@@ -51,7 +51,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void WhenKnownEndpointWarningIsNotDiagnosed ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         Docs.SetupScript("other.nani", "# label");
         Endpoints.Setup(d => d.ScriptExist("this")).Returns(true);
         Endpoints.Setup(d => d.LabelExist(new("this", "label"))).Returns(true);
@@ -67,7 +67,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void DiagnosticsAreClearedWhenCorrected ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         Endpoints.Setup(d => d.LabelExist(new("this", "bar"))).Returns(true);
         Assert.NotEmpty(Diagnose("@goto .foo"));
         Assert.Empty(Diagnose("@goto .bar"));
@@ -76,7 +76,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void DiagnosticsAreClearedWhenDocumentAdded ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         Endpoints.Setup(d => d.LabelExist(new("other", "foo"))).Returns(false);
         Assert.NotEmpty(Diagnose("@goto other.foo"));
 
@@ -89,7 +89,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void DiagnosticsAreAddedWhenDocumentRemoved ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         SetupHandler();
         Docs.SetupScript("script1.nani", "@goto script2.foo", "@goto script2");
         Docs.SetupScript("script2.nani", "# foo");
@@ -119,7 +119,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void UnusedLabelIsDetectedAfterChange ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         SetupHandler();
         Docs.SetupScript("foo.nani", "[goto bar.label]");
         Docs.SetupScript("bar.nani", "# label");
@@ -143,7 +143,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void UnknownEndpointIsDetectedAfterChange ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         SetupHandler();
         Docs.SetupScript("foo.nani", "@goto bar.label");
         Docs.SetupScript("bar.nani", "# label");
@@ -167,7 +167,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void UnusedLabelIsClearedAfterChangeInSameScript ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         SetupHandler();
         Docs.SetupScript("script.nani", "# label", "@goto .foo");
         Endpoints.Setup(d => d.LabelExist(new("script", "label"))).Returns(true);
@@ -190,7 +190,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void UnknownEndpointIsClearedAfterChangeInSameScript ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         SetupHandler();
         Docs.SetupScript("script.nani", "# foo", "@goto .label");
         Endpoints.Setup(d => d.LabelExist(new("script", "foo"))).Returns(true);
@@ -213,7 +213,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
     [Fact]
     public void CanDiagnoseWhenRemovingLines ()
     {
-        Meta.SetupCommandWithEndpoint("goto");
+        Meta.SetupNavigationCommands();
         SetupHandler();
         Docs.SetupScript("foo.nani", "# bar", "@goto .bar", "[@goto .bar]");
         Endpoints.Setup(d => d.LabelExist(new("foo", "bar"))).Returns(true);

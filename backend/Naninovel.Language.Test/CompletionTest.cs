@@ -621,7 +621,7 @@ public class CompletionTest
     [Fact]
     public void WhenNoEndpointsAndLabelsCompletesEmpty ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string>());
         endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string>());
         Assert.Empty(Complete("@goto ", 6));
@@ -630,7 +630,7 @@ public class CompletionTest
     [Fact]
     public void WhenNoEndpointsButSomeLabelsCompletesWithThisScriptShortcut ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string> { "foo" });
         endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string>());
         Assert.Single(Complete("@goto ", 6));
@@ -640,7 +640,7 @@ public class CompletionTest
     [Fact]
     public void CanCompleteScriptEndpoint ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         endpoints.Setup(e => e.GetLabelsInScript(It.IsAny<string>())).Returns(new HashSet<string>());
         endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string> { "ScriptA", "ScriptB" });
         Assert.Equal(2, Complete("@goto ", 6).Count);
@@ -651,7 +651,7 @@ public class CompletionTest
     [Fact]
     public void PrependsThisScriptShortcutWhenThereAreLabelsInCurrentScript ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         endpoints.Setup(e => e.GetLabelsInScript("@")).Returns(new HashSet<string> { "foo" });
         endpoints.Setup(e => e.GetAllScriptPaths()).Returns(new HashSet<string> { "ScriptA", "ScriptB" });
         Assert.Equal(3, Complete("@goto ", 6).Count);
@@ -663,7 +663,7 @@ public class CompletionTest
     [Fact]
     public void DoesntPrependThisScriptShortcutWhenThereAreLabelsInOtherScriptsButNotInCurrent ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         endpoints.Setup(e => e.GetLabelsInScript("@")).Returns(new HashSet<string>());
         endpoints.Setup(e => e.GetLabelsInScript("ScriptA")).Returns(new HashSet<string> { "foo" });
         endpoints.Setup(e => e.GetLabelsInScript("ScriptB")).Returns(new HashSet<string> { "foo", "bar" });
@@ -676,7 +676,7 @@ public class CompletionTest
     [Fact]
     public void WhenNoLabelsInScriptCompletesEmptyForLabel ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         endpoints.Setup(e => e.GetLabelsInScript("ScriptA")).Returns(new HashSet<string>());
         Assert.Empty(Complete("@goto ScriptA.", 14));
     }
@@ -684,7 +684,7 @@ public class CompletionTest
     [Fact]
     public void CanCompleteLabelEndpoints ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         endpoints.Setup(e => e.GetLabelsInScript("ScriptA")).Returns(new HashSet<string> { "LabelA", "LabelB" });
         Assert.Equal("LabelA", Complete("@goto ScriptA.", 14)[0].Label);
         Assert.Equal("LabelB", Complete("@goto ScriptA.", 14)[1].Label);
@@ -693,7 +693,7 @@ public class CompletionTest
     [Fact]
     public void CanCompleteLabelEndpointsForCurrentScript ()
     {
-        meta.SetupCommandWithEndpoint("goto");
+        meta.SetupNavigationCommands();
         endpoints.Setup(e => e.GetLabelsInScript("ScriptA")).Returns(new HashSet<string> { "LabelA", "LabelB" });
         Assert.Equal("LabelA", Complete("@goto .", 7, "ScriptA.nani")[0].Label);
         Assert.Equal("LabelB", Complete("@goto .", 7, "ScriptA.nani")[1].Label);
