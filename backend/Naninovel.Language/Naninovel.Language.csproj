@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Naninovel.Common.Modern" Version="2024.9.5.1640"/>
+        <PackageReference Include="Naninovel.Common.Modern" Version="2024.9.11.1851"/>
     </ItemGroup>
 
 </Project>
