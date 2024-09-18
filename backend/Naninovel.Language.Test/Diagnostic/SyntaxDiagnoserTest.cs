@@ -79,11 +79,11 @@ public class SyntaxDiagnoserTest : DiagnoserTest
     {
         SetupHandler();
         Docs.SetupScript("foo.nani", "# bar", "# baz");
-        Handler.HandleDocumentAdded("foo.nani");
+        Manager.HandleDocumentAdded("foo.nani");
         Assert.Empty(GetDiagnostics("foo.nani"));
-        Handler.HandleDocumentChanging("foo.nani", new(0, 1));
+        Manager.HandleDocumentChanging("foo.nani", new(0, 1));
         Docs.SetupScript("foo.nani", "#");
-        Handler.HandleDocumentChanged("foo.nani", new(0, 0));
+        Manager.HandleDocumentChanged("foo.nani", new(0, 0));
         Assert.NotEmpty(GetDiagnostics("foo.nani"));
     }
 
@@ -92,9 +92,9 @@ public class SyntaxDiagnoserTest : DiagnoserTest
     {
         SetupHandler();
         Docs.SetupScript("foo.nani", "#");
-        Handler.HandleDocumentAdded("foo.nani");
+        Manager.HandleDocumentAdded("foo.nani");
         Assert.NotEmpty(GetDiagnostics("foo.nani"));
-        Handler.HandleDocumentRemoved("foo.nani");
+        Manager.HandleDocumentRemoved("foo.nani");
         Assert.Empty(GetDiagnostics("foo.nani"));
     }
 

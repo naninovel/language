@@ -7,18 +7,18 @@ namespace Naninovel.Language.Test;
 public class MetadataTest
 {
     private readonly NotifierMock<IMetadataObserver> notifier = new();
-    private readonly MetadataHandler handler;
+    private readonly MetadataUpdater updater;
 
     public MetadataTest ()
     {
-        handler = new(notifier);
+        updater = new(notifier);
     }
 
     [Fact]
     public void NotifiesOnMetadataUpdate ()
     {
         var meta = new Project();
-        handler.UpdateMetadata(meta);
+        updater.UpdateMetadata(meta);
         notifier.Verify(n => n.HandleMetadataChanged(meta), Times.Once);
         notifier.VerifyNoOtherCalls();
     }

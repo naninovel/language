@@ -7,7 +7,7 @@ public abstract class DiagnoserTest
 {
     protected const string DefaultUri = "this.nani";
     protected abstract Settings Settings { get; }
-    protected DiagnosticHandler Handler { get; }
+    protected DiagnosticManager Manager { get; }
     protected MetadataMock Meta { get; } = new();
     protected Mock<IDocumentRegistry> Docs { get; } = new();
     protected Mock<IEndpointRegistry> Endpoints { get; } = new();
@@ -17,7 +17,7 @@ public abstract class DiagnoserTest
 
     protected DiagnoserTest ()
     {
-        Handler = new(Meta, Docs.Object, Endpoints.Object, Publisher.Object);
+        Manager = new(Meta, Docs.Object, Endpoints.Object, Publisher.Object);
         Docs.Setup(d => d.GetAllUris()).Returns(Array.Empty<string>());
         Endpoints.Setup(e => e.GetLabelLocations(It.Ref<QualifiedLabel>.IsAny)).Returns(ImmutableHashSet<LineLocation>.Empty);
         Endpoints.Setup(e => e.GetNavigatorLocations(It.Ref<QualifiedEndpoint>.IsAny)).Returns(ImmutableHashSet<LineLocation>.Empty);
@@ -39,10 +39,10 @@ public abstract class DiagnoserTest
         doc.SetupGet(d => d[It.IsAny<Index>()]).Returns(new DocumentFactory(Meta).CreateLine("@"));
         Docs.Setup(d => d.GetAllUris()).Returns(["foo.nani"]);
         Docs.Setup(d => d.Get("foo.nani")).Returns(doc.Object);
-        Handler.HandleSettingsChanged(new() { DiagnoseSyntax = true });
-        Handler.HandleDocumentAdded("foo.nani");
+        Manager.HandleSettingsChanged(new() { DiagnoseSyntax = true });
+        Manager.HandleDocumentAdded("foo.nani");
         doc.Invocations.Clear();
-        Handler.HandleDocumentChanged("foo.nani", new Range(new(2, 0), new(3, 0)));
+        Manager.HandleDocumentChanged("foo.nani", new Range(new(2, 0), new(3, 0)));
         doc.VerifyGet(l => l[0], Times.Never);
         doc.VerifyGet(l => l[1], Times.Once); // Start from range.Start - 1 to handle nested hosts.
         doc.VerifyGet(l => l[2], Times.Once);
@@ -57,8 +57,8 @@ public abstract class DiagnoserTest
 
     protected void SetupHandler ()
     {
-        Handler.HandleSettingsChanged(Settings);
-        Handler.HandleMetadataChanged(Meta.AsProject());
+        Manager.HandleSettingsChanged(Settings);
+        Manager.HandleMetadataChanged(Meta.AsProject());
     }
 
     protected IReadOnlyList<Diagnostic> Diagnose (params string[] lines)
@@ -66,14 +66,14 @@ public abstract class DiagnoserTest
         SetupHandler();
         if (Docs.Object.GetAllUris().Contains(DefaultUri))
         {
-            Handler.HandleDocumentChanging(DefaultUri, new(0, 0));
+            Manager.HandleDocumentChanging(DefaultUri, new(0, 0));
             Docs.SetupScript(Meta, DefaultUri, lines);
-            Handler.HandleDocumentChanged(DefaultUri, new(0, 0));
+            Manager.HandleDocumentChanged(DefaultUri, new(0, 0));
         }
         else
         {
             Docs.SetupScript(Meta, DefaultUri, lines);
-            Handler.HandleDocumentAdded(DefaultUri);
+            Manager.HandleDocumentAdded(DefaultUri);
         }
         return GetDiagnostics();
     }

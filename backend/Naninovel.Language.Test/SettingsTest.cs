@@ -5,7 +5,7 @@ namespace Naninovel.Language.Test;
 public class SettingsTest
 {
     private readonly NotifierMock<ISettingsObserver> notifier = new();
-    private readonly SettingsHandler handler;
+    private readonly Configurator handler;
 
     public SettingsTest ()
     {

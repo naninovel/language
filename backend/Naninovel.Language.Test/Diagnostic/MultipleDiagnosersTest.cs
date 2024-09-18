@@ -11,8 +11,8 @@ public class MultipleDiagnosersTest : DiagnoserTest
         Meta.SetupNavigationCommands();
         Assert.Equal(2, Diagnose("@goto other.label p:").Count);
         Assert.Single(Diagnose("@goto other.label p:v"));
-        Handler.HandleDocumentRemoved(DefaultUri);
-        Handler.HandleDocumentRemoved("other.nani");
+        Manager.HandleDocumentRemoved(DefaultUri);
+        Manager.HandleDocumentRemoved("other.nani");
         Assert.Empty(GetDiagnostics());
     }
 }

@@ -82,7 +82,7 @@ public class NavigationDiagnoserTest : DiagnoserTest
 
         Docs.SetupScript("other.nani", "# foo");
         Endpoints.Setup(d => d.LabelExist(new("other", "foo"))).Returns(true);
-        Handler.HandleDocumentAdded("other.nani");
+        Manager.HandleDocumentAdded("other.nani");
         Assert.Empty(GetDiagnostics());
     }
 
@@ -100,15 +100,15 @@ public class NavigationDiagnoserTest : DiagnoserTest
         Endpoints.Setup(d => d.GetLabelLocations(new("script2", "foo"))).Returns(new HashSet<LineLocation> { new("script2.nani", 0) });
         Endpoints.Setup(d => d.GetNavigatorLocations(new("script2", "foo"))).Returns(new HashSet<LineLocation> { new("script1.nani", 0) });
         Endpoints.Setup(d => d.GetNavigatorLocations(new("script2", NoLabel))).Returns(new HashSet<LineLocation> { new("script1.nani", 1) });
-        Handler.HandleDocumentAdded("script1.nani");
-        Handler.HandleDocumentAdded("script2.nani");
+        Manager.HandleDocumentAdded("script1.nani");
+        Manager.HandleDocumentAdded("script2.nani");
         Assert.Empty(GetDiagnostics("script1.nani"));
         Assert.Empty(GetDiagnostics("script2.nani"));
 
         Endpoints.Setup(d => d.ScriptExist("script2")).Returns(false);
         Endpoints.Setup(d => d.LabelExist(new("script2", "foo"))).Returns(false);
         Endpoints.Setup(d => d.GetLabelLocations(new("script2", "foo"))).Returns(ImmutableHashSet<LineLocation>.Empty);
-        Handler.HandleDocumentRemoved("script2.nani");
+        Manager.HandleDocumentRemoved("script2.nani");
         Assert.Equal(2, GetDiagnostics("script1.nani").Count);
         Assert.Equal(new(new(new(1, 6), new(1, 13)), DiagnosticSeverity.Warning,
             "Unknown endpoint: script2."), GetDiagnostics("script1.nani")[0]);
@@ -127,16 +127,16 @@ public class NavigationDiagnoserTest : DiagnoserTest
         Endpoints.Setup(d => d.NavigatorExist(new("bar", "label"))).Returns(true);
         Endpoints.Setup(d => d.GetLabelLocations(new("bar", "label"))).Returns(new HashSet<LineLocation> { new("bar.nani", 0) });
         Endpoints.Setup(d => d.GetNavigatorLocations(new("bar", "label"))).Returns(new HashSet<LineLocation> { new("foo.nani", 0) });
-        Handler.HandleDocumentAdded("foo.nani");
-        Handler.HandleDocumentAdded("bar.nani");
+        Manager.HandleDocumentAdded("foo.nani");
+        Manager.HandleDocumentAdded("bar.nani");
         Assert.Empty(GetDiagnostics("foo.nani"));
         Assert.Empty(GetDiagnostics("bar.nani"));
 
         Endpoints.Setup(d => d.NavigatorExist(new("bar", "label"))).Returns(false);
         Endpoints.Setup(d => d.GetNavigatorLocations(new("bar", "label"))).Returns(ImmutableHashSet<LineLocation>.Empty);
-        Handler.HandleDocumentChanging("foo.nani", new(0, 0));
+        Manager.HandleDocumentChanging("foo.nani", new(0, 0));
         Docs.SetupScript("foo.nani", "@goto bar.baz");
-        Handler.HandleDocumentChanged("foo.nani", new(0, 0));
+        Manager.HandleDocumentChanged("foo.nani", new(0, 0));
         Assert.Contains(GetDiagnostics("bar.nani"), d => d.Message == "Unused label.");
     }
 
@@ -151,16 +151,16 @@ public class NavigationDiagnoserTest : DiagnoserTest
         Endpoints.Setup(d => d.NavigatorExist(new("bar", "label"))).Returns(true);
         Endpoints.Setup(d => d.GetLabelLocations(new("bar", "label"))).Returns(new HashSet<LineLocation> { new("bar.nani", 0) });
         Endpoints.Setup(d => d.GetNavigatorLocations(new("bar", "label"))).Returns(new HashSet<LineLocation> { new("foo.nani", 0) });
-        Handler.HandleDocumentAdded("foo.nani");
-        Handler.HandleDocumentAdded("bar.nani");
+        Manager.HandleDocumentAdded("foo.nani");
+        Manager.HandleDocumentAdded("bar.nani");
         Assert.Empty(GetDiagnostics("foo.nani"));
         Assert.Empty(GetDiagnostics("bar.nani"));
 
         Endpoints.Setup(d => d.LabelExist(new("bar", "label"))).Returns(false);
         Endpoints.Setup(d => d.GetLabelLocations(new("bar", "label"))).Returns(ImmutableHashSet<LineLocation>.Empty);
-        Handler.HandleDocumentChanging("bar.nani", new(0, 0));
+        Manager.HandleDocumentChanging("bar.nani", new(0, 0));
         Docs.SetupScript("bar.nani", "# baz");
-        Handler.HandleDocumentChanged("bar.nani", new(0, 0));
+        Manager.HandleDocumentChanged("bar.nani", new(0, 0));
         Assert.Contains(GetDiagnostics("foo.nani"), d => d.Message == "Unknown endpoint: bar.label.");
     }
 
@@ -174,16 +174,16 @@ public class NavigationDiagnoserTest : DiagnoserTest
         Endpoints.Setup(d => d.NavigatorExist(new("script", "foo"))).Returns(true);
         Endpoints.Setup(d => d.GetLabelLocations(new("script", "label"))).Returns(new HashSet<LineLocation> { new("script.nani", 0) });
         Endpoints.Setup(d => d.GetNavigatorLocations(new("script", "foo"))).Returns(new HashSet<LineLocation> { new("script.nani", 1) });
-        Handler.HandleDocumentAdded("script.nani");
+        Manager.HandleDocumentAdded("script.nani");
         Assert.Contains(GetDiagnostics("script.nani"), d => d.Message == "Unknown endpoint: .foo.");
 
         Endpoints.Setup(d => d.NavigatorExist(new("script", "foo"))).Returns(false);
         Endpoints.Setup(d => d.NavigatorExist(new("script", "label"))).Returns(true);
         Endpoints.Setup(d => d.GetNavigatorLocations(new("script", "foo"))).Returns(ImmutableHashSet<LineLocation>.Empty);
         Endpoints.Setup(d => d.GetNavigatorLocations(new("script", "label"))).Returns(new HashSet<LineLocation> { new("script.nani", 1) });
-        Handler.HandleDocumentChanging("script.nani", new(1, 1));
+        Manager.HandleDocumentChanging("script.nani", new(1, 1));
         Docs.SetupScript("script.nani", "# label", "@goto .label");
-        Handler.HandleDocumentChanged("script.nani", new(1, 1));
+        Manager.HandleDocumentChanged("script.nani", new(1, 1));
         Assert.Empty(GetDiagnostics("script.nani"));
     }
 
@@ -197,16 +197,16 @@ public class NavigationDiagnoserTest : DiagnoserTest
         Endpoints.Setup(d => d.NavigatorExist(new("script", "label"))).Returns(true);
         Endpoints.Setup(d => d.GetLabelLocations(new("script", "foo"))).Returns(new HashSet<LineLocation> { new("script.nani", 0) });
         Endpoints.Setup(d => d.GetNavigatorLocations(new("script", "label"))).Returns(new HashSet<LineLocation> { new("script.nani", 1) });
-        Handler.HandleDocumentAdded("script.nani");
+        Manager.HandleDocumentAdded("script.nani");
         Assert.Contains(GetDiagnostics("script.nani"), d => d.Message == "Unused label.");
 
         Endpoints.Setup(d => d.LabelExist(new("script", "foo"))).Returns(false);
         Endpoints.Setup(d => d.LabelExist(new("script", "label"))).Returns(true);
         Endpoints.Setup(d => d.GetLabelLocations(new("script", "foo"))).Returns(ImmutableHashSet<LineLocation>.Empty);
         Endpoints.Setup(d => d.GetLabelLocations(new("script", "label"))).Returns(new HashSet<LineLocation> { new("script.nani", 0) });
-        Handler.HandleDocumentChanging("script.nani", new(0, 0));
+        Manager.HandleDocumentChanging("script.nani", new(0, 0));
         Docs.SetupScript("script.nani", "# label", "@goto .label");
-        Handler.HandleDocumentChanged("script.nani", new(0, 0));
+        Manager.HandleDocumentChanged("script.nani", new(0, 0));
         Assert.Empty(GetDiagnostics("script.nani"));
     }
 
@@ -218,13 +218,13 @@ public class NavigationDiagnoserTest : DiagnoserTest
         Docs.SetupScript("foo.nani", "# bar", "@goto .bar", "[@goto .bar]");
         Endpoints.Setup(d => d.LabelExist(new("foo", "bar"))).Returns(true);
         Endpoints.Setup(d => d.NavigatorExist(new("foo", "bar"))).Returns(true);
-        Handler.HandleDocumentAdded("foo.nani");
+        Manager.HandleDocumentAdded("foo.nani");
         Assert.Empty(GetDiagnostics("foo.nani"));
 
         Endpoints.Setup(d => d.LabelExist(new("foo", "bar"))).Returns(false);
-        Handler.HandleDocumentChanging("foo.nani", new(0, 2));
+        Manager.HandleDocumentChanging("foo.nani", new(0, 2));
         Docs.SetupScript("foo.nani", "@goto .bar");
-        Handler.HandleDocumentChanged("foo.nani", new(0, 0));
+        Manager.HandleDocumentChanged("foo.nani", new(0, 0));
         Assert.NotEmpty(GetDiagnostics("foo.nani"));
     }
 }
