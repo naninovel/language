@@ -102,18 +102,28 @@ public class DocumentHandlerTest
     public void AppliesRenameRefactorOnDirectoryRename ()
     {
         var expectedEdit = new WorkspaceEdit([]);
-        registry.Setup(r => r.GetAllUris()).Returns(["foo"]);
-        renamer.Setup(r => r.RenameDirectory("foo", "bar")).Returns(expectedEdit);
-        handler.RenameDocuments([new("foo", "bar")]);
-        editor.Verify(e => e.PublishEdit("Rename endpoints 'foo' -> 'bar'", expectedEdit));
+        registry.Setup(r => r.GetAllUris()).Returns(["/sub/foo.nani"]);
+        renamer.Setup(r => r.RenameDirectory("/sub", "/bus")).Returns(expectedEdit);
+        handler.RenameDocuments([new("/sub", "/bus")]);
+        editor.Verify(e => e.PublishEdit("Rename endpoints '/sub' -> '/bus'", expectedEdit));
     }
 
     [Fact]
     public void DoesntApplyRenameRefactorOnDirectoryRenameWhenNothingToRefactor ()
     {
-        registry.Setup(r => r.GetAllUris()).Returns(["foo"]);
-        renamer.Setup(r => r.RenameDirectory("foo", "bar")).Returns((WorkspaceEdit?)null);
-        handler.RenameDocuments([new("foo", "bar")]);
+        registry.Setup(r => r.GetAllUris()).Returns(["/sub/foo.nani"]);
+        renamer.Setup(r => r.RenameDirectory("/sub", "/bus")).Returns((WorkspaceEdit?)null);
+        handler.RenameDocuments([new("/sub", "/bus")]);
+        editor.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void DoesntApplyRenameRefactorWhenDisabled ()
+    {
+        handler.HandleSettingsChanged(new() { RefactorFileRenames = false });
+        registry.Setup(r => r.GetAllUris()).Returns(["/sub/foo.nani"]);
+        renamer.Setup(r => r.RenameDirectory("/sub", "/bus")).Returns(new WorkspaceEdit([]));
+        handler.RenameDocuments([new("/sub", "/bus")]);
         editor.VerifyNoOtherCalls();
     }
 }

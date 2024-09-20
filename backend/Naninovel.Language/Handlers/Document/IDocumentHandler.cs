@@ -5,8 +5,8 @@
 
 public interface IDocumentHandler
 {
-    void UpsertDocuments (IReadOnlyList<DocumentInfo> docs);
-    void RenameDocuments (IReadOnlyList<DocumentRenameInfo> docs);
-    void DeleteDocuments (IReadOnlyList<DocumentDeleteInfo> docs);
+    void UpsertDocuments (IReadOnlyList<DocumentInfo> infos);
+    void RenameDocuments (IReadOnlyList<DocumentRenameInfo> infos);
+    void DeleteDocuments (IReadOnlyList<DocumentDeleteInfo> infos);
     void ChangeDocument (string uri, IReadOnlyList<DocumentChange> changes);
 }
