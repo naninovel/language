@@ -20,6 +20,7 @@ function createCapabilities(): ls.ServerCapabilities {
         foldingRangeProvider: {},
         hoverProvider: {},
         definitionProvider: {},
-        renameProvider: { prepareProvider: true }
+        renameProvider: { prepareProvider: true },
+        documentFormattingProvider: {}
     };
 }

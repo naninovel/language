@@ -1,7 +1,12 @@
-﻿namespace Naninovel.Language;
+﻿using Naninovel.Parsing;
+
+namespace Naninovel.Language;
 
 public interface IDocument
 {
-    public int LineCount { get; }
+    int LineCount { get; }
     DocumentLine this [Index index] { get; }
+
+    IEnumerable<IScriptLine> EnumerateScript ();
+    Range GetRange ();
 }

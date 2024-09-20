@@ -22,7 +22,8 @@ using Naninovel.Metadata;
     typeof(ISymbolHandler),
     typeof(ITokenHandler),
     typeof(IHoverHandler),
-    typeof(IRenameHandler)
+    typeof(IRenameHandler),
+    typeof(IFormattingHandler)
 )]
 
 namespace Naninovel.Language.Bindings;
@@ -52,6 +53,7 @@ public static class Language
         .AddSingleton<ITokenHandler, TokenHandler>()
         .AddSingleton<IHoverHandler, HoverHandler>()
         .AddSingleton<IRenameHandler, RenameHandler>()
+        .AddSingleton<IFormattingHandler, FormattingHandler>()
         // observers
         .AddObserving<ISettingsObserver>()
         .AddObserving<IMetadataObserver>()

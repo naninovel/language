@@ -51,6 +51,7 @@ function attachHandlers(c: Connection) {
     c.onDefinition(p => cs.DefinitionHandler.gotoDefinition(p.textDocument.uri, p.position));
     c.onRenameRequest(p => asEdit(cs.RenameHandler.rename(p.textDocument.uri, p.position, p.newName)));
     c.onPrepareRename(p => cs.RenameHandler.prepareRename(p.textDocument.uri, p.position));
+    c.onDocumentFormatting(p => cs.FormattingHandler.format(p.textDocument.uri));
     c.onDidChangeWatchedFiles(p => handleFileChanges(p.changes));
 }
 
