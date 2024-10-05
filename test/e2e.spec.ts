@@ -23,11 +23,12 @@ test("can boot", async () => {
 
 test("can be configured", async () => {
     expect(() => configure({
-        scriptRootUri: "foo",
+        scenarioRoot: "foo",
         debounceDelay: 100,
         diagnoseSyntax: true,
         diagnoseSemantics: true,
-        diagnoseNavigation: true
+        diagnoseNavigation: true,
+        refactorFileRenames: true
     })).not.toThrow();
 });
 
@@ -72,11 +73,12 @@ test("can autocomplete", async () => {
 test("can publish diagnostics", async () => {
     await openScript("# label");
     expect(() => configure({
-        scriptRootUri: "foo",
+        scenarioRoot: "foo",
         debounceDelay: 100,
         diagnoseSyntax: true,
         diagnoseSemantics: true,
-        diagnoseNavigation: true
+        diagnoseNavigation: true,
+        refactorFileRenames: true
     })).not.toThrow();
     const params = peekOut<lsp.PublishDiagnosticsParams>(lsp.PublishDiagnosticsNotification.method);
     expect(params.uri).toEqual(testFileUri);

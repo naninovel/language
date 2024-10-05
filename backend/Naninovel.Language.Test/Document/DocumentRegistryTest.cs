@@ -87,11 +87,11 @@ public class DocumentRegistryTest
     }
 
     [Fact]
-    public void RespectsScriptRootSettingWhenResolvingScriptPath ()
+    public void RespectsScenarioRootSettingWhenResolvingScriptPath ()
     {
-        registry.HandleSettingsChanged(new() { ScriptRootUri = "foo" });
+        registry.HandleSettingsChanged(new() { ScenarioRoot = "foo" });
         Assert.Equal("bar/nya", registry.ResolvePath("/foo/bar/nya.nani"));
-        registry.HandleSettingsChanged(new() { ScriptRootUri = "bar" });
+        registry.HandleSettingsChanged(new() { ScenarioRoot = "bar" });
         Assert.Equal("nya", registry.ResolvePath("/foo/bar/nya.nani"));
     }
 }

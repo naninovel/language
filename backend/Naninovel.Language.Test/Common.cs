@@ -5,7 +5,7 @@ namespace Naninovel.Language.Test;
 
 internal static class Common
 {
-    private static readonly ScriptPathResolver pathResolver = new() { RootUri = "Scripts" };
+    private static readonly ScriptPathResolver pathResolver = new() { RootUri = "Scenario" };
 
     public static Document CreateDocument (params string[] lines)
     {

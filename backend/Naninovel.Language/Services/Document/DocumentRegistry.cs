@@ -20,7 +20,7 @@ public class DocumentRegistry : IDocumentRegistry, ISettingsObserver
 
     public void HandleSettingsChanged (Settings settings)
     {
-        pathResolver.RootUri = settings.ScriptRootUri;
+        pathResolver.RootUri = settings.ScenarioRoot;
     }
 
     public IReadOnlyCollection<string> GetAllUris () => map.Keys;
