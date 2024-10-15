@@ -5,6 +5,8 @@ namespace Naninovel.Language;
 
 public class MetadataProvider : IMetadata, IMetadataObserver
 {
+    public string? EntryScript => provider.EntryScript;
+    public string? TitleScript => provider.TitleScript;
     public IReadOnlyCollection<Actor> Actors => provider.Actors;
     public IReadOnlyCollection<Metadata.Command> Commands => provider.Commands;
     public IReadOnlyCollection<Constant> Constants => provider.Constants;

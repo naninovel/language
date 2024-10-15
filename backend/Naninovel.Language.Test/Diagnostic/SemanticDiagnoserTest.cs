@@ -335,7 +335,12 @@ public class SemanticDiagnoserTest : DiagnoserTest
     [Fact]
     public void DoesntErrWhenFunctionParameterHasValidConstantValue ()
     {
-        var param = new FunctionParameter { Name = "x", Context = new() { Type = ValueContextType.Constant, SubType = "@" } };
+        var param = new FunctionParameter {
+            Name = "x", Context = new() {
+                Type = ValueContextType.Constant,
+                SubType = $"{{{ExpressionEvaluator.InspectedScript}}}+@"
+            }
+        };
         Meta.Functions = [new() { Name = "foo", Parameters = [param] }];
         Meta.Constants = [new() { Name = "@", Values = ["foo"] }];
         Assert.Empty(Diagnose("""{foo("foo")}"""));

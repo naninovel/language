@@ -19,6 +19,7 @@ public abstract class DiagnoserTest
     {
         Manager = new(Meta, Docs.Object, Endpoints.Object, Publisher.Object);
         Docs.Setup(d => d.GetAllUris()).Returns(Array.Empty<string>());
+        Docs.Setup(d => d.ResolvePath(It.IsAny<string>())).Returns(Path.GetFileNameWithoutExtension(DefaultUri));
         Endpoints.Setup(e => e.GetLabelLocations(It.Ref<QualifiedLabel>.IsAny)).Returns(ImmutableHashSet<LineLocation>.Empty);
         Endpoints.Setup(e => e.GetNavigatorLocations(It.Ref<QualifiedEndpoint>.IsAny)).Returns(ImmutableHashSet<LineLocation>.Empty);
         Publisher.Setup(p => p.PublishDiagnostics(It.IsAny<string>(), It.IsAny<IReadOnlyList<Diagnostic>>()))

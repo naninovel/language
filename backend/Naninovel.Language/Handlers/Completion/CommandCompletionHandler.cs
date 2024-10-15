@@ -3,13 +3,17 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class CommandCompletionHandler (IMetadata meta, CompletionProvider completions, IEndpointRegistry endpoints)
+internal class CommandCompletionHandler
 {
     private readonly record struct CommandContext (Parsing.Command Model, Metadata.Command Meta);
     private readonly record struct ParameterContext (Parsing.Parameter Model, Metadata.Parameter Meta);
 
-    private readonly ExpressionCompletionHandler expHandler = new(meta, endpoints, completions);
-    private readonly NamedValueParser namedParser = new(meta.Syntax);
+    private readonly IMetadata meta;
+    private readonly CompletionProvider completions;
+    private readonly IEndpointRegistry endpoints;
+    private readonly ExpressionCompletionHandler expHandler;
+    private readonly NamedValueParser namedParser;
+    private readonly ExpressionEvaluator expEval;
     private int cursor => position.Character;
     private char charBehindCursor;
     private Position position;
@@ -17,6 +21,16 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
     private CommandContext command;
     private ParameterContext param;
     private string scriptPath = string.Empty;
+
+    public CommandCompletionHandler (IMetadata meta, CompletionProvider completions, IEndpointRegistry endpoints)
+    {
+        this.meta = meta;
+        this.completions = completions;
+        this.endpoints = endpoints;
+        expHandler = new ExpressionCompletionHandler(meta, endpoints, completions);
+        namedParser = new NamedValueParser(meta.Syntax);
+        expEval = new(meta, () => scriptPath, GetParamValue);
+    }
 
     public CompletionItem[] Handle (Parsing.Command command, in Position position,
         in DocumentLine line, string scriptPath, bool inline)
@@ -153,16 +167,9 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
 
     private CompletionItem[] GetConstantValues (ValueContext context)
     {
-        var names = ConstantEvaluator.EvaluateNames(context.SubType ?? "", scriptPath, GetParamValue);
+        using var _ = ListPool<string>.Rent(out var names);
+        expEval.Evaluate(context.SubType ?? "", names);
         return names.SelectMany(completions.GetConstants).ToArray();
-
-        string? GetParamValue (string id, int? index)
-        {
-            foreach (var param in command.Model.Parameters)
-                if (meta.FindParameter(command.Meta.Id, param.Identifier)?.Id == id)
-                    return index.HasValue ? GetNamedValue(param.Value, index == 0) : line.Extract(param.Value);
-            return null;
-        }
     }
 
     private CompletionItem[] GetEndpointValues (ValueContext context)
@@ -174,5 +181,13 @@ internal class CommandCompletionHandler (IMetadata meta, CompletionProvider comp
         }
         var script = GetNamedValue(param.Model.Value, true) ?? scriptPath;
         return completions.GetLabelEndpoints(endpoints.GetLabelsInScript(script));
+    }
+
+    private string? GetParamValue (string id, int? index)
+    {
+        foreach (var param in command.Model.Parameters)
+            if (meta.FindParameter(command.Meta.Id, param.Identifier)?.Id == id)
+                return index.HasValue ? GetNamedValue(param.Value, index == 0) : line.Extract(param.Value);
+        return null;
     }
 }

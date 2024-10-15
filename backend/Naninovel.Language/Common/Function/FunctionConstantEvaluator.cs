@@ -3,15 +3,24 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class FunctionConstantEvaluator (ISyntax stx)
+internal class FunctionConstantEvaluator
 {
-    private readonly NamedValueParser namedParser = new(stx);
+    private readonly ExpressionEvaluator expEval;
+    private readonly NamedValueParser namedParser;
     private ResolvedFunction fn;
 
-    public IReadOnlyList<string> EvaluateNames (string scriptPath, ValueContext ctx, ResolvedFunction fn)
+    public FunctionConstantEvaluator (IMetadata meta, Func<string> getInspectedScript)
+    {
+        expEval = new(meta, getInspectedScript, GetParamValue);
+        namedParser = new(meta.Syntax);
+    }
+
+    public IReadOnlyList<string> EvaluateNames (ValueContext ctx, ResolvedFunction fn)
     {
         this.fn = fn;
-        return ConstantEvaluator.EvaluateNames(ctx.SubType ?? "", scriptPath, GetParamValue);
+        var names = new List<string>();
+        expEval.Evaluate(ctx.SubType ?? "", names);
+        return names;
     }
 
     private string? GetParamValue (string name, int? idx)

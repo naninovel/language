@@ -3,15 +3,26 @@ using Naninovel.Parsing;
 
 namespace Naninovel.Language;
 
-internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry endpoints, CompletionProvider completions)
+internal class ExpressionCompletionHandler
 {
-    private readonly FunctionResolver fnResolver = new(meta);
-    private readonly NamedValueParser namedParser = new(meta.Syntax);
-    private readonly FunctionConstantEvaluator fnConstEval = new(meta.Syntax);
+    private readonly CompletionProvider completions;
+    private readonly IEndpointRegistry endpoints;
+    private readonly FunctionResolver fnResolver;
+    private readonly NamedValueParser namedParser;
+    private readonly FunctionConstantEvaluator fnConstEval;
     private DocumentLine line;
     private Position position;
     private ResolvedFunction fn;
     private string scriptPath = null!;
+
+    public ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry endpoints, CompletionProvider completions)
+    {
+        this.completions = completions;
+        this.endpoints = endpoints;
+        fnResolver = new(meta);
+        namedParser = new(meta.Syntax);
+        fnConstEval = new(meta, () => scriptPath);
+    }
 
     public CompletionItem[] Handle (PlainText? expBody, in Position position, in DocumentLine line, string scriptPath)
     {
@@ -52,7 +63,7 @@ internal class ExpressionCompletionHandler (IMetadata meta, IEndpointRegistry en
     }
 
     private CompletionItem[] GetForContext (ValueContext ctx, ResolvedFunctionParameter param) => ctx.Type switch {
-        ValueContextType.Constant => fnConstEval.EvaluateNames(scriptPath, ctx, fn).SelectMany(completions.GetConstants).ToArray(),
+        ValueContextType.Constant => fnConstEval.EvaluateNames(ctx, fn).SelectMany(completions.GetConstants).ToArray(),
         ValueContextType.Endpoint => GetEndpointValues(ctx, param.Value),
         ValueContextType.Resource => completions.GetResources(ctx.SubType ?? ""),
         ValueContextType.Actor => completions.GetActors(ctx.SubType ?? ""),

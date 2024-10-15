@@ -28,6 +28,8 @@ public class MetadataTest
     {
         var provider = new MetadataProvider();
         provider.HandleMetadataChanged(new() {
+            EntryScript = "Entry",
+            TitleScript = "Title",
             Commands = [new() { Id = "cmd", Parameters = [new() { Id = "p" }] }],
             Actors = [new() { Id = "actor" }],
             Resources = [new() { Path = "res" }],
@@ -36,6 +38,8 @@ public class MetadataTest
             Functions = [new() { Name = "fn", Parameters = [new() { Name = "p" }] }],
             Syntax = new Syntax(commentLine: "%")
         });
+        Assert.Equal("Entry", provider.EntryScript);
+        Assert.Equal("Title", provider.TitleScript);
         Assert.Equal("cmd", provider.Commands.First().Id);
         Assert.Equal("actor", provider.Actors.First().Id);
         Assert.Equal("res", provider.Resources.First().Path);

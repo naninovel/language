@@ -476,7 +476,12 @@ public class CompletionTest
             Id = "Path",
             Nameless = true,
             ValueContainerType = ValueContainerType.Named,
-            ValueContext = [null, new() { Type = ValueContextType.Constant, SubType = "Labels/{:Path[0]??$Script}+Test" }]
+            ValueContext = [
+                null, new() {
+                    Type = ValueContextType.Constant,
+                    SubType = $"Labels/{{:Path[0]??{ExpressionEvaluator.InspectedScript}}}+Test"
+                }
+            ]
         };
         meta.Commands = [new Metadata.Command { Id = "Goto", Parameters = [param] }];
         meta.Constants = [
@@ -502,7 +507,7 @@ public class CompletionTest
             ValueContainerType = ValueContainerType.Named,
             ValueContext = [
                 new() { Type = ValueContextType.Resource, SubType = "Scripts" },
-                new() { Type = ValueContextType.Constant, SubType = "Labels/{:GotoPath[0]??$Script}+Test" }
+                new() { Type = ValueContextType.Constant, SubType = $"Labels/{{:GotoPath[0]??{ExpressionEvaluator.InspectedScript}}}+Test" }
             ]
         };
         meta.Commands = [new Metadata.Command { Id = "AddChoice", Alias = "choice", Parameters = [summaryParam, gotoParam] }];
@@ -871,7 +876,10 @@ public class CompletionTest
     {
         var param = new FunctionParameter {
             Name = "path",
-            Context = new() { Type = ValueContextType.Constant, SubType = "Labels/{:path[0]??$Script}+Test" }
+            Context = new() {
+                Type = ValueContextType.Constant,
+                SubType = $"Labels/{{:path[0]??{ExpressionEvaluator.InspectedScript}}}+Test"
+            }
         };
         meta.Functions = [new Function { Name = "foo", Parameters = [param] }];
         meta.Constants = [
