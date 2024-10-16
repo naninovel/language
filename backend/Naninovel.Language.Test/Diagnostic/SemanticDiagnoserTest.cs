@@ -338,7 +338,7 @@ public class SemanticDiagnoserTest : DiagnoserTest
         var param = new FunctionParameter {
             Name = "x", Context = new() {
                 Type = ValueContextType.Constant,
-                SubType = $"{{{ExpressionEvaluator.InspectedScript}}}+@"
+                SubType = $"{{{ExpressionEvaluator.EntryScript}}}+@"
             }
         };
         Meta.Functions = [new() { Name = "foo", Parameters = [param] }];

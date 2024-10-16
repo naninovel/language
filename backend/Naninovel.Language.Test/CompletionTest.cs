@@ -479,7 +479,7 @@ public class CompletionTest
             ValueContext = [
                 null, new() {
                     Type = ValueContextType.Constant,
-                    SubType = $"Labels/{{:Path[0]??{ExpressionEvaluator.InspectedScript}}}+Test"
+                    SubType = $"Labels/{{:Path[0]??{ExpressionEvaluator.EntryScript}}}+Test"
                 }
             ]
         };
@@ -507,7 +507,7 @@ public class CompletionTest
             ValueContainerType = ValueContainerType.Named,
             ValueContext = [
                 new() { Type = ValueContextType.Resource, SubType = "Scripts" },
-                new() { Type = ValueContextType.Constant, SubType = $"Labels/{{:GotoPath[0]??{ExpressionEvaluator.InspectedScript}}}+Test" }
+                new() { Type = ValueContextType.Constant, SubType = $"Labels/{{:GotoPath[0]??{ExpressionEvaluator.EntryScript}}}+Test" }
             ]
         };
         meta.Commands = [new Metadata.Command { Id = "AddChoice", Alias = "choice", Parameters = [summaryParam, gotoParam] }];
@@ -878,7 +878,7 @@ public class CompletionTest
             Name = "path",
             Context = new() {
                 Type = ValueContextType.Constant,
-                SubType = $"Labels/{{:path[0]??{ExpressionEvaluator.InspectedScript}}}+Test"
+                SubType = $"Labels/{{:path[0]??{ExpressionEvaluator.EntryScript}}}+Test"
             }
         };
         meta.Functions = [new Function { Name = "foo", Parameters = [param] }];
@@ -923,6 +923,7 @@ public class CompletionTest
 
     private IReadOnlyList<CompletionItem> Complete (string line, int charOffset, string uri = "@")
     {
+        meta.EntryScript = Path.GetFileNameWithoutExtension(uri);
         handler.HandleMetadataChanged(meta.AsProject());
         docs.SetupScript(meta, uri, line);
         return handler.Complete(uri, new Position(0, charOffset));

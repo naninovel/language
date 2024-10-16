@@ -11,7 +11,7 @@ internal class SemanticDiagnoser : Diagnoser
     private readonly Parser expParser;
     private readonly FunctionResolver fnResolver;
     private readonly List<ParseDiagnostic> expErrors = [];
-    private readonly FunctionConstantEvaluator fnConstEval;
+    private readonly ExpressionEvaluator expEval;
     private readonly ValueValidator valueValidator;
     private readonly IMetadata meta;
 
@@ -24,7 +24,7 @@ internal class SemanticDiagnoser : Diagnoser
             HandleDiagnostic = expErrors.Add
         });
         fnResolver = new FunctionResolver(meta);
-        fnConstEval = new FunctionConstantEvaluator(meta, GetInspectedScript);
+        expEval = new(meta);
         valueValidator = new(meta.Syntax);
     }
 
@@ -125,12 +125,18 @@ internal class SemanticDiagnoser : Diagnoser
     {
         if (!param.IsOperand || param.Meta is not { } paramMeta) return;
         var paramRange = Line.GetRange(param.Range, LineIndex);
-        if (paramMeta.Context is { Type: ValueContextType.Constant } ctx &&
-            fnConstEval.EvaluateNames(ctx, fn) is [..] names &&
-            !meta.Constants.Where(c => names.Contains(c.Name)).Any(c => c.Values.Contains(param.Value, StringComparer.OrdinalIgnoreCase)))
+
+        var names = default(List<string>);
+        if (paramMeta.Context is { Type: ValueContextType.Constant } ctx)
+        {
+            _ = ListPool<string>.Rent(out names);
+            expEval.Evaluate(ctx.SubType ?? "", names, new() { Function = fn.Function });
+        }
+        if (names?.Count > 0 && !meta.Constants.Where(c => names.Contains(c.Name)).Any(c => c.Values.Contains(param.Value, StringComparer.OrdinalIgnoreCase)))
             AddError(paramRange, $"Invalid constant value. Expected to be one of '{string.Join(", ", names)}'.");
         else if (!valueValidator.Validate(param.Value, ValueContainerType.Single, paramMeta.Type))
             AddError(paramRange, $"Invalid value: '{param.Value}' is not a {paramMeta.Type.ToString().FirstToLower()}.");
+        if (names is not null) ListPool<string>.Return(names);
     }
 
     private void AddUnknownCommand (Parsing.Command command)
@@ -215,10 +221,5 @@ internal class SemanticDiagnoser : Diagnoser
             AddWarning(Line.GetRange(command, LineIndex), "This command doesn't support nesting.");
         if (commandMeta.Nest is { Required: true } && !hasNested)
             AddError(Line.GetRange(command, LineIndex), "This command requires nested lines.");
-    }
-
-    private string GetInspectedScript ()
-    {
-        return Docs.ResolvePath(Uri);
     }
 }

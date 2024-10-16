@@ -45,7 +45,7 @@ internal class FunctionResolver
         line.TryResolve(body, expRange, out var fnRange);
         var fnMeta = ResolveFunctionMeta(fn);
         var @params = fnMeta is null || fnMeta.Parameters.Length == 0 ? [] : ResolveParameters(fn, fnMeta);
-        resolved = new ResolvedFunction(fnMeta, fnRange, @params);
+        resolved = new ResolvedFunction(fnMeta, fn, fnRange, @params);
         return true;
     }
 
